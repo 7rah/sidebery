@@ -122,7 +122,7 @@ void (async function main() {
 function initToolbarButton(): void {
   Menu.createSettingsMenu()
 
-  browser.browserAction.onClicked.addListener((_, info): void => {
+  browser.action.onClicked.addListener((_, info): void => {
     if (info && info.button === 1) browser.runtime.openOptionsPage()
     else browser.sidebarAction.toggle()
   })

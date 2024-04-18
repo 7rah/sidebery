@@ -434,12 +434,12 @@ export function start(): void {
 
   const hasFocus = document.hasFocus()
   if (!hasFocus) {
-    browser.browserAction.setPopup({ popup: SEARCH_URL })
-    browser.browserAction.openPopup()
+    browser.action.setPopup({ popup: SEARCH_URL })
+    browser.action.openPopup()
     Search.reactive.barIsActive = true
 
     // Reset browser action
-    setTimeout(() => browser.browserAction.setPopup({ popup: null }), 500)
+    setTimeout(() => browser.action.setPopup({ popup: null }), 500)
   }
 
   showBar()

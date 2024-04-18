@@ -96,15 +96,23 @@ export function createSettingsMenu(): void {
     id: 'open_settings',
     title: translate('menu.browserAction.open_settings'),
     icons: { '16': 'assets/logo-native.svg' },
-    onclick: () => browser.runtime.openOptionsPage(),
-    contexts: ['browser_action'],
+    contexts: ['action'],
   })
   browser.menus.create({
     id: 'create_snapshot',
     title: translate('menu.browserAction.create_snapshot'),
     icons: { '16': 'assets/snapshot-native.svg' },
-    onclick: () => Snapshots.createSnapshot(),
-    contexts: ['browser_action'],
+    contexts: ['action'],
+  })
+  browser.menus.onClicked.addListener((info, tab) => {
+    switch (info.menuItemId) {
+      case 'open_settings':
+        browser.runtime.openOptionsPage()
+        break
+      case 'create_snapshot':
+        Snapshots.createSnapshot()
+        break
+    }
   })
 }
 

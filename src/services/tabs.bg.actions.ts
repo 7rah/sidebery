@@ -507,22 +507,26 @@ export async function initInternalPageScripts(tabs: Tab[]) {
 
 export function injectUrlPageScript(winId: ID, tabId: ID) {
   try {
-    browser.tabs
-      .executeScript(tabId, {
-        file: '/injections/url.js',
-        runAt: 'document_start',
-        matchAboutBlank: true,
+    browser.scripting
+      .executeScript({
+        files: ['/injections/url.js'],
+        target: { tabId },
+        injectImmediately: true,
       })
       .catch(err => {
         Logs.warn('Tabs.injectUrlPageScript: Cannot inject script, tabId:', tabId, err)
       })
     const initData = getUrlPageInitData(winId, tabId)
     const initDataJson = JSON.stringify(initData)
-    browser.tabs
-      .executeScript(tabId, {
-        code: `window.sideberyInitData=${initDataJson};window.onSideberyInitDataReady?.()`,
-        runAt: 'document_start',
-        matchAboutBlank: true,
+    browser.scripting
+      .executeScript<[string], void>({
+        args: [initDataJson],
+        func: (initDataJson: string) => {
+          window.sideberyInitData = JSON.parse(initDataJson);
+          window.onSideberyInitDataReady?.()
+        },
+        target: { tabId },
+        injectImmediately: true,
       })
       .catch(() => {
         Logs.warn('Tabs.injectUrlPageScript: Cannot inject init data, reloading tab (if active)...')
@@ -569,22 +573,26 @@ export async function injectGroupPageScript(winId: ID, tabId: ID): Promise<void>
   injectingGroup.add(tabId)
 
   try {
-    browser.tabs
-      .executeScript(tabId, {
-        file: '/injections/group.js',
-        runAt: 'document_start',
-        matchAboutBlank: true,
+    browser.scripting
+      .executeScript({
+        files: ['/injections/group.js'],
+        target: { tabId },
+        injectImmediately: true,
       })
       .catch(err => {
         Logs.warn('Tabs.injectGroupPageScript: Cannot inject script, tabId:', tabId, err)
       })
     const initData = await getGroupPageInitData(winId, tabId)
     const initDataJson = JSON.stringify(initData)
-    browser.tabs
-      .executeScript(tabId, {
-        code: `window.sideberyInitData=${initDataJson};window.onSideberyInitDataReady?.()`,
-        runAt: 'document_start',
-        matchAboutBlank: true,
+    browser.scripting
+      .executeScript<[string], void>({
+        args: [initDataJson],
+        func: (initDataJson: string) => {
+          window.sideberyInitData = JSON.parse(initDataJson);
+          window.onSideberyInitDataReady?.()
+        },
+        target: { tabId },
+        injectImmediately: true,
       })
       .catch(() => {
         Logs.warn('Tabs.injectGroupPageScript: Cannot inject init data, reloading tab')

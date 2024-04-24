@@ -1192,15 +1192,23 @@ export async function discardTabs(tabIds: ID[] = []): Promise<void> {
 
   // Try to reset closing prevention and discard such tabs
   if (Settings.state.forceDiscard && Permissions.allUrls && secondTryIds.length) {
-    const forceDiscardInjection =
-      'window.onbeforeunload=null;window.addEventListener("beforeunload", e => {e.returnValue=""})'
     await Promise.allSettled(
-      secondTryIds.map(id => {
-        return browser.tabs.executeScript(id, {
-          code: forceDiscardInjection,
-          runAt: 'document_start',
-          allFrames: true,
-        })
+      secondTryIds.map(async (id) => {
+        return browser.scripting.executeScript({
+          func: () => {
+            window.onbeforeunload = null;
+            window.addEventListener("beforeunload", e => {
+              e.stopPropagation()
+              e.returnValue = ''
+            }, { capture: true })
+          },
+          injectImmediately: true,
+          target: {
+            tabId: id,
+            allFrames: true
+          },
+          world: 'MAIN'
+        }).then(console.log).catch(console.error)
       })
     )
 

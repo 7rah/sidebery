@@ -147,22 +147,30 @@ async function injectTabPreview(tabId: ID, y?: number) {
 
   const initData = getTabPreviewInitData(tabId, y)
   const initDataJson = JSON.stringify(initData)
-  const injectingData = browser.tabs
-    .executeScript(activeTab.id, {
-      code: `window.sideberyInitData=${initDataJson};window.onSideberyInitDataReady?.();true;`,
-      runAt: 'document_start',
-      allFrames: false,
-      matchAboutBlank: true,
+  const injectingData = browser.scripting
+    .executeScript<[string], void>({
+      args: [initDataJson],
+      func: (initDataJson: string) => {
+        window.sideberyInitData = JSON.parse(initDataJson);
+        window.onSideberyInitDataReady?.();true;
+      },
+      injectImmediately: true,
+      target: { 
+        tabId: activeTab.id,
+        allFrames: false,
+      },
     })
     .catch(() => {
       // Cannot inject init data
     })
-  const injectingScript = browser.tabs
-    .executeScript(activeTab.id, {
-      file: '../injections/tab-preview.js',
-      runAt: 'document_start',
-      allFrames: false,
-      matchAboutBlank: true,
+  const injectingScript = browser.scripting
+    .executeScript({
+      files: ['../injections/tab-preview.js'],
+      injectImmediately: true,
+      target: {
+        tabId: activeTab.id, 
+        allFrames: false,
+      }
     })
     .catch(() => {
       // Cannot exec script

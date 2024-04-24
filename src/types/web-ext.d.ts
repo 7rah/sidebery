@@ -314,15 +314,6 @@ declare namespace browser {
       active?: boolean
     }
 
-    interface ExecuteOpts {
-      allFrames?: boolean
-      code?: string
-      file?: string
-      frameId?: number
-      matchAboutBlank?: boolean
-      runAt?: 'document_start' | 'document_end' | 'document_idle'
-    }
-
     interface GroupOpts {
       // The tab ID or list of tab IDs to add to the specified group.
       tabIds: ID | ID[]
@@ -354,7 +345,6 @@ declare namespace browser {
     function getCurrent(): Promise<Tab>
     function saveAsPDF(pageSettings: PageSettings): Promise<SavePDFResult>
     function duplicate(tabId: ID, opts?: DuplOpts): Promise<Tab>
-    function executeScript(tabId: ID, opts: ExecuteOpts): Promise<any[]>
     function warmup(tabId: ID): Promise<void>
     /**
      * Adds one or more tabs to a specified group, or if no group is specified,
@@ -1452,5 +1442,32 @@ declare namespace browser {
 
     function getRedirectURL(): string
     function launchWebAuthFlow(details: LaunchWebAuthDetails): Promise<string>
+  }
+
+  namespace scripting {
+    interface InjectionTarget {
+      allFrames?: boolean
+      frameIds?: number[]
+      tabId: ID
+    }
+
+    type ExecutionWorld = 'ISOLATED' | 'MAIN'
+
+    interface InjectDetails<Args extends unknown[] = unknown[], Result = unknown> {
+      args?: Args
+      files?: string[]
+      func?: (...args: Args) => Result
+      injectImmediately?: boolean
+      target: InjectionTarget
+      world?: ExecutionWorld
+    }
+
+    interface InjectionResult<T> {
+      frameId: number
+      result?: T
+      error?: unknown // unsupported by chrome
+    }
+
+    function executeScript<Args extends unknown[], Result>(details: InjectDetails<Args, Result>): Promise<InjectionResult<Result>[]>
   }
 }

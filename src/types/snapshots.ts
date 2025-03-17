@@ -30,6 +30,7 @@ export interface SnapWindowState {
   id: ID
   panels: SnapPanelState[]
   tabsLen: number
+  folded: boolean
 }
 
 export interface SnapPanelState {
@@ -39,6 +40,7 @@ export interface SnapPanelState {
   iconSVG: string
   iconIMG?: string
   color?: string
+  folded: boolean
 }
 
 export interface SnapTab {
@@ -53,6 +55,7 @@ export interface SnapTab {
   customColor?: string
 }
 export interface SnapTabState extends SnapTab {
+  ref: SnapTab
   id?: ID
   parentId?: ID
   containerIcon?: string
@@ -60,6 +63,10 @@ export interface SnapTabState extends SnapTab {
   domain?: string
   iconSVG?: string
   sel?: boolean
+  folded: boolean
+  isParent: boolean
+  invisible: boolean
+  branchLen: number
 }
 
 export const enum RemovingSnapshotResult {

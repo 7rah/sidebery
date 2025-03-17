@@ -38,24 +38,31 @@
       .content(v-if="state.activeSnapshot")
         .windows
           .window(v-for="(win, i) in state.activeSnapshot.windows" :key="i")
-            .window-bar
+            .window-bar(:data-folded="win.folded")
+              .drop-down-btn(@click="win.folded = !win.folded")
+                svg.exp-icon: use(xlink:href="#icon_expand")
               .win-name {{translate('snapshot.window_title') + ' ' + (i + 1)}}
               .win-len ({{win.tabsLen}} {{translate('snapshot.snap_tab', win.tabsLen)}})
               .btn(@click="openWindow(state.activeSnapshot, i)") {{translate('snapshot.btn_open_win')}}
-            .panels
+            .panels(v-show="!win.folded")
               .panel(v-for="panel in win.panels" :key="panel.id" :data-void="panel.id === -1")
-                .panel-bar(:data-color="panel.color")
+                .panel-bar(:data-color="panel.color" :data-folded="panel.folded")
+                  .drop-down-btn(@click="panel.folded = !panel.folded")
+                    svg.exp-icon: use(xlink:href="#icon_expand")
                   .icon
                     img(v-if="panel.iconIMG" :src="panel.iconIMG")
                     svg(v-else): use(:xlink:href="'#' + panel.iconSVG")
                   .name {{panel.name}}
                   .len {{panel.tabs.length}} {{translate('snapshot.snap_tab', panel.tabs.length)}}
-                .tabs
+                .tabs(v-show="!panel.folded")
                   .tab(
-                    v-for="tab in panel.tabs"
+                    v-for="(tab, i) in panel.tabs"
+                    v-show="!tab.invisible"
                     :key="tab.id"
                     :title="tab.title"
                     :id="String(tab.id)"
+                    :data-folded="tab.folded"
+                    :data-invisible="tab.invisible"
                     :data-sel="tab.sel"
                     :data-lvl="tab.lvl"
                     :data-pinned="tab.pinned"
@@ -69,6 +76,9 @@
                       @mousedown="onTabMouseDown($event, tab)"
                       @mouseup.stop.prevent="onTabMouseUp($event, tab)")
                     .container-mark(v-if="tab.containerIcon")
+                    .drop-down-btn(v-if="tab.isParent" @click="Snapshots.foldBranchInViewer(i, panel.tabs)")
+                      svg.exp-icon: use(xlink:href="#icon_expand")
+                      .branch-len {{tab.branchLen}}
                     .icon
                       img(
                         v-if="tab.domain && Favicons.reactive.byDomains[tab.domain]"
@@ -415,8 +425,10 @@ async function createSnapshot(): Promise<void> {
 async function openAllWindows(snapshot: SnapshotState | null): Promise<void> {
   if (!snapshot) return
 
+  const normSnapshot = Snapshots.snapshotStateToNormalizedSnapshot(snapshot)
+
   try {
-    await IPC.bg('openSnapshotWindows', Utils.cloneObject(snapshot))
+    await IPC.bg('openSnapshotWindows', normSnapshot)
   } catch (err) {
     Logs.err('Snapshots: Cannot openAllWindows', err)
   }
@@ -425,8 +437,10 @@ async function openAllWindows(snapshot: SnapshotState | null): Promise<void> {
 async function openWindow(snapshot: SnapshotState | null, winIndex: number): Promise<void> {
   if (!snapshot) return
 
+  const normSnapshot = Snapshots.snapshotStateToNormalizedSnapshot(snapshot)
+
   try {
-    await IPC.bg('openSnapshotWindows', Utils.cloneObject(snapshot), winIndex)
+    await IPC.bg('openSnapshotWindows', normSnapshot, winIndex)
   } catch (err) {
     Logs.err('Snapshots: Cannot openWindow', err)
   }

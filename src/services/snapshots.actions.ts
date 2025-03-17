@@ -712,7 +712,7 @@ export function parseSnapshot(
     if (!win.length) continue
 
     const panelsById: Record<ID, SnapPanelState> = {}
-    const winState: SnapWindowState = { id: tabsCount, panels: [], tabsLen: 0 }
+    const winState: SnapWindowState = { id: tabsCount, panels: [], tabsLen: 0, folded: false }
     windows.push(winState)
 
     // Per panels (or pinned tabs)
@@ -720,7 +720,11 @@ export function parseSnapshot(
       if (!panel.length) continue
 
       // Per tabs
-      for (const tab of panel) {
+      for (let i = 0; i < panel.length; i++) {
+        const tab = panel[i]
+        const nextTab = panel[i + 1]
+        if (!tab) break
+
         const container = tab.containerId ? snapshot.containers[tab.containerId] : undefined
 
         if (tab.pinned && tab.panelId === NOID) tab.panelId = GLOB_PINNED_ID
@@ -747,18 +751,25 @@ export function parseSnapshot(
             iconSVG: panelConfig.iconSVG || 'icon_tabs',
             iconIMG: panelConfig.iconIMG,
             color: panelConfig.color,
+            folded: false,
           }
           panelsById[panelState.id] = panelState
         }
 
+        const tabLvl = tab.lvl ?? 0
         const tabState: SnapTabState = {
           ...tab,
+          ref: tab,
           id: tabsCount,
           containerIcon: container?.icon,
           containerColor: container?.color,
           domain: Utils.getDomainOf(tab.url),
           iconSVG: Favicons.getFavPlaceholder(tab.url),
           sel: false,
+          folded: !!tab.folded,
+          isParent: nextTab && (nextTab.lvl ?? 0) > tabLvl && tab.panelId === nextTab.panelId,
+          invisible: false,
+          branchLen: 0,
         }
 
         panelState.tabs.push(tabState)
@@ -774,6 +785,24 @@ export function parseSnapshot(
     }
   }
 
+  // Fold branches and count the descendants
+  for (const win of windows) {
+    for (const panel of win.panels) {
+      for (let t, i = 0; i < panel.tabs.length; i++) {
+        t = panel.tabs[i]
+
+        if (t?.folded) {
+          t.folded = false
+          foldBranchInViewer(i, panel.tabs)
+        }
+
+        if (t.isParent) {
+          t.branchLen = calcBranchLen(i, panel.tabs)
+        }
+      }
+    }
+  }
+
   return {
     ...snapshot,
     windows,
@@ -782,6 +811,59 @@ export function parseSnapshot(
     sizeStr,
     winCount,
     tabsCount,
+  }
+}
+
+export function foldBranchInViewer(index: number, tabs: SnapTabState[]) {
+  const rootTab = tabs[index]
+  if (!rootTab || !rootTab.isParent) return
+
+  rootTab.ref.folded = rootTab.folded = !rootTab.folded
+
+  const rootTabLvl = rootTab.lvl ?? 0
+  let foldedLvl = -1
+  for (let t, i = index + 1; i < tabs.length; i++) {
+    t = tabs[i]
+    if (!t || (t.lvl ?? 0) <= rootTabLvl) break
+
+    // Skip inner folded tabs
+    if (foldedLvl > -1) {
+      if (t.lvl && t.lvl > foldedLvl) continue
+      if (foldedLvl === t.lvl) foldedLvl = -1
+    }
+
+    // Detect root lvl of inner folded tabs
+    if (t.isParent && t.folded) {
+      foldedLvl = t.lvl ?? 0
+    }
+
+    t.invisible = rootTab.folded
+  }
+}
+
+function calcBranchLen(index: number, tabs: SnapTabState[]): number {
+  let len = 0
+
+  const rootTab = tabs[index]
+  if (!rootTab || !rootTab.isParent) return len
+
+  const rootTabLvl = rootTab.lvl ?? 0
+  for (let t, i = index + 1; i < tabs.length; i++) {
+    t = tabs[i]
+    if (!t || (t.lvl ?? 0) <= rootTabLvl) break
+    len++
+  }
+
+  return len
+}
+
+export function snapshotStateToNormalizedSnapshot(s: SnapshotState): NormalizedSnapshot {
+  return {
+    id: s.id,
+    time: s.time,
+    containers: Utils.clone(s.containers),
+    sidebar: Utils.clone(s.sidebar),
+    tabs: Utils.clone(s.tabs),
   }
 }
 

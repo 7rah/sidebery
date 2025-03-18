@@ -55,43 +55,14 @@
                   .name {{panel.name}}
                   .len {{panel.tabs.length}} {{translate('snapshot.snap_tab', panel.tabs.length)}}
                 .tabs(v-show="!panel.folded")
-                  .tab(
+                  SnapTab(
                     v-for="(tab, i) in panel.tabs"
                     v-show="!tab.invisible"
                     :key="tab.id"
-                    :title="tab.title"
-                    :id="String(tab.id)"
-                    :data-folded="tab.folded"
-                    :data-invisible="tab.invisible"
-                    :data-sel="tab.sel"
-                    :data-lvl="tab.lvl"
-                    :data-pinned="tab.pinned"
-                    :data-color="tab.containerColor"
-                    :data-shift-sel="state.mouseUpShiftTabId === tab.id"
-                    @click.stop.prevent="")
-                    a.link(
-                      target="_blank"
-                      :href="tab.url"
-                      @dragstart="onTabDragStart($event)"
-                      @mousedown="onTabMouseDown($event, tab)"
-                      @mouseup.stop.prevent="onTabMouseUp($event, tab)")
-                    .container-mark(v-if="tab.containerIcon")
-                    .drop-down-btn(v-if="tab.isParent" @click="Snapshots.foldBranchInViewer(i, panel.tabs)")
-                      svg.exp-icon: use(xlink:href="#icon_expand")
-                      .branch-len {{tab.branchLen}}
-                    .icon
-                      img(
-                        v-if="tab.domain && Favicons.reactive.byDomains[tab.domain]"
-                        :src="Favicons.reactive.byDomains[tab.domain]")
-                      svg(v-else): use(:xlink:href="tab.iconSVG")
-                      svg.pin(v-if="tab.pinned"): use(xlink:href="#icon_pin")
-                    .title-url
-                      .title {{tab.title}}
-                      .url {{tab.url}}
-                    .checkbox(
-                      :data-sel="tab.sel"
-                      @mousedown="onCheckboxMouseDown($event, tab)"
-                      @mouseup="onCheckboxMouseUp($event, tab)")
+                    :index="i"
+                    :tab="tab"
+                    :panel="panel"
+                    :viewerState="state")
       .selection-bar(:data-active="!!selectedTabsLen")
         .info {{translate('snapshot.selected')}} {{selectedTabsLen}}
         .btn(@click="openSelectedTabs()") {{translate('snapshot.sel.open_in_panel')}}
@@ -118,6 +89,7 @@ import { Windows } from 'src/services/windows'
 import { Store } from 'src/services/storage'
 import { Snapshots } from 'src/services/snapshots'
 import DropDownButton from 'src/components/drop-down-button.vue'
+import SnapTab from './snapshots.tab.vue'
 
 const SCROLL_CONF = { behavior: 'smooth', block: 'nearest' } as const
 
@@ -212,115 +184,115 @@ function onHeaderWheel(e: WheelEvent): void {
   if (el) el.scrollIntoView(SCROLL_CONF)
 }
 
-const LONG_CLICK_DELAY = 700
-let longClickTimeout: number | undefined
-let mouseDownTabId: ID | undefined
-function onTabMouseDown(e: MouseEvent, tab: SnapTabState): void {
-  mouseDownTabId = tab.id
-  clearTimeout(longClickTimeout)
+// const LONG_CLICK_DELAY = 700
+// let longClickTimeout: number | undefined
+// let mouseDownTabId: ID | undefined
+// function onTabMouseDown(e: MouseEvent, tab: SnapTabState): void {
+//   mouseDownTabId = tab.id
+//   clearTimeout(longClickTimeout)
 
-  if (e.button === 0) {
-    longClickTimeout = setTimeout(() => {
-      tab.sel = true
-      mouseDownTabId = undefined
-    }, LONG_CLICK_DELAY)
-  }
-}
+//   if (e.button === 0) {
+//     longClickTimeout = setTimeout(() => {
+//       tab.sel = true
+//       mouseDownTabId = undefined
+//     }, LONG_CLICK_DELAY)
+//   }
+// }
 
-let mouseUpShiftMode = true
-function onTabMouseUp(e: MouseEvent, tab: SnapTabState): void {
-  clearTimeout(longClickTimeout)
-  if (mouseDownTabId !== tab.id) {
-    mouseDownTabId = undefined
-    return
-  }
-  mouseDownTabId = undefined
+// let mouseUpShiftMode = true
+// function onTabMouseUp(e: MouseEvent, tab: SnapTabState): void {
+//   clearTimeout(longClickTimeout)
+//   if (mouseDownTabId !== tab.id) {
+//     mouseDownTabId = undefined
+//     return
+//   }
+//   mouseDownTabId = undefined
 
-  if (e.shiftKey && e.button === 0) {
-    if (state.mouseUpShiftTabId === null) {
-      state.mouseUpShiftTabId = tab.id ?? null
-      tab.sel = !tab.sel
-      mouseUpShiftMode = tab.sel
-    } else {
-      selectRange(state.mouseUpShiftTabId, tab.id, !mouseUpShiftMode)
-      state.mouseUpShiftTabId = null
-    }
-    return
-  }
+//   if (e.shiftKey && e.button === 0) {
+//     if (state.mouseUpShiftTabId === null) {
+//       state.mouseUpShiftTabId = tab.id ?? null
+//       tab.sel = !tab.sel
+//       mouseUpShiftMode = tab.sel
+//     } else {
+//       selectRange(state.mouseUpShiftTabId, tab.id, !mouseUpShiftMode)
+//       state.mouseUpShiftTabId = null
+//     }
+//     return
+//   }
 
-  if (e.ctrlKey && e.button === 0) {
-    tab.sel = !tab.sel
-    return
-  }
+//   if (e.ctrlKey && e.button === 0) {
+//     tab.sel = !tab.sel
+//     return
+//   }
 
-  state.mouseUpShiftTabId = null
+//   state.mouseUpShiftTabId = null
 
-  if (e.button === 0) openTab(tab)
-}
+//   if (e.button === 0) openTab(tab)
+// }
 
-function onCheckboxMouseDown(e: MouseEvent, tab: SnapTabState): void {
-  mouseDownTabId = tab.id
-}
+// function onCheckboxMouseDown(e: MouseEvent, tab: SnapTabState): void {
+//   mouseDownTabId = tab.id
+// }
 
-function onCheckboxMouseUp(e: MouseEvent, tab: SnapTabState): void {
-  if (mouseDownTabId !== tab.id) {
-    mouseDownTabId = undefined
-    return
-  }
-  mouseDownTabId = undefined
+// function onCheckboxMouseUp(e: MouseEvent, tab: SnapTabState): void {
+//   if (mouseDownTabId !== tab.id) {
+//     mouseDownTabId = undefined
+//     return
+//   }
+//   mouseDownTabId = undefined
 
-  if (e.shiftKey && e.button === 0) {
-    if (state.mouseUpShiftTabId === null) {
-      state.mouseUpShiftTabId = tab.id ?? null
-      tab.sel = !tab.sel
-      mouseUpShiftMode = tab.sel
-    } else {
-      selectRange(state.mouseUpShiftTabId, tab.id, !mouseUpShiftMode)
-      state.mouseUpShiftTabId = null
-    }
-    return
-  }
-  state.mouseUpShiftTabId = null
+//   if (e.shiftKey && e.button === 0) {
+//     if (state.mouseUpShiftTabId === null) {
+//       state.mouseUpShiftTabId = tab.id ?? null
+//       tab.sel = !tab.sel
+//       mouseUpShiftMode = tab.sel
+//     } else {
+//       selectRange(state.mouseUpShiftTabId, tab.id, !mouseUpShiftMode)
+//       state.mouseUpShiftTabId = null
+//     }
+//     return
+//   }
+//   state.mouseUpShiftTabId = null
 
-  if (e.button === 0) {
-    tab.sel = !tab.sel
-  }
-}
+//   if (e.button === 0) {
+//     tab.sel = !tab.sel
+//   }
+// }
 
-function onTabDragStart(e: DragEvent): void {
-  clearTimeout(longClickTimeout)
+// function onTabDragStart(e: DragEvent): void {
+//   clearTimeout(longClickTimeout)
 
-  const target = e.currentTarget as HTMLElement
+//   const target = e.currentTarget as HTMLElement
 
-  if (target.parentElement) {
-    const parentEl = target.parentElement as HTMLElement
-    const bounds = parentEl.getBoundingClientRect()
-    const x = e.clientX - bounds.x
-    const y = e.clientY - bounds.y
-    if (e.dataTransfer) e.dataTransfer.setDragImage(target.parentElement, x, y)
-  }
-}
+//   if (target.parentElement) {
+//     const parentEl = target.parentElement as HTMLElement
+//     const bounds = parentEl.getBoundingClientRect()
+//     const x = e.clientX - bounds.x
+//     const y = e.clientY - bounds.y
+//     if (e.dataTransfer) e.dataTransfer.setDragImage(target.parentElement, x, y)
+//   }
+// }
 
-function selectRange(tabAId: ID, tabBId?: ID, deselectActually = false): void {
-  if (!state.activeSnapshot) return
-  if (tabBId === undefined) tabBId = tabAId
-  const oneTab = tabAId === tabBId
-  let inRange = false
+// function selectRange(tabAId: ID, tabBId?: ID, deselectActually = false): void {
+//   if (!state.activeSnapshot) return
+//   if (tabBId === undefined) tabBId = tabAId
+//   const oneTab = tabAId === tabBId
+//   let inRange = false
 
-  for (const win of state.activeSnapshot.windows) {
-    for (const panel of win.panels) {
-      for (const tab of panel.tabs) {
-        if (inRange) tab.sel = !deselectActually
+//   for (const win of state.activeSnapshot.windows) {
+//     for (const panel of win.panels) {
+//       for (const tab of panel.tabs) {
+//         if (inRange) tab.sel = !deselectActually
 
-        if (tab.id === tabAId || tab.id === tabBId) {
-          inRange = !inRange
-          if (inRange) tab.sel = !deselectActually
-          if (oneTab) inRange = !inRange
-        }
-      }
-    }
-  }
-}
+//         if (tab.id === tabAId || tab.id === tabBId) {
+//           inRange = !inRange
+//           if (inRange) tab.sel = !deselectActually
+//           if (oneTab) inRange = !inRange
+//         }
+//       }
+//     }
+//   }
+// }
 
 function resetSelection(snapshot?: SnapshotState | null): void {
   if (!snapshot && state.activeSnapshot) snapshot = state.activeSnapshot
@@ -339,30 +311,30 @@ function resetSelection(snapshot?: SnapshotState | null): void {
 
 function onClick() {
   state.mouseUpShiftTabId = null
-  mouseUpShiftMode = true
+  // mouseUpShiftMode = true
 }
 
-async function openTab(tab: SnapTabState): Promise<void> {
-  const activePanel = await IPC.sidebar(Windows.id, 'getActivePanelConfig')
+// async function openTab(tab: SnapTabState): Promise<void> {
+//   const activePanel = await IPC.sidebar(Windows.id, 'getActivePanelConfig')
 
-  if (Utils.isTabsPanel(activePanel)) {
-    const item: ItemInfo = {
-      id: tab.id ?? NOID,
-      url: tab.url,
-      title: tab.title,
-      container: tab.containerId ?? CONTAINER_ID,
-    }
-    await IPC.sidebar(Windows.id, 'openTabs', [item], { panelId: activePanel.id })
-  } else {
-    const conf: browser.tabs.CreateProperties = {
-      url: Utils.normalizeUrl(tab.url, tab.title),
-      windowId: Windows.id,
-      active: false,
-      cookieStoreId: tab.containerId ?? CONTAINER_ID,
-    }
-    browser.tabs.create(conf)
-  }
-}
+//   if (Utils.isTabsPanel(activePanel)) {
+//     const item: ItemInfo = {
+//       id: tab.id ?? NOID,
+//       url: tab.url,
+//       title: tab.title,
+//       container: tab.containerId ?? CONTAINER_ID,
+//     }
+//     await IPC.sidebar(Windows.id, 'openTabs', [item], { panelId: activePanel.id })
+//   } else {
+//     const conf: browser.tabs.CreateProperties = {
+//       url: Utils.normalizeUrl(tab.url, tab.title),
+//       windowId: Windows.id,
+//       active: false,
+//       cookieStoreId: tab.containerId ?? CONTAINER_ID,
+//     }
+//     browser.tabs.create(conf)
+//   }
+// }
 
 async function openSelectedTabs(): Promise<void> {
   if (!state.activeSnapshot) return

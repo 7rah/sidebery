@@ -15,7 +15,11 @@
   @mousedown="onTabMouseDown($event, tab)"
   @mouseup.stop.prevent="onTabMouseUp($event, tab)")
   .container-mark(v-if="tab.containerIcon")
-  .drop-down-btn(v-if="tab.isParent" @click="Snapshots.foldBranchInViewer(index, panel.tabs)")
+  .drop-down-btn(
+    v-if="tab.isParent"
+    @click="Snapshots.foldBranchInViewer(index, panel.tabs)"
+    @mousedown.stop.prevent=""
+    @mouseup.stop.prevent="")
     svg.exp-icon: use(xlink:href="#icon_expand")
     .branch-len {{tab.branchLen}}
   .icon
@@ -43,15 +47,13 @@ import { Snapshots } from 'src/services/snapshots'
 import { Favicons } from 'src/services/_services.fg'
 import { IPC, Utils } from 'src/services/_services'
 import { Windows } from 'src/services/windows'
+import { SnapshotsViewerState } from './snapshots.vue'
 
 interface SnapTabProps {
   index: number
   tab: SnapTabState
   panel: SnapPanelState
-  viewerState: {
-    activeSnapshot: SnapshotState | null
-    mouseUpShiftTabId: ID | null
-  }
+  viewerState: SnapshotsViewerState
 }
 
 const props = defineProps<SnapTabProps>()
@@ -71,7 +73,6 @@ function onTabMouseDown(e: MouseEvent, tab: SnapTabState): void {
   }
 }
 
-let mouseUpShiftMode = true
 function onTabMouseUp(e: MouseEvent, tab: SnapTabState): void {
   clearTimeout(longClickTimeout)
   if (mouseDownTabId !== tab.id) {
@@ -84,9 +85,9 @@ function onTabMouseUp(e: MouseEvent, tab: SnapTabState): void {
     if (props.viewerState.mouseUpShiftTabId === null) {
       props.viewerState.mouseUpShiftTabId = tab.id ?? null
       tab.sel = !tab.sel
-      mouseUpShiftMode = tab.sel
+      props.viewerState.mouseUpShiftMode = tab.sel
     } else {
-      selectRange(props.viewerState.mouseUpShiftTabId, tab.id, !mouseUpShiftMode)
+      selectRange(props.viewerState.mouseUpShiftTabId, tab.id, !props.viewerState.mouseUpShiftMode)
       props.viewerState.mouseUpShiftTabId = null
     }
     return
@@ -117,9 +118,9 @@ function onCheckboxMouseUp(e: MouseEvent, tab: SnapTabState): void {
     if (props.viewerState.mouseUpShiftTabId === null) {
       props.viewerState.mouseUpShiftTabId = tab.id ?? null
       tab.sel = !tab.sel
-      mouseUpShiftMode = tab.sel
+      props.viewerState.mouseUpShiftMode = tab.sel
     } else {
-      selectRange(props.viewerState.mouseUpShiftTabId, tab.id, !mouseUpShiftMode)
+      selectRange(props.viewerState.mouseUpShiftTabId, tab.id, !props.viewerState.mouseUpShiftMode)
       props.viewerState.mouseUpShiftTabId = null
     }
     return

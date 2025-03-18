@@ -45,7 +45,7 @@ import { ItemInfo, SnapPanelState, SnapshotState, SnapTabState } from 'src/types
 import { CONTAINER_ID, NOID } from 'src/defaults'
 import { Snapshots } from 'src/services/snapshots'
 import { Favicons } from 'src/services/_services.fg'
-import { IPC, Utils } from 'src/services/_services'
+import { IPC, Logs, Utils } from 'src/services/_services'
 import { Windows } from 'src/services/windows'
 import { SnapshotsViewerState } from './snapshots.vue'
 
@@ -145,19 +145,24 @@ function onTabDragStart(e: DragEvent): void {
 }
 
 async function openTab(tab: SnapTabState): Promise<void> {
-  const activePanel = await IPC.sidebar(Windows.id, 'getActivePanelConfig')
+  let activePanel
+  try {
+    activePanel = await IPC.sidebar(Windows.id, 'getActivePanelConfig')
+  } catch (err) {
+    Logs.err('snapshots.tab.openTab: Unable to getActivePanelConfig:', err)
+  }
 
   if (Utils.isTabsPanel(activePanel)) {
     const item: ItemInfo = {
       id: tab.id ?? NOID,
-      url: tab.url,
+      url: Snapshots.updateInternalUrl(tab.url),
       title: tab.title,
       container: tab.containerId ?? CONTAINER_ID,
     }
     await IPC.sidebar(Windows.id, 'openTabs', [item], { panelId: activePanel.id })
   } else {
     const conf: browser.tabs.CreateProperties = {
-      url: Utils.normalizeUrl(tab.url, tab.title),
+      url: Utils.normalizeUrl(Snapshots.updateInternalUrl(tab.url), tab.title),
       windowId: Windows.id,
       active: false,
       cookieStoreId: tab.containerId ?? CONTAINER_ID,

@@ -871,16 +871,21 @@ export function updateInternalUrls(snapshot: NormalizedSnapshot): void {
   for (const win of snapshot.tabs) {
     for (const panel of win) {
       for (const tab of panel) {
-        if (Utils.isGroupUrl(tab.url)) {
-          const newUrl = GROUP_URL + tab.url.slice(GROUP_URL_LEN)
-          tab.url = newUrl
-        } else if (Utils.isUrlUrl(tab.url)) {
-          const newUrl = URL_URL + tab.url.slice(URL_URL_LEN)
-          tab.url = newUrl
-        }
+        tab.url = updateInternalUrl(tab.url)
       }
     }
   }
+}
+
+export function updateInternalUrl(url: string): string {
+  if (Utils.isGroupUrl(url)) {
+    const newUrl = GROUP_URL + url.slice(GROUP_URL_LEN)
+    url = newUrl
+  } else if (Utils.isUrlUrl(url)) {
+    const newUrl = URL_URL + url.slice(URL_URL_LEN)
+    url = newUrl
+  }
+  return url
 }
 
 export async function getStoredSnapshots() {

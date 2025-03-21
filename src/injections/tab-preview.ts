@@ -93,14 +93,14 @@ function setPreview(preview: string) {
     state.previewEl1.style.setProperty('background-image', preview ? `url("${preview}")` : 'none')
     setTimeout(() => {
       if (state.previewEl2) state.previewEl2.style.setProperty('opacity', '0')
-    }, 100)
+    }, 10)
   } else {
     previewElN++
     state.previewEl2.style.setProperty('opacity', '1')
     state.previewEl2.style.setProperty('background-image', preview ? `url("${preview}")` : 'none')
     setTimeout(() => {
       if (state.previewEl1) state.previewEl1.style.setProperty('opacity', '0')
-    }, 100)
+    }, 10)
   }
 }
 
@@ -357,7 +357,7 @@ async function main() {
     background-position: 50% 0%;
     background-size: cover;
     opacity: 0;
-    transition: opacity .2s;
+    transition: opacity .12s;
 `
 
   // Create preview 2 element
@@ -374,7 +374,7 @@ async function main() {
     background-position: 50% 0%;
     background-size: cover;
     opacity: 0;
-    transition: opacity .2s;
+    transition: opacity .12s;
 `
 
   compensateZoom()

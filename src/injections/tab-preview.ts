@@ -128,8 +128,6 @@ function hide() {
 
 function compensateZoom() {
   if (!state.rootEl) return
-  if (state.referenceDevicePixelRatio === window.devicePixelRatio) return
-  state.compScale = state.referenceDevicePixelRatio / window.devicePixelRatio
   state.rootEl.style.transform = `scale(${state.compScale})`
 }
 
@@ -161,8 +159,7 @@ function getPopupHeight() {
 }
 
 function calcPositionRestraints() {
-  state.minY = MARGIN / state.compScale
-  state.maxY = (state.pageHeight - MARGIN) / state.compScale - state.popupHeight
+  state.maxY = state.pageHeight / state.compScale - MARGIN - state.popupHeight
 }
 
 async function main() {
@@ -184,8 +181,12 @@ async function main() {
   window.sideberyInitData = undefined
   window.onSideberyInitDataReady = undefined
 
-  const sidebarHeight = initData.sh || window.innerHeight
-  const heightDifBetweenSidebarAndPage = window.innerHeight - sidebarHeight
+  if (state.referenceDevicePixelRatio !== window.devicePixelRatio) {
+    state.compScale = state.referenceDevicePixelRatio / window.devicePixelRatio
+  }
+  const pageHeight = Math.trunc(window.innerHeight / state.compScale)
+  const sidebarHeight = initData.sh || pageHeight
+  const heightDifBetweenSidebarAndPage = pageHeight - sidebarHeight
 
   state.winId = initData.winId
   state.referenceDevicePixelRatio = initData.dpr

@@ -150,7 +150,7 @@ function calcScale(previewWidth: number, previewHeight: number, devicePixelRatio
   let scale = (devicePixelRatio / Math.min(w, h)) * 1.5
   if (scale > devicePixelRatio) scale = devicePixelRatio
 
-  return scale
+  return scale * state.compScale
 }
 
 function getPopupHeight() {

@@ -175,6 +175,7 @@ export interface SettingsState {
 
   // Appearance
   fontSize: (typeof SETTINGS_OPTIONS.fontSize)[number]
+  fontFamily: string
   bgNoise?: boolean // DEPR
   animations: boolean
   animationSpeed: (typeof SETTINGS_OPTIONS.animationSpeed)[number]

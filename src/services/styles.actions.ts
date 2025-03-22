@@ -700,6 +700,17 @@ export function updateGlobalFontSize(): void {
   else htmlEl.style.fontSize = '16px'
 }
 
+export function udpateGlobalFontFamily() {
+  const bodyEl = document.body
+  if (!bodyEl) return
+
+  if (Settings.state.fontFamily) {
+    bodyEl.style.setProperty('--general-font-family', `${Settings.state.fontFamily}, system-ui`)
+  } else {
+    bodyEl.style.setProperty('--general-font-family', 'system-ui')
+  }
+}
+
 export function setupListeners(): void {
   if (Info.isSidebar) {
     Store.onKeyChange('sidebarCSS', css => {

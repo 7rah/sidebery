@@ -172,6 +172,7 @@ export function updateSettingsFg(settings?: SettingsState | null): void {
   const colorScheme = prev.colorScheme !== next.colorScheme
   const ctxMenuCtrIgnore = prev.ctxMenuIgnoreContainers !== next.ctxMenuIgnoreContainers
   const fontSize = prev.fontSize !== next.fontSize
+  const fontFamily = prev.fontFamily !== next.fontFamily
   const updateSidebarTitleChanged = prev.updateSidebarTitle !== next.updateSidebarTitle
   const pinnedTabsPositionChanged = prev.pinnedTabsPosition !== next.pinnedTabsPosition
   const colorizeTabsChanged = prev.colorizeTabs !== next.colorizeTabs
@@ -252,6 +253,7 @@ export function updateSettingsFg(settings?: SettingsState | null): void {
   }
   if (ctxMenuCtrIgnore) Menu.parseContainersRules()
   if (fontSize) Styles.updateGlobalFontSize()
+  if (fontFamily) Styles.udpateGlobalFontFamily()
 
   if (colorScheme) Styles.updateColorScheme()
 

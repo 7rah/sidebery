@@ -24,6 +24,7 @@ async function main(): Promise<void> {
     Settings.loadSettings().then(() => {
       Styles.initColorScheme()
       Styles.updateGlobalFontSize()
+      Styles.udpateGlobalFontFamily()
     }),
     Windows.loadWindowInfo(),
   ])

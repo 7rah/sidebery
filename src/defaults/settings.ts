@@ -174,6 +174,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
 
   // Appearance
   fontSize: 'm',
+  fontFamily: '',
   animations: true,
   animationSpeed: 'norm',
   theme: 'proton',

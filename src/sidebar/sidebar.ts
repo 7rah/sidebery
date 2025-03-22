@@ -103,6 +103,7 @@ async function main(): Promise<void> {
   Sync.initSync(reactive)
 
   Styles.updateGlobalFontSize()
+  Styles.udpateGlobalFontFamily()
 
   const app = createApp(SidebarRoot)
   app.mount('#root_container')

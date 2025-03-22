@@ -3954,6 +3954,16 @@ Przykłady: "*", "ctrl+$", "ctrl+alt+g"`,
   'settings.font_size_xxl': {
     en: 'XXL',
   },
+  'settings.font_family': {
+    en: 'Default font-family',
+    de: 'Standardmäßig font-family',
+    hu: 'Alapértelmezett font-family',
+    pl: 'Domyślna font-family',
+    ru: 'font-family по умолчанию',
+    zh_CN: '默认 font-family',
+    zh_TW: '預設 font-family',
+    ja: 'デフォルト font-family',
+  },
   'settings.animations': {
     en: 'Animations',
     de: 'Animationen',

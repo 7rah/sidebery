@@ -508,6 +508,9 @@ function onTabCreated(nativeTab: NativeTab, attached?: boolean): void {
         if (reopenedTabInfo.children.includes(t.id)) {
           t.parentId = tab.id
           treeHasChanged = true
+          Tabs.saveTabData(t.id, false, 250)
+        } else if (t.lvl > tab.lvl) {
+          continue
         } else {
           break
         }

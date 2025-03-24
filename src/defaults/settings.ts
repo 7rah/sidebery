@@ -29,7 +29,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   navActBookmarksPanelLeftClickAction: 'none',
   navTabsPanelMidClickAction: 'discard',
   navBookmarksPanelMidClickAction: 'none',
-  navSwitchPanelsWheel: true,
+  navSwitchPanelsWheel: false,
   subPanelRecentlyClosedBar: true,
   subPanelBookmarks: true,
   subPanelHistory: true,

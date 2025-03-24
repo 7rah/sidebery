@@ -7,7 +7,7 @@
   :data-hidden-panels-bar="Sidebar.reactive.hiddenPanelsPopup"
   :data-layout="layout"
   @drop="onDrop")
-  .main-items(@wheel.stop.prevent="onNavWheel")
+  .main-items(@wheel="onNavWheel")
     NavItemComponent(
       v-for="(item, i) in nav?.visibleItems"
       :key="item.id"

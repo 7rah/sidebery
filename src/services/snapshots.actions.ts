@@ -591,7 +591,7 @@ async function openWindow(snapshot: NormalizedSnapshot, winIndex: number): Promi
 
       const tabInfo: ItemInfo = {
         id: index++,
-        url: Utils.normalizeUrl(tab.url),
+        url: Utils.normalizeUrl(tab.url, tab.title),
         title: tab.title,
         parentId: NOID,
         folded: tab.folded,

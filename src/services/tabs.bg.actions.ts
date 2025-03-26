@@ -459,10 +459,15 @@ export async function updateBgTabsTreeData(): Promise<void> {
 
     const treeDataById: Record<ID, TabTreeData> = {}
     let prevPanelId = NOID
-    for (const data of tree) {
-      if (data.pid === SAMEID) data.pid = prevPanelId
-      prevPanelId = data.pid ?? NOID
-      treeDataById[data.id] = data
+    if (tree) {
+      for (const data of tree) {
+        if (data.pid === SAMEID) data.pid = prevPanelId
+        prevPanelId = data.pid ?? NOID
+        treeDataById[data.id] = data
+      }
+      Logs.info('Tabs.updateBgTabsTreeData: win/sdb tabs len:', window.tabs.length, tree.length)
+    } else {
+      Logs.warn('Tabs.updateBgTabsTreeData: No sidebar tree, i:', i)
     }
 
     for (const tab of window.tabs) {
@@ -471,8 +476,6 @@ export async function updateBgTabsTreeData(): Promise<void> {
       tab.panelId = NOID
       tab.customTitle = undefined
       tab.customColor = undefined
-
-      if (!tree) continue
 
       const tabInfo = treeDataById[tab.id]
       if (!tabInfo) continue

@@ -495,17 +495,17 @@ async function adaptTabsPanels(snapshot: NormalizedSnapshot): Promise<void> {
   // Recreate tabs panels
   let changed = false
   for (let i = 0; i < snapshot.sidebar.nav.length; i++) {
-    const snapId = snapshot.sidebar.nav[i]
-    if (snapId === undefined) continue
-    const snapPanel = snapshot.sidebar.panels[snapId]
+    const snapNavId = snapshot.sidebar.nav[i]
+    if (snapNavId === undefined) continue
+    const snapPanel = snapshot.sidebar.panels[snapNavId]
     if (!snapPanel || snapPanel.type !== PanelType.tabs) continue
 
-    const storedIndex = stored.sidebar.nav.indexOf(snapId)
+    const storedIndex = stored.sidebar.nav.indexOf(snapNavId)
     if (storedIndex === -1) {
       changed = true
       lastStoredTabsPanelIndex++
-      stored.sidebar.nav.splice(lastStoredTabsPanelIndex, 0, snapId)
-      stored.sidebar.panels[snapId] = snapPanel
+      stored.sidebar.nav.splice(lastStoredTabsPanelIndex, 0, snapNavId)
+      stored.sidebar.panels[snapNavId] = snapPanel
     }
   }
 

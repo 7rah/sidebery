@@ -227,6 +227,7 @@ async function showPreview(tabId: ID, y?: number) {
     } else if (deadOnArrival) {
       state.status = Status.Closed
       deadOnArrival = false
+      if (IPC.state.previewConnection) IPC.sendToPreview('close')
       return
     }
 

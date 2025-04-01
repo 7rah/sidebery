@@ -388,14 +388,18 @@ function onTabDoubleClickUpdate(value: string): void {
 }
 
 function onActivateOnMouseUpUpdate(value: boolean): void {
-  if (!value && Settings.state.tabLongLeftClick === 'edit_title') {
+  if (
+    !value &&
+    (Settings.state.tabLongLeftClick === 'edit_title' ||
+      Settings.state.tabLongLeftClick === 'discard')
+  ) {
     Settings.state.tabLongLeftClick = 'none'
   }
   Settings.saveDebounced(150)
 }
 
 function onTabLongLeftClickUpdate(value: string): void {
-  if (value === 'edit_title' && !Settings.state.activateOnMouseUp) {
+  if ((value === 'edit_title' || value === 'discard') && !Settings.state.activateOnMouseUp) {
     Settings.state.activateOnMouseUp = true
   }
   Settings.saveDebounced(150)

@@ -47,6 +47,13 @@ section(ref="el")
     v-model:value="Settings.state.copyMultiBullet"
     :or="translate('settings.copy_multi_bullet_or')"
     @update:value="Settings.saveDebounced(500)")
+  TextField.copyTemplatesTextField(
+    label="settings.copy_templates"
+    v-model:value="Settings.state.copyTemplates"
+    or="---"
+    input-width="66"
+    :note="translate('settings.copy_templates_note')"
+    @update:value="Settings.saveDebounced(500)")
   .ctrls
     .btn(@click="showStorageView") {{translate('settings.storage_btn')}} {{state.storageOveral}}
     .btn(@click="showPermissionsPopup") {{translate('settings.permissions_btn')}}

@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   markWindowPreface: '[Sidebery] ',
   copyTreeIndent: '',
   copyMultiBullet: '',
+  copyTemplates: 'HTML:%B<a href="%U">%CT</a>\nMarkdown:%B[%CT](%U)',
 
   // Context menu
   ctxMenuNative: false,

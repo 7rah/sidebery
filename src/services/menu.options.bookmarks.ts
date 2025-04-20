@@ -314,7 +314,7 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
       label: translate('menu.copy_urls', len),
       icon: 'icon_link',
       badge: 'icon_copy_badge',
-      onClick: () => Bookmarks.copyUrls(selected),
+      onClick: () => Bookmarks.copy(selected, { str: '%B%U', hasU: true, hasB: true }),
     }
 
     if (selected.length === 1 && firstNode?.type === 'separator') option.inactive = true
@@ -331,12 +331,32 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
       label: translate('menu.copy_titles', len),
       icon: 'icon_title',
       badge: 'icon_copy_badge',
-      onClick: () => Bookmarks.copyTitles(selected),
+      onClick: () => Bookmarks.copy(selected, { str: '%B%CT', hasCT: true, hasB: true }),
     }
 
     if (selected.length === 1 && firstNode?.type === 'separator') option.inactive = true
     if (!Settings.state.ctxMenuRenderInact && option.inactive) return
     return option
+  },
+
+  copyBookmarksByTemplates: () => {
+    const opts: MenuOption[] = []
+    const selected = Selection.get()
+    const firstNode = Bookmarks.reactive.byId[selected[0]]
+    const inactive = selected.length === 1 && firstNode?.type === 'separator'
+    if (!Settings.state.ctxMenuRenderInact && inactive) return
+
+    for (const t of Settings.copyTemplates) {
+      opts.push({
+        label: translate('menu.copy_by_template', t.name),
+        icon: 'icon_code',
+        badge: 'icon_copy_badge',
+        inactive,
+        onClick: () => Bookmarks.copy(selected, t),
+      })
+    }
+
+    if (opts.length) return opts
   },
 
   moveBookmarksTo: () => {

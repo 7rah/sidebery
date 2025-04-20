@@ -2,6 +2,7 @@ import * as Utils from 'src/utils'
 import { translate } from 'src/dict'
 import { Bookmark, Panel, Notification, DialogConfig, DragInfo, SubPanelType } from 'src/types'
 import { Stored, BookmarksSortType, DstPlaceInfo, ItemInfo, TabsPanel } from 'src/types'
+import { CopyTemplate } from 'src/types'
 import { CONTAINER_ID, NOID, BKM_OTHER_ID, BKM_ROOT_ID, PRE_SCROLL, GROUP_RE } from 'src/defaults'
 import { FOLDER_NAME_DATA_RE, GROUP_URL, PIN_MARK } from 'src/defaults'
 import { TAB_BOOKMARK_COLOR, BOOKMARK_TAB_COLOR } from 'src/defaults'
@@ -1461,53 +1462,46 @@ export async function openAsTabsPanel(folder: Bookmark, showConfigPopup: boolean
   if (ids.length) await Bookmarks.open(ids, { panelId: tabsPanel.id })
 }
 
-export async function copyUrls(ids: ID[]): Promise<void> {
+export async function copy(ids: ID[], template: CopyTemplate) {
   if (!Permissions.reactive.clipboardWrite) {
     const result = await Permissions.request('clipboardWrite')
     if (!result) return
   }
 
-  // Collect nodes to copy from
-  const nodes: Bookmark[] = []
-  for (const node of Bookmarks.listBookmarks()) {
-    const includedItself = ids.includes(node.id)
-    if (includedItself || ids.includes(node.parentId)) {
-      if (!includedItself && node.children?.length) ids.push(node.id)
-      if (node.url) nodes.push(node)
-    }
-  }
-
-  const urls: string[] = []
-  const bullet = nodes.length > 1 ? Settings.state.copyMultiBullet : ''
-  for (const node of nodes) {
-    urls.push(bullet + node.url)
-  }
-
-  const resultString = urls.join('\n')
+  const nodes = getNodesWithChildren(ids, node => {
+    if (template.hasU && !node.url) return false
+    if ((template.hasT || template.hasCT) && !node.title) return false
+    return true
+  })
+  const strings = formatCopyTemplate(ids, nodes, template)
+  const resultString = strings.join('\n')
   if (resultString) navigator.clipboard.writeText(resultString)
 }
 
-export async function copyTitles(ids: ID[]): Promise<void> {
-  if (!Permissions.reactive.clipboardWrite) {
-    const result = await Permissions.request('clipboardWrite')
-    if (!result) return
-  }
-
-  // Collect nodes to copy from
+function getNodesWithChildren(ids: ID[], pred: (node: Bookmark) => any): Bookmark[] {
   const nodes: Bookmark[] = []
   for (const node of Bookmarks.listBookmarks()) {
     const includedItself = ids.includes(node.id)
     if (includedItself || ids.includes(node.parentId)) {
       if (!includedItself && node.children?.length) ids.push(node.id)
-      if (node.title) nodes.push(node)
+      if (pred(node)) nodes.push(node)
     }
   }
+  return nodes
+}
 
-  const titles: string[] = []
+function formatCopyTemplate(ids: ID[], nodes: Bookmark[], template: CopyTemplate): string[] {
+  const isDBG = template.str === '%DBG'
+  const lines: string[] = []
   const bullet = nodes.length > 1 ? Settings.state.copyMultiBullet : ''
   const indent = Settings.state.copyTreeIndent
   const indentLevelsById = new Map<ID, number>()
   for (const node of nodes) {
+    if (isDBG) {
+      lines.push(JSON.stringify(node, null, 2))
+      continue
+    }
+
     // Get indent lvl
     const path = Bookmarks.getPath(node)
     const pNodeId = path.findLast(id => ids.includes(id))
@@ -1515,11 +1509,15 @@ export async function copyTitles(ids: ID[]): Promise<void> {
     const indentLvl = pLvl !== undefined ? pLvl + 1 : 0
 
     indentLevelsById.set(node.id, indentLvl)
-    titles.push(indent.repeat(indentLvl) + bullet + node.title)
-  }
 
-  const resultString = titles.join('\n')
-  if (resultString) navigator.clipboard.writeText(resultString)
+    let result = template.str
+    if (template.hasB) result = result.replaceAll('%B', bullet)
+    if (template.hasCT) result = result.replaceAll('%CT', node.title)
+    if (template.hasT) result = result.replaceAll('%T', node.title)
+    if (template.hasU) result = result.replaceAll('%U', node.url ?? '')
+    lines.push(indent.repeat(indentLvl) + result)
+  }
+  return lines
 }
 
 export function isFolderWithURL(folder: Bookmark): boolean {

@@ -266,6 +266,7 @@ function onCmd(name: string): void {
   else if (name === 'open_panel_config') onKeyOpenPanelConfig()
   else if (name === 'copy_title') onKeyCopyTitle()
   else if (name === 'copy_url') onKeyCopyUrl()
+  else if (name.startsWith('copy_tmplt_')) onKeyCopyByTemplate(parseInt(name.slice(-1)))
   else if (name === 'open_bookmarks_sub_panel') onKeyOpenBookmarksSubPanel()
   else if (name === 'open_sync_popup') onKeyOpenSyncPopup()
 }
@@ -300,25 +301,42 @@ function onKeySwitchToPrevPanel() {
 
 function onKeyCopyUrl() {
   if (Selection.isTabs()) {
-    Tabs.copyUrls(Selection.get())
+    Tabs.copy(Selection.get(), { str: '%B%U', hasB: true, hasU: true })
     Selection.resetSelection()
   } else if (Selection.isBookmarks()) {
-    Bookmarks.copyUrls(Selection.get())
+    Bookmarks.copy(Selection.get(), { str: '%B%U', hasB: true, hasU: true })
     Selection.resetSelection()
   } else {
-    Tabs.copyUrls([Tabs.activeId])
+    Tabs.copy([Tabs.activeId], { str: '%B%U', hasB: true, hasU: true })
   }
 }
 
 function onKeyCopyTitle() {
   if (Selection.isTabs()) {
-    Tabs.copyTitles(Selection.get())
+    Tabs.copy(Selection.get(), { str: '%B%CT', hasB: true, hasCT: true })
     Selection.resetSelection()
   } else if (Selection.isBookmarks()) {
-    Bookmarks.copyTitles(Selection.get())
+    Bookmarks.copy(Selection.get(), { str: '%B%CT', hasB: true, hasCT: true })
     Selection.resetSelection()
   } else {
-    Tabs.copyTitles([Tabs.activeId])
+    Tabs.copy([Tabs.activeId], { str: '%B%CT', hasB: true, hasCT: true })
+  }
+}
+
+function onKeyCopyByTemplate(n: number) {
+  if (isNaN(n)) return
+
+  const template = Settings.copyTemplates[n]
+  if (!template) return
+
+  if (Selection.isTabs()) {
+    Tabs.copy(Selection.get(), template)
+    Selection.resetSelection()
+  } else if (Selection.isBookmarks()) {
+    Bookmarks.copy(Selection.get(), template)
+    Selection.resetSelection()
+  } else {
+    Tabs.copy([Tabs.activeId], template)
   }
 }
 

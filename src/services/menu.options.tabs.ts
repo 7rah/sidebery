@@ -449,7 +449,7 @@ export const tabsMenuOptions: Record<string, () => MenuOption | MenuOption[] | u
       label: translate('menu.copy_urls', selected.length),
       icon: 'icon_link',
       badge: 'icon_copy_badge',
-      onClick: () => Tabs.copyUrls(selected),
+      onClick: () => Tabs.copy(selected, { str: '%B%U', hasB: true, hasU: true }),
     }
   },
 
@@ -459,8 +459,24 @@ export const tabsMenuOptions: Record<string, () => MenuOption | MenuOption[] | u
       label: translate('menu.copy_titles', selected.length),
       icon: 'icon_title',
       badge: 'icon_copy_badge',
-      onClick: () => Tabs.copyTitles(selected),
+      onClick: () => Tabs.copy(selected, { str: '%B%CT', hasB: true, hasCT: true }),
     }
+  },
+
+  copyTabsByTemplates: () => {
+    const opts: MenuOption[] = []
+    const selected = Selection.get()
+
+    for (const t of Settings.copyTemplates) {
+      opts.push({
+        label: translate('menu.copy_by_template', t.name),
+        icon: 'icon_code',
+        badge: 'icon_copy_badge',
+        onClick: () => Tabs.copy(selected, t),
+      })
+    }
+
+    if (opts.length) return opts
   },
 
   colorizeTab: () => {

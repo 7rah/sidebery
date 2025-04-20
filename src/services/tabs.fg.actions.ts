@@ -4,7 +4,7 @@ import { BKM_OTHER_ID, ADDON_HOST, BKM_ROOT_ID } from 'src/defaults'
 import { translate } from 'src/dict'
 import { Stored, Tab, Panel, TabCache, ActiveTabsHistory, ReactiveTabProps } from 'src/types'
 import { Notification, TabSessionData, TabsTreeData, NativeTab } from 'src/types'
-import { ItemInfo, TabTreeData, TabStatus } from 'src/types'
+import { ItemInfo, TabTreeData, TabStatus, CopyTemplate } from 'src/types'
 import { Tabs } from 'src/services/tabs.fg'
 import * as IPC from 'src/services/ipc'
 import * as Logs from 'src/services/logs'
@@ -2585,7 +2585,7 @@ export function findAncestor(childTab: Tab, cb: (t: Tab) => any): Tab | undefine
   }
 }
 
-export async function copyUrls(ids: ID[]): Promise<void> {
+export async function copy(ids: ID[], template: CopyTemplate) {
   if (!Permissions.reactive.clipboardWrite) {
     const result = await Permissions.request('clipboardWrite')
     if (!result) return
@@ -2593,13 +2593,19 @@ export async function copyUrls(ids: ID[]): Promise<void> {
 
   Tabs.sortTabIds(ids)
 
-  const urls: string[] = []
+  const isDBG = template.str === '%DBG'
+  const lines: string[] = []
   const bullet = ids.length > 1 ? Settings.state.copyMultiBullet : ''
   const indent = Settings.state.copyTreeIndent
   const indentLevelsById = new Map<ID, number>()
   for (const id of ids) {
     const tab = Tabs.byId[id]
     if (!tab) continue
+
+    if (isDBG) {
+      lines.push(JSON.stringify(tab, null, 2))
+      continue
+    }
 
     // Get indent lvl
     let indentLvl = 0
@@ -2610,42 +2616,16 @@ export async function copyUrls(ids: ID[]): Promise<void> {
     }
 
     indentLevelsById.set(tab.id, indentLvl)
-    urls.push(indent.repeat(indentLvl) + bullet + tab.url)
+
+    let result = template.str
+    if (template.hasB) result = result.replaceAll('%B', bullet)
+    if (template.hasCT) result = result.replaceAll('%CT', tab.customTitle || tab.title)
+    if (template.hasT) result = result.replaceAll('%T', tab.title)
+    if (template.hasU) result = result.replaceAll('%U', tab.url)
+    lines.push(indent.repeat(indentLvl) + result)
   }
 
-  const resultString = urls.join('\n')
-  if (resultString) navigator.clipboard.writeText(resultString)
-}
-
-export async function copyTitles(ids: ID[]): Promise<void> {
-  if (!Permissions.reactive.clipboardWrite) {
-    const result = await Permissions.request('clipboardWrite')
-    if (!result) return
-  }
-
-  Tabs.sortTabIds(ids)
-
-  const titles: string[] = []
-  const bullet = ids.length > 1 ? Settings.state.copyMultiBullet : ''
-  const indent = Settings.state.copyTreeIndent
-  const indentLevelsById = new Map<ID, number>()
-  for (const id of ids) {
-    const tab = Tabs.byId[id]
-    if (!tab) continue
-
-    // Get indent lvl
-    let indentLvl = 0
-    if (tab.lvl > 0) {
-      const pTabId = Tabs.findAncestorId(id, pid => ids.includes(pid))
-      const pLvl = pTabId ? indentLevelsById.get(pTabId) : undefined
-      indentLvl = pLvl !== undefined ? pLvl + 1 : 0
-    }
-
-    indentLevelsById.set(tab.id, indentLvl)
-    titles.push(indent.repeat(indentLvl) + bullet + tab.title)
-  }
-
-  const resultString = titles.join('\n')
+  const resultString = lines.join('\n')
   if (resultString) navigator.clipboard.writeText(resultString)
 }
 

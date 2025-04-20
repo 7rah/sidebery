@@ -1115,6 +1115,14 @@ export const setupPageTranslations: Translations = {
     zh_TW: '沒有標記',
     ja: 'マークなし',
   },
+  'settings.copy_templates': {
+    en: 'Copy by templates',
+  },
+  'settings.copy_templates_note': {
+    en: `To use this feature enable "Copy by templates..." option in context menu editor or set keybindings.
+Templates are written per line in the form "Template name:Template" (without quotes).
+Available variables: %B - a list mark (bullet); %CT - custom title or title; %T - title; %U - URL`,
+  },
   'settings.storage_btn': {
     en: "Sidebery's data:",
     de: 'Sidebery-Daten',

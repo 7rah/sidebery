@@ -1467,16 +1467,23 @@ export async function copyUrls(ids: ID[]): Promise<void> {
     if (!result) return
   }
 
-  let urls = ''
+  // Collect nodes to copy from
+  const nodes: Bookmark[] = []
   for (const node of Bookmarks.listBookmarks()) {
     const includedItself = ids.includes(node.id)
     if (includedItself || ids.includes(node.parentId)) {
       if (!includedItself && node.children?.length) ids.push(node.id)
-      if (node.url) urls += '\n' + node.url
+      if (node.url) nodes.push(node)
     }
   }
 
-  const resultString = urls.trim()
+  const urls: string[] = []
+  const bullet = nodes.length > 1 ? Settings.state.copyMultiBullet : ''
+  for (const node of nodes) {
+    urls.push(bullet + node.url)
+  }
+
+  const resultString = urls.join('\n')
   if (resultString) navigator.clipboard.writeText(resultString)
 }
 
@@ -1486,27 +1493,32 @@ export async function copyTitles(ids: ID[]): Promise<void> {
     if (!result) return
   }
 
-  let titles = ''
-  const indent = Settings.state.copyTreeIndent
-  const indentLevelsById = new Map<ID, number>()
+  // Collect nodes to copy from
+  const nodes: Bookmark[] = []
   for (const node of Bookmarks.listBookmarks()) {
     const includedItself = ids.includes(node.id)
     if (includedItself || ids.includes(node.parentId)) {
       if (!includedItself && node.children?.length) ids.push(node.id)
-      if (!node.title) continue
-
-      // Get indent lvl
-      const path = Bookmarks.getPath(node)
-      const pNodeId = path.findLast(id => ids.includes(id))
-      const pLvl = pNodeId ? indentLevelsById.get(pNodeId) : undefined
-      const indentLvl = pLvl !== undefined ? pLvl + 1 : 0
-
-      indentLevelsById.set(node.id, indentLvl)
-      titles += '\n' + indent.repeat(indentLvl) + node.title
+      if (node.title) nodes.push(node)
     }
   }
 
-  const resultString = titles.trim()
+  const titles: string[] = []
+  const bullet = nodes.length > 1 ? Settings.state.copyMultiBullet : ''
+  const indent = Settings.state.copyTreeIndent
+  const indentLevelsById = new Map<ID, number>()
+  for (const node of nodes) {
+    // Get indent lvl
+    const path = Bookmarks.getPath(node)
+    const pNodeId = path.findLast(id => ids.includes(id))
+    const pLvl = pNodeId ? indentLevelsById.get(pNodeId) : undefined
+    const indentLvl = pLvl !== undefined ? pLvl + 1 : 0
+
+    indentLevelsById.set(node.id, indentLvl)
+    titles.push(indent.repeat(indentLvl) + bullet + node.title)
+  }
+
+  const resultString = titles.join('\n')
   if (resultString) navigator.clipboard.writeText(resultString)
 }
 

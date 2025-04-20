@@ -2593,7 +2593,8 @@ export async function copyUrls(ids: ID[]): Promise<void> {
 
   Tabs.sortTabIds(ids)
 
-  let urls = ''
+  const urls: string[] = []
+  const bullet = ids.length > 1 ? Settings.state.copyMultiBullet : ''
   const indent = Settings.state.copyTreeIndent
   const indentLevelsById = new Map<ID, number>()
   for (const id of ids) {
@@ -2609,10 +2610,10 @@ export async function copyUrls(ids: ID[]): Promise<void> {
     }
 
     indentLevelsById.set(tab.id, indentLvl)
-    urls += '\n' + indent.repeat(indentLvl) + tab.url
+    urls.push(indent.repeat(indentLvl) + bullet + tab.url)
   }
 
-  const resultString = urls.trim()
+  const resultString = urls.join('\n')
   if (resultString) navigator.clipboard.writeText(resultString)
 }
 
@@ -2624,7 +2625,8 @@ export async function copyTitles(ids: ID[]): Promise<void> {
 
   Tabs.sortTabIds(ids)
 
-  let titles = ''
+  const titles: string[] = []
+  const bullet = ids.length > 1 ? Settings.state.copyMultiBullet : ''
   const indent = Settings.state.copyTreeIndent
   const indentLevelsById = new Map<ID, number>()
   for (const id of ids) {
@@ -2640,10 +2642,10 @@ export async function copyTitles(ids: ID[]): Promise<void> {
     }
 
     indentLevelsById.set(tab.id, indentLvl)
-    titles += '\n' + indent.repeat(indentLvl) + tab.title
+    titles.push(indent.repeat(indentLvl) + bullet + tab.title)
   }
 
-  const resultString = titles.trim()
+  const resultString = titles.join('\n')
   if (resultString) navigator.clipboard.writeText(resultString)
 }
 

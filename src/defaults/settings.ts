@@ -10,6 +10,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   markWindow: false,
   markWindowPreface: '[Sidebery] ',
   copyTreeIndent: '',
+  copyMultiBullet: '',
 
   // Context menu
   ctxMenuNative: false,

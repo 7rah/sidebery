@@ -42,6 +42,11 @@ section(ref="el")
     v-model:value="Settings.state.copyTreeIndent"
     :or="translate('settings.copy_title_url_indent_or')"
     @update:value="Settings.saveDebounced(500)")
+  TextField.-inline(
+    label="settings.copy_multi_bullet"
+    v-model:value="Settings.state.copyMultiBullet"
+    :or="translate('settings.copy_multi_bullet_or')"
+    @update:value="Settings.saveDebounced(500)")
   .ctrls
     .btn(@click="showStorageView") {{translate('settings.storage_btn')}} {{state.storageOveral}}
     .btn(@click="showPermissionsPopup") {{translate('settings.permissions_btn')}}

@@ -11,6 +11,7 @@ export interface SettingsState {
   markWindow: boolean
   markWindowPreface: string
   copyTreeIndent: string
+  copyMultiBullet: string
 
   // Context menu
   ctxMenuNative: boolean

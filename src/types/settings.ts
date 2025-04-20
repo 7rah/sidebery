@@ -10,7 +10,7 @@ export interface SettingsState {
   updateSidebarTitle: boolean
   markWindow: boolean
   markWindowPreface: string
-  copyTitleURLIndent: string
+  copyTreeIndent: string
 
   // Context menu
   ctxMenuNative: boolean

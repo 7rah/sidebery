@@ -39,7 +39,7 @@ section(ref="el")
       @update:value="Settings.saveDebounced(500)")
   TextField.-inline(
     label="settings.copy_title_url_indent"
-    v-model:value="Settings.state.copyTitleURLIndent"
+    v-model:value="Settings.state.copyTreeIndent"
     :or="translate('settings.copy_title_url_indent_or')"
     @update:value="Settings.saveDebounced(500)")
   .ctrls

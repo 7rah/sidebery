@@ -2594,7 +2594,7 @@ export async function copyUrls(ids: ID[]): Promise<void> {
   Tabs.sortTabIds(ids)
 
   let urls = ''
-  const indent = Settings.state.copyTitleURLIndent
+  const indent = Settings.state.copyTreeIndent
   const indentLevelsById = new Map<ID, number>()
   for (const id of ids) {
     const tab = Tabs.byId[id]
@@ -2625,7 +2625,7 @@ export async function copyTitles(ids: ID[]): Promise<void> {
   Tabs.sortTabIds(ids)
 
   let titles = ''
-  const indent = Settings.state.copyTitleURLIndent
+  const indent = Settings.state.copyTreeIndent
   const indentLevelsById = new Map<ID, number>()
   for (const id of ids) {
     const tab = Tabs.byId[id]

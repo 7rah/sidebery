@@ -1487,7 +1487,7 @@ export async function copyTitles(ids: ID[]): Promise<void> {
   }
 
   let titles = ''
-  const indent = Settings.state.copyTitleURLIndent
+  const indent = Settings.state.copyTreeIndent
   const indentLevelsById = new Map<ID, number>()
   for (const node of Bookmarks.listBookmarks()) {
     const includedItself = ids.includes(node.id)

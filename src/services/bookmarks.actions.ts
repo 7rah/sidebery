@@ -1487,11 +1487,22 @@ export async function copyTitles(ids: ID[]): Promise<void> {
   }
 
   let titles = ''
+  const indent = Settings.state.copyTitleURLIndent
+  const indentLevelsById = new Map<ID, number>()
   for (const node of Bookmarks.listBookmarks()) {
     const includedItself = ids.includes(node.id)
     if (includedItself || ids.includes(node.parentId)) {
       if (!includedItself && node.children?.length) ids.push(node.id)
-      if (node.title) titles += '\n' + node.title
+      if (!node.title) continue
+
+      // Get indent lvl
+      const path = Bookmarks.getPath(node)
+      const pNodeId = path.findLast(id => ids.includes(id))
+      const pLvl = pNodeId ? indentLevelsById.get(pNodeId) : undefined
+      const indentLvl = pLvl !== undefined ? pLvl + 1 : 0
+
+      indentLevelsById.set(node.id, indentLvl)
+      titles += '\n' + indent.repeat(indentLvl) + node.title
     }
   }
 

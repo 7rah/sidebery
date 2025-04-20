@@ -9,6 +9,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   updateSidebarTitle: true,
   markWindow: false,
   markWindowPreface: '[Sidebery] ',
+  copyTitleURLIndent: '',
 
   // Context menu
   ctxMenuNative: false,

@@ -2591,10 +2591,25 @@ export async function copyUrls(ids: ID[]): Promise<void> {
     if (!result) return
   }
 
+  Tabs.sortTabIds(ids)
+
   let urls = ''
+  const indent = Settings.state.copyTitleURLIndent
+  const indentLevelsById = new Map<ID, number>()
   for (const id of ids) {
     const tab = Tabs.byId[id]
-    if (tab) urls += '\n' + tab.url
+    if (!tab) continue
+
+    // Get indent lvl
+    let indentLvl = 0
+    if (tab.lvl > 0) {
+      const pTabId = Tabs.findAncestorId(id, pid => ids.includes(pid))
+      const pLvl = pTabId ? indentLevelsById.get(pTabId) : undefined
+      indentLvl = pLvl !== undefined ? pLvl + 1 : 0
+    }
+
+    indentLevelsById.set(tab.id, indentLvl)
+    urls += '\n' + indent.repeat(indentLvl) + tab.url
   }
 
   const resultString = urls.trim()
@@ -2607,10 +2622,25 @@ export async function copyTitles(ids: ID[]): Promise<void> {
     if (!result) return
   }
 
+  Tabs.sortTabIds(ids)
+
   let titles = ''
+  const indent = Settings.state.copyTitleURLIndent
+  const indentLevelsById = new Map<ID, number>()
   for (const id of ids) {
     const tab = Tabs.byId[id]
-    if (tab) titles += '\n' + tab.title
+    if (!tab) continue
+
+    // Get indent lvl
+    let indentLvl = 0
+    if (tab.lvl > 0) {
+      const pTabId = Tabs.findAncestorId(id, pid => ids.includes(pid))
+      const pLvl = pTabId ? indentLevelsById.get(pTabId) : undefined
+      indentLvl = pLvl !== undefined ? pLvl + 1 : 0
+    }
+
+    indentLevelsById.set(tab.id, indentLvl)
+    titles += '\n' + indent.repeat(indentLvl) + tab.title
   }
 
   const resultString = titles.trim()

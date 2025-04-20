@@ -37,6 +37,11 @@ section(ref="el")
       :note="translate('settings.mark_window_preface_note')"
       :inactive="!Settings.state.markWindow"
       @update:value="Settings.saveDebounced(500)")
+  TextField.-inline(
+    label="settings.copy_title_url_indent"
+    v-model:value="Settings.state.copyTitleURLIndent"
+    :or="translate('settings.copy_title_url_indent_or')"
+    @update:value="Settings.saveDebounced(500)")
   .ctrls
     .btn(@click="showStorageView") {{translate('settings.storage_btn')}} {{state.storageOveral}}
     .btn(@click="showPermissionsPopup") {{translate('settings.permissions_btn')}}

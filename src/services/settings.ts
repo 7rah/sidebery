@@ -18,5 +18,10 @@ export const Settings = {
   activateAfterClosingPrev: false,
   activateAfterClosingPrevAct: false,
 
+  tabsUpdateMarkAll: false,
+  tabsUpdateMarkPin: false,
+  tabsUpdateMarkNorm: false,
+  tabsUpdateMarkNone: false,
+
   ...SettingsActions,
 }

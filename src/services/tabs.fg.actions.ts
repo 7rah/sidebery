@@ -66,7 +66,7 @@ export function mutateNativeTabToSideberyTab(nativeTab: NativeTab): Tab {
       isParent: tab.isParent,
       folded: tab.folded,
       title: tab.title,
-      tooltip: Settings.state.previewTabs ? '' : getTooltip(tab),
+      tooltip: '',
       customTitle: tab.customTitle ?? null,
       customTitleEdit: false,
       customColor: tab.customColor ?? null,
@@ -107,7 +107,7 @@ export function createReactiveProps(tab: Tab): ReactiveTabProps {
     isParent: tab.isParent,
     folded: tab.folded,
     title: tab.title,
-    tooltip: Settings.state.previewTabs ? '' : getTooltip(tab),
+    tooltip: '',
     customTitle: tab.customTitle ?? null,
     customTitleEdit: false,
     customColor: tab.customColor ?? null,
@@ -2735,14 +2735,7 @@ export function pringDbgInfo(reset = false): void {
   }
 }
 
-const updateTooltipBuf: Map<ID, number> = new Map()
-export function updateTooltipDebounced(tabId: ID, delay: number) {
-  clearTimeout(updateTooltipBuf.get(tabId))
-  updateTooltipBuf.set(tabId, setTimeout(updateTooltip, delay, tabId))
-}
 export function updateTooltip(tabId: ID) {
-  updateTooltipBuf.delete(tabId)
-
   const tab = Tabs.byId[tabId]
   if (!tab) return
 

@@ -538,12 +538,16 @@ function onMouseEnter(e: MouseEvent) {
 
   if (Settings.state.previewTabs) {
     Preview.setTargetTab(props.tabId, e.clientY)
+  } else {
+    updateTooltipDebounced()
   }
 }
 
 function onMouseLeave(): void {
   if (Settings.state.previewTabs) {
     Preview.resetTargetTab(props.tabId)
+  } else {
+    clearTimeout(updateTooltipDebouncedTimeout)
   }
 }
 
@@ -575,6 +579,14 @@ function onAudioMouseUp(e: MouseEvent, tab: Tab) {
       Sidebar.updateMediaStateOfPanelDebounced(100, tab.panelId, tab)
     }
   }
+}
+
+let updateTooltipDebouncedTimeout: number | undefined
+function updateTooltipDebounced() {
+  clearTimeout(updateTooltipDebouncedTimeout)
+  updateTooltipDebouncedTimeout = setTimeout(() => {
+    Tabs.updateTooltip(props.tabId)
+  }, Settings.state.updTooltipDelay)
 }
 
 function discardOrCloseTabs(selectedTabs: ID[]): void {

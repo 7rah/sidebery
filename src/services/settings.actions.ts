@@ -208,10 +208,6 @@ export function updateSettingsFg(settings?: SettingsState | null): void {
     Tabs.list.forEach(t => (t.reactive.unread = t.unread = false))
   }
 
-  if (tabsUrlInTooltip || previewTabs) {
-    Tabs.list.forEach(t => Tabs.updateTooltip(t.id))
-  }
-
   if (previewTabs || previewTabsMode) {
     Preview.resetMode()
   }
@@ -307,6 +303,11 @@ function updPrecalcSettings() {
   Settings.activateAfterClosingNext = Settings.state.activateAfterClosing === 'next'
   Settings.activateAfterClosingPrev = Settings.state.activateAfterClosing === 'prev'
   Settings.activateAfterClosingPrevAct = Settings.state.activateAfterClosing === 'prev_act'
+
+  Settings.tabsUpdateMarkAll = Settings.state.tabsUpdateMark === 'all'
+  Settings.tabsUpdateMarkPin = Settings.state.tabsUpdateMark === 'pin'
+  Settings.tabsUpdateMarkNorm = Settings.state.tabsUpdateMark === 'norm'
+  Settings.tabsUpdateMarkNone = Settings.state.tabsUpdateMark === 'none'
 }
 
 export function resetSettings(): void {

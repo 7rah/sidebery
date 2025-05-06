@@ -500,6 +500,16 @@
     "zh_TW": "取消選取",
     "ja": "選択をリセット"
   },
+  "KbLockSel": {
+    "en": "Lock/Unlock selection",
+    "de": "Auswahl sperren/entsperren",
+    "hu": "Kijelölés zárolása/feloldása",
+    "pl": "Zablokuj/odblokuj wybór",
+    "ru": "Заблокировать/разблокировать выбор",
+    "zh_CN": "锁定/解锁选择",
+    "zh_TW": "鎖定/解鎖選擇",
+    "ja": "選択のロック/ロック解除"
+  },
   "KbActivate": {
     "en": "Activate selection",
     "de": "Auswahl aktivieren oder aktiven Tab-Zweig oder ausgewählten Lesezeichenordner ein-/ausklappen",

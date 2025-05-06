@@ -15,7 +15,7 @@ import { Containers } from 'src/services/containers'
 import { Bookmarks } from 'src/services/bookmarks'
 import { Permissions } from 'src/services/permissions'
 import { Notifications } from 'src/services/notifications'
-import { Selection } from './selection'
+import * as Selection from './selection'
 
 const URL_WITHOUT_PROTOCOL_RE = /^(.+\.)\/?(.+\/)?\w+/
 
@@ -74,6 +74,7 @@ export function mutateNativeTabToSideberyTab(nativeTab: NativeTab): Tab {
       lvl: tab.lvl,
       branchLen: 0,
       sel: tab.sel,
+      selLock: tab.selLock,
       warn: tab.warn,
       updated: tab.updated,
       unread: !!tab.unread,
@@ -115,6 +116,7 @@ export function createReactiveProps(tab: Tab): ReactiveTabProps {
     lvl: tab.lvl,
     branchLen: 0,
     sel: tab.sel,
+    selLock: tab.selLock,
     warn: tab.warn,
     updated: tab.updated,
     unread: !!tab.unread,

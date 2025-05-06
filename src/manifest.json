@@ -154,6 +154,9 @@
       },
       "description": "__MSG_KbResetSelection__"
     },
+    "lock_selection": {
+      "description": "__MSG_KbLockSel__"
+    },
     "menu": {
       "description": "__MSG_KbMenu__"
     },

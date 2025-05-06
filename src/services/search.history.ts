@@ -1,7 +1,7 @@
 import { History } from 'src/services/history'
 import { Sidebar } from 'src/services/sidebar'
 import { Search } from 'src/services/search'
-import { Selection } from 'src/services/selection'
+import * as Selection from 'src/services/selection'
 import { Utils, Logs } from './_services'
 import { Visit } from 'src/types'
 

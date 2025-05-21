@@ -215,7 +215,7 @@ function updSidebarEls() {
 
 onMounted(() => {
   updSidebarEls()
-  document.addEventListener('keyup', onDocumentKeyup)
+  document.addEventListener('keydown', onDocumentKeydown)
 })
 
 function getPanelComponent(panel: Panel): Component | undefined {
@@ -237,7 +237,7 @@ function onFocusOut(e: FocusEvent): void {
   }
 }
 
-function onDocumentKeyup(e: KeyboardEvent): void {
+function onDocumentKeydown(e: KeyboardEvent): void {
   // Close popups
   if (e.code === 'Escape') {
     // Context menu

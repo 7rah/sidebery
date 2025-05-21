@@ -1068,6 +1068,7 @@ declare namespace browser {
       query: string
       engine?: string
       tabId?: ID
+      disposition?: 'CURRENT_TAB' | 'NEW_TAB' | 'NEW_WINDOW'
     }
 
     function search(searchProps: SearchProps): void

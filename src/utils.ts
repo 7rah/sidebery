@@ -1,7 +1,7 @@
 import { GroupConfig, AnyFunc, NavItem, NavBtn, NavSpace, Panel, PanelConfig, Tab } from './types'
-import { TabsPanel, BookmarksPanel, PanelType, HistoryPanel, SyncPanel } from './types'
+import { TabsPanel, BookmarksPanel, PanelType, HistoryPanel, SyncPanel, ItemInfo } from './types'
 import { NavItemClass, SubListTitleInfo, RGBA, RGB, AnyAsyncFunc } from './types'
-import { DOMAIN_RE, URL_PAGE_RE, URL_URL } from './defaults'
+import { DOMAIN_RE, GROUP_URL, NOID, URL_PAGE_RE, URL_URL } from './defaults'
 import { translate } from './dict'
 
 // prettier-ignore
@@ -510,6 +510,30 @@ export function createGroupUrl(name?: string, conf?: GroupConfig): string {
   if (!name) name = uid()
   if (conf && conf.pin !== undefined) urlBase += '?pin=' + conf.pin
   return urlBase + `#${encodeURIComponent(name)}`
+}
+
+export function updateGroupUrlBase(url: string): string {
+  const index = url.indexOf('group.html') + 10
+  const newUrl = GROUP_URL + url.slice(index)
+  return newUrl
+}
+
+export function updatePlaceholderUrlBase(url: string): string {
+  const index = url.indexOf('url.html') + 8
+  const newUrl = URL_URL + url.slice(index)
+  return newUrl
+}
+
+export function getGroupName(url: string): string | undefined {
+  let urlInfo
+  try {
+    urlInfo = new URL(url)
+  } catch {
+    return
+  }
+  if (!urlInfo.hash) return
+
+  return decodeURIComponent(urlInfo.hash.slice(1))
 }
 
 /**

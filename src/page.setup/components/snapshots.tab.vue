@@ -67,7 +67,7 @@ function onTabMouseDown(e: MouseEvent, tab: SnapTabState): void {
 
   if (e.button === 0) {
     longClickTimeout = setTimeout(() => {
-      tab.sel = true
+      toggleTab(tab)
       mouseDownTabId = undefined
     }, LONG_CLICK_DELAY)
   }
@@ -83,9 +83,7 @@ function onTabMouseUp(e: MouseEvent, tab: SnapTabState): void {
 
   if (e.shiftKey && e.button === 0) {
     if (props.viewerState.mouseUpShiftTabId === null) {
-      props.viewerState.mouseUpShiftTabId = tab.id ?? null
-      tab.sel = !tab.sel
-      props.viewerState.mouseUpShiftMode = tab.sel
+      toggleTab(tab)
     } else {
       selectRange(props.viewerState.mouseUpShiftTabId, tab.id, !props.viewerState.mouseUpShiftMode)
       props.viewerState.mouseUpShiftTabId = null
@@ -118,12 +116,6 @@ function onCheckboxMouseUp(e: MouseEvent, tab: SnapTabState): void {
   if (e.button !== 0) return
 
   const viewerState = props.viewerState
-  // Helper to toggle the tab selection and update viewerState.
-  const toggleTab = (tab: SnapTabState): void => {
-    viewerState.mouseUpShiftTabId = tab.id ?? null
-    tab.sel = !tab.sel
-    viewerState.mouseUpShiftMode = tab.sel
-  }
 
   if (e.shiftKey) {
     if (viewerState.mouseUpShiftTabId === null) {
@@ -196,5 +188,11 @@ function selectRange(tabAId: ID, tabBId?: ID, deselectActually = false): void {
       }
     }
   }
+}
+
+function toggleTab(tab: SnapTabState): void {
+  props.viewerState.mouseUpShiftTabId = tab.id ?? null
+  tab.sel = !tab.sel
+  props.viewerState.mouseUpShiftMode = tab.sel
 }
 </script>

@@ -188,11 +188,21 @@ function selectRange(tabAId: ID, tabBId?: ID, deselectActually = false): void {
       }
     }
   }
+
+  // Toggle selection state for folded children
+  if (props.tab.isParent && props.tab.folded) {
+    Snapshots.selectBranchInViewer(props.index, props.panel.tabs, !!props.tab.sel)
+  }
 }
 
 function toggleTab(tab: SnapTabState): void {
   props.viewerState.mouseUpShiftTabId = tab.id ?? null
   tab.sel = !tab.sel
   props.viewerState.mouseUpShiftMode = tab.sel
+
+  // Toggle selection state for folded children
+  if (tab.isParent && tab.folded) {
+    Snapshots.selectBranchInViewer(props.index, props.panel.tabs, tab.sel)
+  }
 }
 </script>

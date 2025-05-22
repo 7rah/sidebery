@@ -287,6 +287,10 @@ function onRemovedTabHideBg(): void {
     Settings.state.hideFoldedTabs = false
     saveNeeded = true
   }
+  if (Settings.state.hideUnloadedTabs) {
+    Settings.state.hideUnloadedTabs = false
+    saveNeeded = true
+  }
 
   if (saveNeeded) {
     Settings.saveSettings()
@@ -297,6 +301,7 @@ function onRemovedTabHideFg(): void {
   if (Info.isSetup) {
     Settings.state.hideInact = false
     Settings.state.hideFoldedTabs = false
+    Settings.state.hideUnloadedTabs = false
   }
 }
 

@@ -160,6 +160,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   hideInact: false,
   hideFoldedTabs: false,
   hideFoldedParent: 'none',
+  hideUnloadedTabs: false,
   nativeHighlight: true,
 
   // Bookmarks

@@ -170,6 +170,7 @@ export function updateSettingsFg(settings?: SettingsState | null): void {
   const resetTree = prev.tabsTree !== next.tabsTree && prev.tabsTree
   const updateTree = prev.tabsTreeLimit !== next.tabsTreeLimit
   const hideFoldedTabs = prev.hideFoldedTabs !== next.hideFoldedTabs
+  const hideUnloadedTabs = prev.hideUnloadedTabs !== next.hideUnloadedTabs
   const hideFoldedParent = prev.hideFoldedParent !== next.hideFoldedParent
   const theme = prev.theme !== next.theme
   const highlightOpenBookmarks = prev.highlightOpenBookmarks !== next.highlightOpenBookmarks
@@ -235,7 +236,10 @@ export function updateSettingsFg(settings?: SettingsState | null): void {
     Sidebar.recalcVisibleTabs()
   }
 
-  if ((hideInactTabs || hideFoldedTabs || hideFoldedParent) && Sidebar.hasTabs) {
+  if (
+    (hideInactTabs || hideFoldedTabs || hideFoldedParent || hideUnloadedTabs) &&
+    Sidebar.hasTabs
+  ) {
     Tabs.updateNativeTabsVisibility()
   }
 

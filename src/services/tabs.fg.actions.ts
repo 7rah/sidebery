@@ -1214,6 +1214,10 @@ export async function discardTabs(tabIds: ID[] = []): Promise<void> {
       Logs.err('Tabs.discardTabs: Cannot discard (second try):', err)
     })
   }
+
+  if (Settings.state.hideUnloadedTabs) {
+    updateNativeTabsVisibility()
+  }
 }
 
 /**
@@ -1575,6 +1579,7 @@ export function updateNativeTabsVisibility(): void {
   const hideFolded = Settings.state.hideFoldedTabs
   const hideFoldedParent = hideFolded && Settings.state.hideFoldedParent === 'any'
   const hideFoldedGroup = hideFolded && Settings.state.hideFoldedParent === 'group'
+  const hideUnloaded = Settings.state.hideUnloadedTabs
   const hideInact = Settings.state.hideInact
 
   if (!browser.tabs.hide) return
@@ -1601,6 +1606,11 @@ export function updateNativeTabsVisibility(): void {
     }
 
     if (Utils.isTabsPanel(actPanel) && hideInact && tab.panelId !== actPanel.id) {
+      if (!tab.hidden) toHide.push(tab.id)
+      continue
+    }
+
+    if (hideUnloaded && tab.discarded) {
       if (!tab.hidden) toHide.push(tab.id)
       continue
     }

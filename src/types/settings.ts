@@ -159,6 +159,7 @@ export interface SettingsState {
   hideInact: boolean
   hideFoldedTabs: boolean
   hideFoldedParent: (typeof SETTINGS_OPTIONS.hideFoldedParent)[number]
+  hideUnloadedTabs: boolean
   nativeHighlight: boolean
 
   // Bookmarks

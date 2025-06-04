@@ -1,5 +1,6 @@
 import js from '@eslint/js'
 import ts from 'typescript-eslint'
+import globals from 'globals'
 import pluginVue from 'eslint-plugin-vue'
 import eslintConfigPrettier from 'eslint-config-prettier'
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
@@ -13,6 +14,9 @@ export default [
   {
     files: ['**/*.vue'],
     languageOptions: {
+      globals: {
+        ...globals.browser,
+      },
       parserOptions: {
         parser: {
           js: 'espree',

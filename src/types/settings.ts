@@ -94,6 +94,7 @@ export interface SettingsState {
   tabWarmupOnHover: boolean
   tabSwitchDelay: number
   forceDiscard: boolean
+  tabUpdDelay: number
 
   // New tab position
   moveNewTabPin: (typeof SETTINGS_OPTIONS.moveNewTabPin)[number]

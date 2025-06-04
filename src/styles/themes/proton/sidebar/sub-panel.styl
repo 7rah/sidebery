@@ -15,6 +15,12 @@
   z-index: 200
   transition: z-index var(--d-fast)
 
+// Make the inner scrollbox flex so that the height
+// of the scroll-container is calculated correctly
+.SubPanel .ScrollBox
+  display: flex
+  flex-direction: column
+
 .SubPanel .overlay
   position: absolute
   width: 100%

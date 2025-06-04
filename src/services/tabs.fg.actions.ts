@@ -16,6 +16,7 @@ import { Bookmarks } from 'src/services/bookmarks'
 import { Permissions } from 'src/services/permissions'
 import { Notifications } from 'src/services/notifications'
 import * as Selection from './selection'
+import { Favicons } from './_services.fg'
 
 const URL_WITHOUT_PROTOCOL_RE = /^(.+\.)\/?(.+\/)?\w+/
 
@@ -60,14 +61,11 @@ export function mutateNativeTabToSideberyTab(nativeTab: NativeTab): Tab {
       mediaPaused: tab.mediaPaused,
       containerColor: Containers.reactive.byId[tab.cookieStoreId]?.color ?? null,
       discarded: tab.discarded ?? false,
-      favIconUrl: tab.favIconUrl,
       pinned: tab.pinned,
       status: Tabs.getStatus(tab),
       isParent: tab.isParent,
       folded: tab.folded,
-      title: tab.title,
       tooltip: '',
-      customTitle: tab.customTitle ?? null,
       customTitleEdit: false,
       customColor: tab.customColor ?? null,
       url: tab.url,
@@ -102,14 +100,11 @@ export function createReactiveProps(tab: Tab): ReactiveTabProps {
     mediaPaused: tab.mediaPaused,
     containerColor: Containers.reactive.byId[tab.cookieStoreId]?.color ?? null,
     discarded: tab.discarded ?? false,
-    favIconUrl: tab.favIconUrl,
     pinned: tab.pinned,
     status: Tabs.getStatus(tab),
     isParent: tab.isParent,
     folded: tab.folded,
-    title: tab.title,
     tooltip: '',
-    customTitle: tab.customTitle ?? null,
     customTitleEdit: false,
     customColor: tab.customColor ?? null,
     url: tab.url,
@@ -402,7 +397,7 @@ function restoreTabsFromCache(
       const actualParentId = idsMap[data.parentId]
       if (actualParentId !== undefined) tab.parentId = actualParentId
       tab.reactive.folded = tab.folded = !!data.folded
-      if (data.customTitle) tab.reactive.customTitle = tab.customTitle = data.customTitle
+      if (data.customTitle) tab.customTitle = data.customTitle
       if (data.customColor) tab.reactive.customColor = tab.customColor = data.customColor
       idsMap[data.id] = tab.id
     }
@@ -465,7 +460,7 @@ function restoreTabsFromSessionData(
       const actualParentId = idsMap[data.parentId]
       if (actualParentId !== undefined) tab.parentId = actualParentId
       tab.reactive.folded = tab.folded = !!data.folded
-      if (data.customTitle) tab.reactive.customTitle = tab.customTitle = data.customTitle
+      if (data.customTitle) tab.customTitle = data.customTitle
       if (data.customColor) tab.reactive.customColor = tab.customColor = data.customColor
       idsMap[data.id] = tab.id
     }
@@ -2770,13 +2765,12 @@ export async function paste(dst: DstPlaceInfo) {
   }
 }
 
-let flashAnimationTimeout: number | undefined
 export function triggerFlashAnimation(tab: Tab): void {
-  if (flashAnimationTimeout) return
-  tab.reactive.flash = true
-  flashAnimationTimeout = setTimeout(() => {
-    flashAnimationTimeout = undefined
-    tab.reactive.flash = false
+  if (tab.flashAnimationTimeout) return
+  if (tab.flashFxEl) tab.flashFxEl.setAttribute('data-run', 'true')
+  tab.flashAnimationTimeout = setTimeout(() => {
+    tab.flashAnimationTimeout = undefined
+    if (tab.flashFxEl) tab.flashFxEl.setAttribute('data-run', 'false')
   }, 1000)
 }
 
@@ -2869,9 +2863,9 @@ export function switchToRecentlyActiveTab(scope = SwitchingTabScope.global, dir:
 export function pringDbgInfo(reset = false): void {
   for (const tab of Tabs.list) {
     if (reset) {
-      tab.reactive.title = tab.title
+      renderTitle(tab)
     } else {
-      tab.reactive.title = `${tab.id} i${tab.index} p${tab.parentId} l${tab.lvl} ${tab.title}`
+      renderTitle(tab, `${tab.id} i${tab.index} p${tab.parentId} l${tab.lvl} ${tab.title}`)
     }
   }
 }
@@ -2945,4 +2939,31 @@ function updateSuccession(exclude?: readonly ID[]) {
   }
 
   return firstSuccessor
+}
+
+export function renderTitle(tab: Tab, forcedTitle?: string) {
+  if (tab.titleEl) {
+    tab.titleEl.innerText = forcedTitle ?? tab.customTitle ?? tab.title
+  }
+}
+
+export function renderFavicon(tab: Tab) {
+  const imgEl = tab.favImgEl
+  const svgUseEl = tab.favSvgUseEl
+  if (tab.favIconUrl && imgEl) {
+    // Set img
+    imgEl.src = tab.favIconUrl
+    // Show img
+    imgEl.style.display = 'block'
+    // Hide svg
+    if (svgUseEl?.parentElement) svgUseEl.parentElement.style.display = 'none'
+  } else if (svgUseEl?.parentElement) {
+    // Set svg
+    const icon = tab.warn ? '#icon_warn' : Favicons.getFavPlaceholder(tab.url)
+    svgUseEl.setAttribute('href', icon)
+    // Show svg
+    svgUseEl.parentElement.style.display = 'block'
+    // Hide img
+    if (imgEl) imgEl.style.display = 'none'
+  }
 }

@@ -51,7 +51,10 @@ export async function loadFavicons(): Promise<void> {
       if (tab?.favIconUrl) continue
       const domain = Utils.getDomainOf(tab.url)
       const favicon = reactive.byDomains[domain]
-      if (favicon) tab.reactive.favIconUrl = tab.favIconUrl = favicon
+      if (favicon) {
+        tab.favIconUrl = favicon
+        Tabs.renderFavicon(tab)
+      }
     }
   }
 

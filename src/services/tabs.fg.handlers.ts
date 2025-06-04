@@ -178,7 +178,10 @@ async function tryToRestoreTabsStateFromSessionData(
     if (actualParentId !== undefined) tab.parentId = actualParentId
     tab.reactive.folded = tab.folded = !!data.folded
     tab.reactive.unread = tab.unread = false
-    if (data.customTitle) tab.reactive.customTitle = tab.customTitle = data.customTitle
+    if (data.customTitle) {
+      tab.customTitle = data.customTitle
+      Tabs.renderTitle(tab)
+    }
     if (data.customColor) tab.reactive.customColor = tab.customColor = data.customColor
 
     idsMap[data.id] = tab.id
@@ -305,7 +308,7 @@ function onTabCreated(nativeTab: NativeTab, attached?: boolean): void {
       tab.customColor = oldTab.customColor
       tab.reactive.customColor = oldTab.customColor ?? null
       tab.customTitle = oldTab.customTitle
-      tab.reactive.customTitle = oldTab.customTitle ?? null
+      Tabs.renderTitle(tab)
     }
   }
 
@@ -426,7 +429,8 @@ function onTabCreated(nativeTab: NativeTab, attached?: boolean): void {
   tab.index = index
   tab.parentId = Settings.state.tabsTree ? (tab.openerTabId ?? NOID) : NOID
   if (!tab.favIconUrl && !tab.internal && !tab.url.startsWith('a')) {
-    tab.reactive.favIconUrl = tab.favIconUrl = Favicons.getFavicon(tab.url)
+    tab.favIconUrl = Favicons.getFavicon(tab.url)
+    Tabs.renderFavicon(tab)
   }
   if (!attached && !Settings.state.autoExpandTabsOnNew && Tabs.byId[tab.parentId]?.folded) {
     tab.invisible = true
@@ -655,9 +659,8 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
       const groupTab = Tabs.getGroupTab(tab)
       if (groupTab && !groupTab.discarded) Tabs.updateGroupChild(groupTab.id, nativeTab.id)
 
-      if (!tab.favIconUrl) {
-        tab.favIconUrl = Favicons.getFavicon(tab.url)
-        tab.reactive.favIconUrl = tab.favIconUrl
+      if (!tab.favIconUrl && change.favIconUrl === undefined) {
+        change.favIconUrl = Favicons.getFavicon(tab.url)
       }
     }
 
@@ -670,7 +673,7 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
       if (Settings.state.animations && change.status !== tab.status) {
         Tabs.triggerFlashAnimation(tab)
       }
-      reloadTabFaviconDebounced(tab)
+      if (tab.internal) Tabs.renderFavicon(tab)
     }
     if (change.url && tab.mediaPaused) {
       Tabs.checkPausedMedia(tabId).then(stillPaused => {
@@ -692,9 +695,10 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
     }
     tab.internal = isInternal
     Tabs.cacheTabsData()
-    if (!change.url.startsWith(tab.url.slice(0, 16))) {
-      tab.favIconUrl = ''
-      tab.reactive.favIconUrl = ''
+
+    // Reset favicon
+    if (!change.url.startsWith(tab.url.slice(0, 16)) || tab.internal) {
+      change.favIconUrl = ''
     }
 
     // Update URL of the linked group page (for pinned tab)
@@ -752,15 +756,13 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
     }
   }
 
-  // Handle favicon change
-  if (change.favIconUrl) {
-    if (change.favIconUrl.startsWith('chrome:')) {
-      if (change.favIconUrl === 'chrome://global/skin/icons/warning.svg') {
-        tab.warn = true
-        tab.reactive.warn = true
-      }
-      change.favIconUrl = ''
+  // Handle Firefox internal favicon
+  if (change.favIconUrl?.startsWith('chrome:')) {
+    if (change.favIconUrl === 'chrome://global/skin/icons/warning.svg') {
+      tab.warn = true
+      tab.reactive.warn = true
     }
+    change.favIconUrl = ''
   }
 
   // Handle title change
@@ -804,9 +806,9 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
 
     // Reset custom title
     if (tab.isGroup && tab.active && change.title !== GROUP_INITIAL_TITLE) {
-      if (tab.reactive.customTitle) {
+      if (tab.customTitle) {
         tab.customTitle = undefined
-        tab.reactive.customTitle = null
+        Tabs.renderTitle(tab)
       }
     }
 
@@ -824,17 +826,6 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
 
   // Update tab object
   Object.assign(tab, change)
-  if (change.audible !== undefined) tab.reactive.mediaAudible = change.audible
-  if (change.discarded !== undefined) tab.reactive.discarded = change.discarded
-  if (change.favIconUrl !== undefined) {
-    if (tab.internal) tab.reactive.favIconUrl = undefined
-    else tab.reactive.favIconUrl = change.favIconUrl
-  }
-  if (change.mutedInfo?.muted !== undefined) tab.reactive.mediaMuted = change.mutedInfo.muted
-  if (change.pinned !== undefined) tab.reactive.pinned = change.pinned
-  if (change.status !== undefined) tab.reactive.status = Tabs.getStatus(tab)
-  if (change.title !== undefined) tab.reactive.title = change.title
-  if (change.url !== undefined) tab.reactive.url = change.url
 
   // Handle media state change
   if (change.audible !== undefined || change.mutedInfo?.muted !== undefined) {
@@ -929,48 +920,48 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
 
   // Colorize branch
   if (branchColorizationNeeded) Tabs.colorizeBranch(tab.id)
+
+  accumulateChangesForBatchUpdate(tab, change)
 }
 
-const reloadTabFaviconTimeout: Record<ID, number> = {}
-function reloadTabFaviconDebounced(tab: Tab, delay = 500): void {
-  clearTimeout(reloadTabFaviconTimeout[tab.id])
-  reloadTabFaviconTimeout[tab.id] = setTimeout(() => {
-    delete reloadTabFaviconTimeout[tab.id]
+let changeLock = false
+const changesBuf = new Map<Tab, browser.tabs.ChangeInfo>()
+function accumulateChangesForBatchUpdate(tab: Tab, change: browser.tabs.ChangeInfo) {
+  if (changeLock) {
+    let bufferedChange = changesBuf.get(tab)
+    if (bufferedChange) Object.assign(bufferedChange, change)
+    else bufferedChange = change
+    changesBuf.set(tab, bufferedChange)
+    return
+  }
 
-    if (tab.internal) {
-      tab.favIconUrl = undefined
-      tab.reactive.favIconUrl = undefined
-      return
-    }
+  updTabReactiveProps(change, tab)
 
-    browser.tabs
-      .get(tab.id)
-      .then(tabInfo => {
-        if (tabInfo.favIconUrl && !tabInfo.favIconUrl.startsWith('chrome:')) {
-          tab.favIconUrl = tabInfo.favIconUrl
-          tab.reactive.favIconUrl = tabInfo.favIconUrl
-        } else {
-          if (tabInfo.favIconUrl === 'chrome://global/skin/icons/warning.svg') {
-            tab.warn = true
-            tab.reactive.warn = true
-          } else if (tab.warn) {
-            tab.warn = false
-            tab.reactive.warn = false
-          }
-          tab.favIconUrl = ''
-          tab.reactive.favIconUrl = ''
-        }
+  changeLock = true
+  setTimeout(() => {
+    changeLock = false
+    updTabsReactiveProps()
+  }, Settings.state.tabUpdDelay)
+}
 
-        const groupTab = Tabs.getGroupTab(tab)
-        if (groupTab && !groupTab.discarded) Tabs.updateGroupChild(groupTab.id, tab.id)
-      })
-      .catch(() => {
-        // If I close containered tab opened from bg script
-        // I'll get 'updated' event with 'status': 'complete'
-        // and since tab is in 'removing' state I'll get this
-        // error.
-      })
-  }, delay)
+function updTabsReactiveProps() {
+  if (!changesBuf.size) return
+  changesBuf.forEach(updTabReactiveProps)
+  changesBuf.clear()
+}
+
+function updTabReactiveProps(change: browser.tabs.ChangeInfo, tab: Tab) {
+  if (change.audible !== undefined) tab.reactive.mediaAudible = change.audible
+  if (change.discarded !== undefined) tab.reactive.discarded = change.discarded
+  if (change.favIconUrl !== undefined) {
+    if (tab.internal) tab.favIconUrl = undefined
+    Tabs.renderFavicon(tab)
+  }
+  if (change.mutedInfo?.muted !== undefined) tab.reactive.mediaMuted = change.mutedInfo.muted
+  if (change.pinned !== undefined) tab.reactive.pinned = change.pinned
+  if (change.status !== undefined) tab.reactive.status = Tabs.getStatus(tab)
+  if (change.title !== undefined) Tabs.renderTitle(tab)
+  if (change.url !== undefined) tab.reactive.url = change.url
 }
 
 let recentlyRemovedChildParentMap: Record<ID, ID> | null = null

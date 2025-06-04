@@ -25,7 +25,8 @@ export async function editTabTitle(tabIds: ID[]) {
 
   Tabs.editableTabId = tab.id
   tab.reactive.customTitleEdit = true
-  tab.reactive.customTitle = tab.customTitle ?? tab.title
+  tab.customTitle ??= tab.title
+  Tabs.renderTitle(tab)
 
   await Utils.sleep(1)
 
@@ -45,7 +46,7 @@ export function saveCustomTitle(tabId: ID) {
   const tab = Tabs.byId[tabId]
   if (!tab) return
 
-  let value = tab.reactive.customTitle
+  let value = tab.customTitle
   if (value) value = value.trim()
   if (value === tab.title) value = ''
 
@@ -56,11 +57,10 @@ export function saveCustomTitle(tabId: ID) {
   } else {
     if (value) {
       tab.customTitle = value
-      tab.reactive.customTitle = value
     } else {
       tab.customTitle = undefined
-      tab.reactive.customTitle = null
     }
+    Tabs.renderTitle(tab)
   }
 
   Tabs.saveTabData(tab.id)
@@ -80,7 +80,8 @@ export function onOutsideEditingInput(value: string) {
   if (!inputEl) return
 
   inputEl.value = value
-  tab.reactive.customTitle = value
+  tab.customTitle = value
+  Tabs.renderTitle(tab)
 }
 
 export function onOutsideEditingEnter() {

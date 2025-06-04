@@ -30,38 +30,35 @@
   @mouseenter.stop="onMouseEnter"
   @mouseleave="onMouseLeave"
   @dblclick.prevent.stop="onDoubleClick")
-  .dnd-layer(data-dnd-type="tab" :data-dnd-id="tab.id")
+  .dnd-layer(v-once data-dnd-type="tab" :data-dnd-id="tab.id")
   .body
     .color-layer(v-if="tabColor" :style="{ '--tab-color': tabColor }")
-    .flash-fx(v-if="tab.reactive.flash")
+    .flash-fx(ref="flashFxEl")
     .unread-mark(v-if="tab.reactive.unread")
     .fav(@dragstart.stop.prevent)
-      img.fav-icon(v-if="tab.reactive.favIconUrl" :src="tab.reactive.favIconUrl" @error="onError" draggable="false")
-      svg.fav-icon(v-else): use(:xlink:href="favPlaceholder")
+      img.fav-icon(ref="favImgEl" @error="onError" draggable="false")
+      svg.fav-icon: use(ref="favSvgUseEl" href="#icon_ff")
       .exp(
         v-if="tab.reactive.isParent"
         @dblclick.prevent.stop
         @mousedown.stop="onExpandMouseDown"
         @mouseup="onExpandMouseUp")
-        svg.exp-icon: use(xlink:href="#icon_expand")
+        svg.exp-icon: use(href="#icon_expand")
       .badge
-      template(v-if="Settings.state.animations")
-        .progress-spinner(v-show="tab.reactive.status === TabStatus.Loading")
-      template(v-else)
-        svg.progress-spinner(v-show="tab.reactive.status === TabStatus.Loading")
-          use(xlink:href="#icon_hourglass")
+      .progress-spinner(v-if="Settings.state.animations")
+      svg.progress-spinner(v-else): use(href="#icon_hourglass")
       .child-count(v-if="tab.reactive.folded && tab.reactive.branchLen") {{tab.reactive.branchLen}}
     .audio(
       v-if="tab.reactive.mediaAudible || tab.reactive.mediaMuted || tab.reactive.mediaPaused"
       @mousedown.stop.prevent="onAudioMouseDown($event, tab)"
       @mouseup.stop="onAudioMouseUp($event, tab)")
-      svg.audio-icon.-loud: use(xlink:href="#icon_loud_badge")
-      svg.audio-icon.-mute: use(xlink:href="#icon_mute_badge")
-      svg.audio-icon.-pause: use(xlink:href="#icon_pause_12")
+      svg.audio-icon.-loud: use(href="#icon_loud_badge")
+      svg.audio-icon.-mute: use(href="#icon_mute_badge")
+      svg.audio-icon.-pause: use(href="#icon_pause_12")
     .t-box(v-if="!iconOnly")
       input.custom-title-input(
         v-if="tab.reactive.customTitleEdit"
-        v-model="tab.reactive.customTitle"
+        :value="tab.customTitle"
         autocomplete="off"
         autocorrect="off"
         autocapitalize="off"
@@ -69,18 +66,18 @@
         tabindex="-1"
         @blur="onCustomTitleBlur"
         @keydown="onCustomTitlteKD")
-      .title(v-else) {{tab.reactive.customTitle ?? tab.reactive.title}}
+      .title(ref="titleEl") {{tab.customTitle ?? tab.title}}
     .close(
       v-if="!iconOnly && Settings.state.tabRmBtn !== 'none'"
       @mousedown.stop="onMouseDownClose"
       @mouseup.stop="onMouseUpClose"
       @contextmenu.stop.prevent)
-      svg.close-icon: use(xlink:href="#icon_remove")
-    .ctx(v-if="tab.reactive.containerColor")
+      svg.close-icon: use(href="#icon_remove")
+    .ctx(v-once v-if="tab.reactive.containerColor")
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { DragInfo, DragItem, DragType, DropType, MenuType, Tab } from 'src/types'
 import { TabStatus } from 'src/types'
 import { Settings } from 'src/services/settings'
@@ -92,14 +89,23 @@ import { Tabs } from 'src/services/tabs.fg'
 import { Mouse } from 'src/services/mouse'
 import { DnD } from 'src/services/drag-and-drop'
 import { Search } from 'src/services/search'
-import * as Favicons from 'src/services/favicons.fg'
 import { NOID, RGB_COLORS } from 'src/defaults'
 import * as Utils from 'src/utils'
 import * as Logs from 'src/services/logs'
 import * as Preview from 'src/services/tabs.preview'
 
-const props = defineProps<{ tabId: ID; iconOnly?: boolean }>()
+const props = defineProps<{ tabId: ID }>()
 const tab = Tabs.byId[props.tabId] as Tab
+const iconOnly =
+  tab.pinned &&
+  (!Settings.state.pinnedTabsList ||
+    Settings.state.pinnedTabsPosition === 'left' ||
+    Settings.state.pinnedTabsPosition === 'right')
+
+const titleEl = ref<HTMLElement | null>(null)
+const favImgEl = ref<HTMLImageElement | null>(null)
+const favSvgUseEl = ref<SVGElement | null>(null)
+const flashFxEl = ref<HTMLElement | null>(null)
 
 const tabColor = computed<string>(() => {
   if (tab.reactive.customColor) return RGB_COLORS[tab.customColor as browser.ColorName]
@@ -115,9 +121,16 @@ const tabColor = computed<string>(() => {
     return ''
   }
 })
-const favPlaceholder = computed((): string => {
-  if (tab.reactive.warn) return '#icon_warn'
-  return Favicons.getFavPlaceholder(tab.reactive.url)
+
+onMounted(() => {
+  if (titleEl.value) tab.titleEl = titleEl.value
+  if (favImgEl.value) tab.favImgEl = favImgEl.value
+  if (favSvgUseEl.value) tab.favSvgUseEl = favSvgUseEl.value
+  if (flashFxEl.value) tab.flashFxEl = flashFxEl.value
+
+  if (tab.url !== 'about:blank') {
+    Tabs.renderFavicon(tab)
+  }
 })
 
 function shouldBeConvertedToGroup(): boolean {
@@ -151,7 +164,7 @@ function onMouseDownClose(e: MouseEvent): void {
     return
   }
   if (Tabs.editableTabId === tab.id) {
-    tab.reactive.customTitle = tab.title
+    tab.customTitle = tab.title
   } else if (e.button === 0) {
     if (shouldBeConvertedToGroup()) return convertToGroup()
     Tabs.removeTabs([tab.id])
@@ -662,11 +675,15 @@ function onExpandMouseUp(e: MouseEvent): void {
 }
 
 function onError(): void {
-  tab.reactive.favIconUrl = tab.favIconUrl = undefined
+  tab.favIconUrl = undefined
+  Tabs.renderFavicon(tab)
 }
 
-function onCustomTitleBlur() {
+function onCustomTitleBlur(e: Event) {
+  const titleInputEl = e.target as HTMLInputElement
+
   Tabs.editableTabId = NOID
+  tab.customTitle = titleInputEl.value
   tab.reactive.customTitleEdit = false
   Tabs.saveCustomTitle(tab.id)
 }

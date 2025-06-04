@@ -37,9 +37,15 @@ export interface Tab extends NativeTab {
   preventAutoReopening?: boolean
   previewImg?: string
   removing?: boolean
+  flashAnimationTimeout?: number
 
   reactive: ReactiveTabProps
   sessionData?: TabSessionData
+
+  titleEl?: HTMLElement
+  favImgEl?: HTMLImageElement
+  favSvgUseEl?: SVGElement
+  flashFxEl?: HTMLElement
 }
 
 export const enum TabStatus {
@@ -55,14 +61,11 @@ export interface ReactiveTabProps {
   mediaPaused: boolean
   containerColor: string | null
   discarded: boolean
-  favIconUrl?: string
   pinned: boolean
   status: TabStatus
   isParent: boolean
   folded: boolean
-  title: string
   tooltip: string
-  customTitle: string | null
   customTitleEdit: boolean
   url: string
   lvl: number

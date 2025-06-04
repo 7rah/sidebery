@@ -450,7 +450,10 @@ export async function open(
 
     if (item.customTitle) {
       const newTab = Tabs.byId[tab.id]
-      if (newTab) newTab.reactive.customTitle = newTab.customTitle = item.customTitle
+      if (newTab) {
+        newTab.customTitle = item.customTitle
+        Tabs.renderTitle(newTab)
+      }
     }
 
     if (item.customColor) {

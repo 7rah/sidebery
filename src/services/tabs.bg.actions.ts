@@ -189,16 +189,14 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo): void {
     }
   }
 
-  if (change.status !== undefined) {
-    if (change.status === 'complete') {
-      if (tab.url[0] !== 'a' && !tab.internal) {
-        reloadTabFaviconDebounced(tab)
-      }
-      // Check if injection of group-page script is needed
-      if (tab.internal && !change.title && tab.title === GROUP_INITIAL_TITLE) {
-        groupScriptInjectionIsNeeded = true
-      }
-    }
+  // Check if injection of group-page script is needed
+  if (
+    tab.internal &&
+    change.status === 'complete' &&
+    !change.title &&
+    tab.title === GROUP_INITIAL_TITLE
+  ) {
+    groupScriptInjectionIsNeeded = true
   }
 
   // Check if injection of group-page script is needed
@@ -206,11 +204,7 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo): void {
     groupScriptInjectionIsNeeded = true
   }
 
-  if (
-    change.favIconUrl?.startsWith('data:') &&
-    reloadTabFaviconTimeout[tab.id] === undefined &&
-    !tab.internal
-  ) {
+  if (!tab.internal && change.favIconUrl?.startsWith('data:')) {
     Favicons.saveFavicon(tab.url, change.favIconUrl)
   }
 
@@ -229,28 +223,6 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo): void {
     tab.proxified = false
     hideProxyBadge(tabId)
   }
-}
-
-const reloadTabFaviconTimeout: Record<ID, number> = {}
-function reloadTabFaviconDebounced(targetTab: Tab, delay = 500): void {
-  clearTimeout(reloadTabFaviconTimeout[targetTab.id])
-  reloadTabFaviconTimeout[targetTab.id] = setTimeout(() => {
-    delete reloadTabFaviconTimeout[targetTab.id]
-    if (!Tabs.byId[targetTab.id]) return
-    browser.tabs
-      .get(targetTab.id)
-      .then(tabInfo => {
-        if (tabInfo.favIconUrl && !tabInfo.favIconUrl.startsWith('chrome:')) {
-          targetTab.favIconUrl = tabInfo.favIconUrl
-        } else {
-          targetTab.favIconUrl = ''
-        }
-        Favicons.saveFavicon(targetTab.url, targetTab.favIconUrl)
-      })
-      .catch(err => {
-        Logs.err('Tabs.reloadTabFaviconDebounced: Cannot get tab:', err)
-      })
-  }, delay)
 }
 
 /**

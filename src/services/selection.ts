@@ -64,15 +64,16 @@ export function getTabsInfo(setPanelId?: boolean): ItemInfo[] {
   return Tabs.getTabsInfo(tabIds, setPanelId)
 }
 
-export function lockSelection() {
+export function toggleLocked() {
   if (normType === SelectionType.Nothing) return
   if (!normal.length) return
 
+  let isSelLocked
   if (normType === SelectionType.Tabs) {
     const firstItem = Tabs.byId[normal[0]]
     if (!firstItem) return
 
-    const isSelLocked = firstItem.selLock
+    isSelLocked = firstItem.selLock
     for (const id of normal) {
       const tab = Tabs.byId[id]
       if (tab) tab.reactive.selLock = tab.selLock = !isSelLocked
@@ -81,20 +82,26 @@ export function lockSelection() {
     const firstItem = Bookmarks.reactive.byId[normal[0]]
     if (!firstItem) return
 
-    const isSelLocked = firstItem.selLock
+    isSelLocked = firstItem.selLock
     for (const id of normal) {
       const bkmNode = Bookmarks.reactive.byId[id]
       if (bkmNode) bkmNode.selLock = bkmNode.selLock = !isSelLocked
     }
+  } else {
+    return
   }
 
   lockType = normType
-  locked = locked.union(new Set(normal))
+  if (isSelLocked) {
+    locked = locked.difference(new Set(normal))
+  } else {
+    locked = locked.union(new Set(normal))
+  }
 
   selected = new Set(locked)
 }
 
-export function unlockSelection() {
+function resetLocked() {
   if (lockType === SelectionType.Nothing) return
   if (!locked.size) return
 
@@ -491,7 +498,7 @@ export function resetSelection(forced?: boolean, preserveLocked?: boolean): void
   normLast = null
 
   if (!preserveLocked) {
-    unlockSelection()
+    resetLocked()
     selected.clear()
   } else {
     selected = new Set(locked)

@@ -776,7 +776,7 @@ function onKeyLockSelection() {
     }
   }
 
-  Selection.lockSelection()
+  Selection.toggleLocked()
 }
 
 /**

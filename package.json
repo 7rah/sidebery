@@ -62,7 +62,7 @@
     "src": "./src"
   },
   "browserslist": [
-    "Firefox >= 115"
+    "Firefox >= 128"
   ],
   "sideEffects": false
 }

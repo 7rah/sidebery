@@ -104,11 +104,11 @@ export function toggleLocked() {
   lockType = normType
   if (isSelLocked) {
     locked = locked.difference(new Set(normal))
+    selected = locked.union(new Set(normal))
   } else {
     locked = locked.union(new Set(normal))
+    selected = new Set(locked)
   }
-
-  selected = new Set(locked)
 }
 
 function resetLocked() {

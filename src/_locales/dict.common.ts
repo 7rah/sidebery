@@ -1823,16 +1823,6 @@ export const commonTranslations: Translations = {
     zh_TW: '關閉其他分頁',
     ja: '他のタブを閉じる',
   },
-  'menu.tab.duplicate_selection': {
-    en: 'Deduplicate',
-    de: 'Deduplizieren',
-    hu: 'Deduplikáció',
-    pl: 'Deduplikuj',
-    ru: 'Дедуплицировать',
-    zh_CN: '重复数据删除',
-    zh_TW: '重複資料刪除',
-    ja: '重複排除',
-  },
   // - Tabs panel
   'menu.tabs_panel.mute_all_audible': {
     en: 'Mute audible tabs',
@@ -2045,6 +2035,16 @@ export const commonTranslations: Translations = {
     ja: 'このサイトの記録を削除',
   },
   // - Common
+  'menu.dedupe': {
+    en: 'Deduplicate',
+    de: 'Deduplizieren',
+    hu: 'Deduplikáció',
+    pl: 'Deduplikuj',
+    ru: 'Дедуплицировать',
+    zh_CN: '重复数据删除',
+    zh_TW: '重複資料刪除',
+    ja: '重複排除',
+  },
   'menu.copy_urls': {
     en: n => (n === 1 || n === undefined ? 'Copy URL' : 'Copy URLs'),
     de: n => (n === 1 || n === undefined ? 'URL kopieren' : 'URLs kopieren'),

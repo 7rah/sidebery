@@ -175,6 +175,7 @@ const TABS_MENU_OPTS: Record<string, string> = {
   mute: 'menu.tab.mute',
   duplicate: 'menu.tab.duplicate',
   discard: 'menu.tab.discard',
+  dedupeTabs: 'menu.dedupe',
   copyTabsUrls: 'menu.copy_urls',
   copyTabsTitles: 'menu.copy_titles',
   copyTabsByTemplates: 'menu.copy_by_templates',
@@ -204,7 +205,6 @@ const TABS_MENU_OPTS: Record<string, string> = {
   closeTabsAbove: 'menu.tab.close_above',
   closeTabsBelow: 'menu.tab.close_below',
   closeOtherTabs: 'menu.tab.close_other',
-  dedupInSelectedTabs:'menu.tab.duplicate_selection',
 }
 
 const TABS_PANEL_MENU_OPTS: Record<string, string> = {

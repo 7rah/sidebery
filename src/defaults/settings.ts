@@ -103,6 +103,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   moveNewTabParentActPanel: false,
   moveNewTab: 'end',
   moveNewTabActivePin: 'start',
+  autoScrollToNewTab: true,
 
   // Pinned tabs
   pinnedTabsPosition: 'panel',

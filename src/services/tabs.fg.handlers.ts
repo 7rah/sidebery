@@ -590,7 +590,13 @@ function onTabCreated(nativeTab: NativeTab, attached?: boolean): void {
   }
 
   // Scroll to new inactive tab
-  if (!tab.pinned && !tab.active && !tab.invisible && tab.panelId === Sidebar.activePanelId && Settings.state.autoScrollToNewTab) {
+  if (
+    !tab.pinned &&
+    !tab.active &&
+    !tab.invisible &&
+    tab.panelId === Sidebar.activePanelId &&
+    Settings.state.autoScrollToNewTab
+  ) {
     Tabs.scrollToTabDebounced(120, tab.id, true)
   }
 

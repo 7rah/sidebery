@@ -1311,3 +1311,11 @@ export function parseTextForItems(srcText: string): ItemInfo[] {
 
   return items
 }
+
+// TODO: After 140ESR(2025-09-16) replace with Iterator.prototype.some()
+export function someIter<T>(it: IteratorObject<T>, pred: (value: T) => unknown): boolean {
+  for (const val of it) {
+    if (pred(val)) return true
+  }
+  return false
+}

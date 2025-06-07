@@ -66,12 +66,12 @@ export function getTabsInfo(setPanelId?: boolean): ItemInfo[] {
 
 export function hasPinnedTabs() {
   if (!selected.size) return undefined
-  return selected.values().some(tabId => Tabs.byId[tabId]?.pinned)
+  return Utils.someIter(selected.values(), tabId => Tabs.byId[tabId]?.pinned)
 }
 
 export function hasLockedPinnedTabs() {
   if (!locked.size) return undefined
-  return locked.values().some(tabId => Tabs.byId[tabId]?.pinned)
+  return Utils.someIter(locked.values(), tabId => Tabs.byId[tabId]?.pinned)
 }
 
 export function toggleLocked() {

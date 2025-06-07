@@ -7,7 +7,7 @@ import { execSync } from 'child_process'
 const OWNER = 'mbnuqw'
 const REPO = 'sidebery'
 const BRANCH = 'v5'
-const MAX_ASSETS_COUNT = 3
+const MAX_ASSETS_COUNT = 10
 const ADDON_ID = '{3c078156-979c-498b-8990-85f7987dd929}'
 const CONSIDERED_COMMIT_PREFIXES_RE = /^(fix|feat|perf)/
 const ASSET_RE = /sidebery-(\d\d?\.\d\d?\.\d\d?\.\d?\d?\d?)\.xpi/

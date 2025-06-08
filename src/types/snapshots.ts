@@ -31,6 +31,7 @@ export interface SnapWindowState {
   panels: SnapPanelState[]
   tabsLen: number
   folded: boolean
+  private: boolean
 }
 
 export interface SnapPanelState {
@@ -53,6 +54,7 @@ export interface SnapTab {
   containerId?: string
   customTitle?: string
   customColor?: string
+  priv?: boolean
 }
 export interface SnapTabState extends SnapTab {
   ref: SnapTab

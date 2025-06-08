@@ -42,9 +42,14 @@
               .drop-down-btn(@click="win.folded = !win.folded")
                 svg.exp-icon: use(xlink:href="#icon_expand")
               .win-name {{translate('snapshot.window_title') + ' ' + (i + 1)}}
+              svg.win-private(v-if="win.private"): use(href="#icon_priv_win")
               .win-len ({{win.tabsLen}} {{translate('snapshot.snap_tab', win.tabsLen)}})
-              .btn(@click="openWindow(state.activeSnapshot, i, false)") {{translate('snapshot.btn_open_win')}}
-              .btn(@click="openWindow(state.activeSnapshot, i, true)") {{translate('snapshot.btn_open_private_win')}}
+              .btn(@click="openWindow(state.activeSnapshot, i, win.private)").
+                {{translate('snapshot.btn_open_win')}}
+              .btn(v-if="win.private" @click="openWindow(state.activeSnapshot, i, !win.private)").
+                {{translate('snapshot.btn_open_as_norm_win')}}
+              .btn(v-else @click="openWindow(state.activeSnapshot, i, !win.private)").
+                {{translate('snapshot.btn_open_as_private_win')}}
             .panels(v-show="!win.folded")
               .panel(v-for="panel in win.panels" :key="panel.id" :data-void="panel.id === -1")
                 .panel-bar(:data-color="panel.color" :data-folded="panel.folded")

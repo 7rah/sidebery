@@ -113,6 +113,11 @@ export async function createSnapshot(auto = false): Promise<Snapshot | undefined
       if (panelTabs) panelTabs.push(snapTab)
     }
 
+    // Mark private window
+    if (window.incognito && winTabs[0]?.[0]) {
+      winTabs[0][0].priv = true
+    }
+
     tabs.push(winTabs)
   }
 
@@ -728,7 +733,13 @@ export function parseSnapshot(
     if (!win.length) continue
 
     const panelsById: Record<ID, SnapPanelState> = {}
-    const winState: SnapWindowState = { id: tabsCount, panels: [], tabsLen: 0, folded: false }
+    const winState: SnapWindowState = {
+      id: tabsCount,
+      panels: [],
+      tabsLen: 0,
+      folded: false,
+      private: !!win[0]?.[0]?.priv,
+    }
     windows.push(winState)
 
     // Per panels (or pinned tabs)

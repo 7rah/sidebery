@@ -138,6 +138,8 @@ export async function createWithTabs(
 ): Promise<boolean> {
   Logs.info('Windows.createWithTabs', tabsInfo.length)
 
+  if (!Info.isBg) throw 'Windows.createWithTabs: Should be called in bg'
+
   globalTabsLockCounter++
 
   if (!conf) conf = {}

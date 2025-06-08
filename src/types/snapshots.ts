@@ -75,9 +75,9 @@ export const enum RemovingSnapshotResult {
 }
 
 export const enum SnapOpenType {
-  CURRENT_PANEL = 1,
-  NEW_WINDOW,
-  NEW_PRIVATE_WINDOW,
+  CurrentPanel = 1,
+  NewWindow = 2,
+  NewPrivateWindow = 3,
 }
 
 export interface SnapExportTypes {

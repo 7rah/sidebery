@@ -68,11 +68,11 @@
         .info {{translate('snapshot.selected')}} {{selectedTabsLen}}
         DropDownButton(
           :label="translate('snapshot.sel.open_in')")
-          a(@click="openSelectedTabs(SnapOpenType.NEW_WINDOW)").snapshot-export-opt
+          a.snapshot-export-opt(@click="openSelectedTabs(SnapOpenType.NewWindow)")
             .label {{translate('snapshot.sel.open_in_window')}}
-          a(@click="openSelectedTabs(SnapOpenType.NEW_PRIVATE_WINDOW)").snapshot-export-opt
+          a.snapshot-export-opt(@click="openSelectedTabs(SnapOpenType.NewPrivateWindow)")
             .label {{translate('snapshot.sel.open_in_private_window')}}
-          a(@click="openSelectedTabs(SnapOpenType.CURRENT_PANEL)").snapshot-export-opt
+          a.snapshot-export-opt(@click="openSelectedTabs(SnapOpenType.CurrentPanel)")
             .label {{translate('snapshot.sel.open_in_panel')}}
         .btn(@click="resetSelection()") {{translate('snapshot.sel.reset_sel')}}
 
@@ -261,17 +261,19 @@ async function openSelectedTabs(how: SnapOpenType): Promise<void> {
     }
   }
 
-  if (how == SnapOpenType.CURRENT_PANEL) {
-    const activePanel = await IPC.sidebar(Windows.id, 'getActivePanelConfig')
+  if (how === SnapOpenType.CurrentPanel) {
+    const activePanel = await IPC.sidebar(Windows.id, 'getActivePanelConfig').catch(() => undefined)
+    // TODO: or find another tab panel
     if (Utils.isTabsPanel(activePanel)) {
       await IPC.sidebar(Windows.id, 'openTabs', items, { panelId: activePanel.id })
     } else {
+      const creating = []
       for (const item of items) {
         const conf: browser.tabs.CreateProperties = {
           url: Utils.normalizeUrl(item.url, item.title),
           windowId: Windows.id,
           active: false,
-          cookieStoreId: item.container,
+          cookieStoreId: item.container, // TODO: find/create container
         }
         if (conf.url && !conf.url.startsWith('a') && item.title) {
           conf.discarded = true
@@ -279,11 +281,19 @@ async function openSelectedTabs(how: SnapOpenType): Promise<void> {
           conf.active = false
         }
 
-        await browser.tabs.create(conf)
+        creating.push(browser.tabs.create(conf))
       }
+      try {
+        await Promise.all(creating)
+      } catch (err) {
+        Logs.err('Snapshots.openSelectedTabs: Cannot open tabs in current panel:', err)
+      }
+      // TODO: update openerTabId
     }
   } else {
-    await Windows.createWithTabs(items, { incognito: how == SnapOpenType.NEW_PRIVATE_WINDOW })
+    await IPC.bg('createWindowWithTabs', items, {
+      incognito: how === SnapOpenType.NewPrivateWindow,
+    })
   }
 }
 

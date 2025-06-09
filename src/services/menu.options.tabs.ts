@@ -530,11 +530,13 @@ export const tabsMenuOptions: Record<string, () => MenuOption | MenuOption[] | u
   },
 
   dedupeTabs: () => {
+    const selected = Selection.ids()
     const option: MenuOption = {
       label: translate('menu.dedupe'),
       icon: 'icon_dedup_tabs',
-      onClick: () => Tabs.dedupTabs(Selection.ids()),
+      onClick: () => Tabs.dedupTabs(selected),
     }
+    if (selected.length <= 1) option.inactive = true
     if (!Settings.state.ctxMenuRenderInact && option.inactive) return
     return option
   },

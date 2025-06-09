@@ -127,14 +127,8 @@ function hidePreviewBoxWhenUnloaded() {
   if (!state.popupEl) return
   if (state.unloaded) {
     state.previewBoxEl?.style.setProperty('display', 'none')
-    // Remove bottom border radii when hiding preview box
-    // (makes the top section look the same when moving mouse between unloaded and loaded tabs)
-    state.popupEl.style.borderBottomLeftRadius = '0px'
-    state.popupEl.style.borderBottomRightRadius = '0px'
   } else {
     state.previewBoxEl?.style.setProperty('display', 'block')
-    state.popupEl.style.borderBottomLeftRadius = '8px'
-    state.popupEl.style.borderBottomRightRadius = '8px'
   }
 }
 

@@ -338,19 +338,19 @@ export const commonTranslations: Translations = {
     zh_TW: '無法刪除同步資料',
     ja: '同期ストレージからデータを削除できません',
   },
-  'sync.success.import_keyboard_success': {
+  'sync.success.import_keyboard': {
     en: 'Keybindings have been successfully imported',
     fr: 'Les raccourcis ont été importés avec succès',
   },
-  'sync.success.import_menu_success': {
+  'sync.success.import_menu': {
     en: 'Context menu has been successfully imported',
     fr: 'Le menu contextuel a été importé avec succès',
   },
-  'sync.success.import_settings_success': {
+  'sync.success.import_settings': {
     en: 'Settings have been successfully imported',
     fr: 'Les paramètres ont été importés avec succès',
   },
-  'sync.success.import_styles_success': {
+  'sync.success.import_styles': {
     en: 'Styles have been successfully imported',
     fr: 'Les styles ont été importés avec succès',
   },
@@ -737,17 +737,6 @@ export const commonTranslations: Translations = {
     ja: 'タブがコンテナ内にある場合',
   },
   'popup.tab_move_rules.rule_container_not_set': {
-    en: 'Not set',
-    de: 'Nicht festgelegt',
-    fr: 'Non défini',
-    hu: 'Nincs megadva',
-    pl: 'Nie ustawiono',
-    ru: 'Не задан',
-    zh_CN: '未设置',
-    zh_TW: '未設定',
-    ja: '未設定',
-  },
-  'popup.tab_move_rules.rule_container_not_set_tooltip': {
     en: 'Not set',
     de: 'Nicht festgelegt',
     fr: 'Non défini',
@@ -2930,6 +2919,18 @@ export const commonTranslations: Translations = {
       if (rh > 0) return `${d}日, ${rh}時`
       else return `${d}日`
     },
+  },
+
+  // ---
+  // -- Notifications
+  // -
+  'notif.open_private_windows_err': {
+    en: 'Cannot open window',
+    fr: 'Impossible d’ouvrir la fenêtre',
+  },
+  'notif.open_private_windows_err_details': {
+    en: 'Extension does not have permission for incognito mode',
+    fr: 'L’extension n’a pas les permissions nécessaires pour le mode de navigation privé',
   },
 }
 

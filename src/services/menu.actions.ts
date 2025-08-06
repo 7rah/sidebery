@@ -74,7 +74,7 @@ export async function importSyncedCtxMenu(entry: Sync.SyncedEntry) {
 
   Notifications.notify({
     icon: '#icon_sync',
-    title: translate('sync.success.import_menu_success'),
+    title: translate('sync.success.import_menu'),
     ctrl: translate('notif.undo_ctrl'),
     callback: () => importCtxMenu(prevCtxMenu),
   })

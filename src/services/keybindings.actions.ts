@@ -71,7 +71,7 @@ export async function importSyncedKeybindings(entry: Sync.SyncedEntry) {
 
   Notifications.notify({
     icon: '#icon_sync',
-    title: translate('sync.success.import_keyboard_success'),
+    title: translate('sync.success.import_keyboard'),
     ctrl: translate('notif.undo_ctrl'),
     callback: () => importKeybindings(prevKeybindings),
   })

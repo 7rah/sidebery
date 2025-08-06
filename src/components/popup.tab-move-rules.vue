@@ -190,7 +190,7 @@ const availableContainersOpts = computed<ContainerOption[]>(() => {
       color: 'inactive',
       icon: '#icon_none',
       title: translate('popup.tab_move_rules.rule_container_not_set'),
-      tooltip: translate('popup.tab_move_rules.rule_container_not_set_tooltip'),
+      tooltip: translate('popup.tab_move_rules.rule_container_not_set'),
     },
     {
       value: DEFAULT_CONTAINER_ID,

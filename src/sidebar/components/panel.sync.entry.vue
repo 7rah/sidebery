@@ -65,7 +65,9 @@ function getTypeTitle() {
   if (props.entry.type === Sync.SyncedEntryType.Tabs) return translate('sync.tabs_title')
   if (props.entry.type === Sync.SyncedEntryType.Settings) return translate('sync.settings_title')
   if (props.entry.type === Sync.SyncedEntryType.Styles) return translate('sync.style_title')
-  if (props.entry.type === Sync.SyncedEntryType.Keybindings) return translate('sync.keybindings_title')
+  if (props.entry.type === Sync.SyncedEntryType.Keybindings) {
+    return translate('sync.keybindings_title')
+  }
   if (props.entry.type === Sync.SyncedEntryType.CtxMenu) return translate('sync.ctx_menu_title')
   return translate('sync.unknown_title')
 }

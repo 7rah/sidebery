@@ -2503,6 +2503,7 @@ export function switchPanelBack(delay: number): void {
 }
 
 let subPanelTypeResetTimeout: number | undefined
+let closeSubPanelLock: number | undefined
 export function openSubPanel(type: SubPanelType, hostPanel?: Panel) {
   if (!Utils.isTabsPanel(hostPanel)) return
 
@@ -2532,10 +2533,15 @@ export function openSubPanel(type: SubPanelType, hostPanel?: Panel) {
   if (Menu.isOpen) Menu.close()
   if (Selection.isSet()) Selection.resetSelection()
   if (Search.rawValue) Search.search()
+
+  closeSubPanelLock = setTimeout(() => {
+    closeSubPanelLock = undefined
+  }, 16)
 }
 
 export function closeSubPanel() {
   if (!Sidebar.subPanelActive) return
+  if (closeSubPanelLock) return
 
   if (Sidebar.subPanelType === SubPanelType.History && Sidebar.activePanelId !== 'history') {
     History.unloadAfter(30_000)

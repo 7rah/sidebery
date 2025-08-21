@@ -23,14 +23,15 @@ type Opts = typeof SETTINGS_OPTIONS
 export async function loadSettings(): Promise<void> {
   Logs.info('Settings.loadSettings()')
 
-  // The catch reason: https://bugzilla.mozilla.org/show_bug.cgi?id=1868153
-  const storedManaged = (await browser.storage.managed.get<Stored>('settings').catch(() => {})) ?? {}
-  if (!storedManaged.settings) {
-    storedManaged.settings = {} as SettingsState
-  }
+  const [managedResult, localResult] = await Promise.allSettled([
+    browser.storage.managed.get<Stored>('settings'),
+    browser.storage.local.get<Stored>('settings'),
+  ])
 
-  const storedLocal = await browser.storage.local.get<Stored>('settings')
+  const storedManaged = Utils.settledOr(managedResult, {} as Stored)
+  if (!storedManaged.settings) storedManaged.settings = {} as SettingsState
 
+  const storedLocal = Utils.settledOr(localResult, {} as Stored)
   if (!storedLocal.settings) {
     // Respect prefersReducedMotion rule for default settings
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')

@@ -2954,7 +2954,7 @@ export function renderFavicon(tab: Tab) {
     // Set img
     imgEl.src = tab.favIconUrl
     // Show img
-    imgEl.style.display = 'block'
+    if (imgEl.style) imgEl.style.display = 'block'
     // Hide svg
     if (svgUseEl?.parentElement) svgUseEl.parentElement.style.display = 'none'
   } else if (svgUseEl?.parentElement) {

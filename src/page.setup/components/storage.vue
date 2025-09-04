@@ -16,11 +16,15 @@
       .btn(@click="calcStorageInfo") {{translate('settings.update_storage_info')}}
       .btn.-warn(@click="clearStorage") {{translate('settings.clear_storage_info')}}
 
-    .storage-section
+    .storage-section(v-if="state.faviconsCache.length")
       .sub-title: .text {{translate('settings.favs_title')}}
       .favs
         .fav(v-for="fav in state.faviconsCache" :key="fav.tooltip" :title="fav.tooltip")
           img(:src="fav.favicon")
+    
+    .ctrls(v-if="state.faviconsCache.length")
+      .btn(@click="calcStorageInfo") {{translate('settings.update_storage_info')}}
+      .btn.-warn(@click="clearFaviconsCache") {{translate('settings.clear_favicons_cache')}}
 
   section(v-if="Settings.state.syncUseGoogleDrive")
     h2 Google Drive Files
@@ -104,7 +108,7 @@ async function calcStorageInfo(): Promise<void> {
     })
     .sort((a, b) => b.size - a.size)
 
-  // TEMP
+  state.faviconsCache = []
   if (stored.favicons_01 && stored.favDomains) {
     const fullList = [
       ...(stored.favicons_01 ?? []),
@@ -113,7 +117,6 @@ async function calcStorageInfo(): Promise<void> {
       ...(stored.favicons_04 ?? []),
       ...(stored.favicons_05 ?? []),
     ]
-    state.faviconsCache = []
     const favsDomainsInfo: { domain: string; index: number; len: number }[][] = []
     for (const d of Object.keys(stored.favDomains)) {
       const domainInfo = stored.favDomains[d]
@@ -185,6 +188,25 @@ async function clearStorage(): Promise<void> {
     await browser.storage.local.clear()
   } catch (err) {
     return Logs.err('clearStorage: Cannot clean storage', err)
+  }
+  browser.runtime.reload()
+}
+
+async function clearFaviconsCache() {
+  if (!window.confirm(translate('settings.clear_favicons_cache_confirm'))) return
+
+  try {
+    await browser.storage.local.remove([
+      'favDomains',
+      'favHashes',
+      'favicons_01',
+      'favicons_02',
+      'favicons_03',
+      'favicons_04',
+      'favicons_05',
+    ])
+  } catch (err) {
+    return Logs.err('clearStorage: Cannot clean favicons', err)
   }
   browser.runtime.reload()
 }

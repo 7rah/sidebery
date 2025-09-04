@@ -1337,6 +1337,12 @@ Available variables: %B - a list mark (bullet); %CT - custom title or title; %T 
     zh_TW: '刪除全部資料',
     ja: 'すべて削除',
   },
+  'settings.clear_favicons_cache': {
+    en: 'Delete favicons cache',
+  },
+  'settings.clear_favicons_cache_confirm': {
+    en: 'Are you sure you want to delete favicons cache?',
+  },
   'settings.clear_storage_confirm': {
     en: 'Are you sure you want to delete all Sidebery data?',
     de: 'Wirklich alle Sidebery-Daten löschen?',

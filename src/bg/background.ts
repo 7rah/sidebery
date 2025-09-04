@@ -17,104 +17,105 @@ import { Menu } from 'src/services/menu'
 import { WebReq } from 'src/services/web-req'
 import { Sync } from 'src/services/_services'
 
+Info.setInstanceType(InstanceType.bg)
+IPC.setInstanceType(InstanceType.bg)
+Logs.setInstanceType(InstanceType.bg)
+
+const ts = performance.now()
+Logs.info('Init start')
+
+// Register globaly available actions
+IPC.registerActions({
+  cacheTabsData: Tabs.cacheTabsData,
+  getGroupPageInitData: Tabs.getGroupPageInitData,
+  tabsApiProxy: Tabs.tabsApiProxy,
+  getSidebarTabs: Tabs.getSidebarTabs,
+  detachSidebarTabs: Tabs.detachSidebarTabs,
+  openTabs: Tabs.openTabs,
+  createSnapshot: Snapshots.createSnapshot,
+  addSnapshot: Snapshots.addSnapshot,
+  removeSnapshot: Snapshots.removeSnapshot,
+  openSnapshotWindows: Snapshots.openWindows,
+  createWindowWithTabs: Windows.createWithTabs,
+  isWindowTabsLocked: Windows.isWindowTabsLocked,
+  saveFavicon: Favicons.saveFavicon,
+  saveInLocalStorage: Store.setFromRemoteFg,
+  checkIpInfo: WebReq.checkIpInfo,
+  disableAutoReopening: WebReq.disableAutoReopening,
+  enableAutoReopening: WebReq.enableAutoReopening,
+
+  saveToSync: Sync.save,
+  saveTabsToSync: Sync.saveTabs,
+  removeFromSync: Sync.remove,
+  getDataFromSync: Sync.getData,
+  loadSync: Sync.load,
+})
+
+// Init first-need stuff
+IPC.setupGlobalMessageListener()
+IPC.setupConnectionListener()
+
+Info.saveVersion()
+Windows.setupWindowsListeners()
+Containers.setupContainersListeners()
+Settings.setupSettingsChangeListener()
+
+Sidebar.setupListeners()
+
+WebReq.updateReqHandlers()
+
+Tabs.setupTabsListeners()
+
+Permissions.loadPermissions()
+Permissions.setupListeners()
+Favicons.loadFavicons()
+Menu.setupListeners()
+Snapshots.scheduleSnapshots()
+
+// Update title preface on sidebar connection/disconnection
+IPC.onConnected(InstanceType.sidebar, winId => {
+  Logs.info('IPC.onConnected sidebar', winId)
+
+  const tabs = Windows.byId[winId]?.tabs
+  if (tabs) Tabs.initInternalPageScripts(tabs)
+
+  if (Settings.state.markWindow && winId !== NOID) {
+    IPC.sendToSidebar(winId, 'updWindowPreface')
+  }
+})
+IPC.onDisconnected(InstanceType.sidebar, winId => {
+  Logs.info('IPC.onDisconnected sidebar', winId)
+
+  if (Settings.state.markWindow && Windows.byId[winId]) {
+    browser.windows.update(winId, { titlePreface: '' })
+  }
+})
+
+window.getSideberyState = () => {
+  // prettier-ignore
+  return {
+    IPC, Info, Settings, Windows, Tabs, Containers,
+    Sidebar, Favicons, Snapshots, Menu, Permissions,
+  }
+}
+
+initToolbarButton()
+
+browser.runtime.onUpdateAvailable.addListener(details => {
+  const currentVersion = versionToInt(browser.runtime.getManifest().version)
+  const newVersion = versionToInt(details.version)
+  if (newVersion <= currentVersion) browser.runtime.reload()
+})
+
 void (async function main() {
-  Info.setInstanceType(InstanceType.bg)
-  IPC.setInstanceType(InstanceType.bg)
-  Logs.setInstanceType(InstanceType.bg)
-
-  const ts = performance.now()
-  Logs.info('Init start')
-
-  // Register globaly available actions
-  IPC.registerActions({
-    cacheTabsData: Tabs.cacheTabsData,
-    getGroupPageInitData: Tabs.getGroupPageInitData,
-    tabsApiProxy: Tabs.tabsApiProxy,
-    getSidebarTabs: Tabs.getSidebarTabs,
-    detachSidebarTabs: Tabs.detachSidebarTabs,
-    openTabs: Tabs.openTabs,
-    createSnapshot: Snapshots.createSnapshot,
-    addSnapshot: Snapshots.addSnapshot,
-    removeSnapshot: Snapshots.removeSnapshot,
-    openSnapshotWindows: Snapshots.openWindows,
-    createWindowWithTabs: Windows.createWithTabs,
-    isWindowTabsLocked: Windows.isWindowTabsLocked,
-    saveFavicon: Favicons.saveFavicon,
-    saveInLocalStorage: Store.setFromRemoteFg,
-    checkIpInfo: WebReq.checkIpInfo,
-    disableAutoReopening: WebReq.disableAutoReopening,
-    enableAutoReopening: WebReq.enableAutoReopening,
-
-    saveToSync: Sync.save,
-    saveTabsToSync: Sync.saveTabs,
-    removeFromSync: Sync.remove,
-    getDataFromSync: Sync.getData,
-    loadSync: Sync.load,
-  })
-
-  // Init first-need stuff
-  IPC.setupGlobalMessageListener()
-  IPC.setupConnectionListener()
+  await Tabs.loadTabs()
+  await Sidebar.loadNav()
   await Promise.all([
     Windows.loadWindows(),
     Containers.load(),
     Settings.loadSettings(),
     Info.loadVersionInfo(),
   ])
-
-  Info.saveVersion()
-  Windows.setupWindowsListeners()
-  Containers.setupContainersListeners()
-  Settings.setupSettingsChangeListener()
-
-  await Sidebar.loadNav()
-  Sidebar.setupListeners()
-
-  WebReq.updateReqHandlers()
-
-  Tabs.setupTabsListeners()
-  await Tabs.loadTabs()
-
-  Permissions.loadPermissions()
-  Permissions.setupListeners()
-  Favicons.loadFavicons()
-  Menu.setupListeners()
-  Snapshots.scheduleSnapshots()
-
-  // Update title preface on sidebar connection/disconnection
-  IPC.onConnected(InstanceType.sidebar, winId => {
-    Logs.info('IPC.onConnected sidebar', winId)
-
-    const tabs = Windows.byId[winId]?.tabs
-    if (tabs) Tabs.initInternalPageScripts(tabs)
-
-    if (Settings.state.markWindow && winId !== NOID) {
-      IPC.sendToSidebar(winId, 'updWindowPreface')
-    }
-  })
-  IPC.onDisconnected(InstanceType.sidebar, winId => {
-    Logs.info('IPC.onDisconnected sidebar', winId)
-
-    if (Settings.state.markWindow && Windows.byId[winId]) {
-      browser.windows.update(winId, { titlePreface: '' })
-    }
-  })
-
-  window.getSideberyState = () => {
-    // prettier-ignore
-    return {
-      IPC, Info, Settings, Windows, Tabs, Containers,
-      Sidebar, Favicons, Snapshots, Menu, Permissions,
-    }
-  }
-
-  initToolbarButton()
-
-  browser.runtime.onUpdateAvailable.addListener(details => {
-    const currentVersion = versionToInt(browser.runtime.getManifest().version)
-    const newVersion = versionToInt(details.version)
-    if (newVersion <= currentVersion) browser.runtime.reload()
-  })
 
   Logs.info(`Init end: ${performance.now() - ts}ms`)
 })()

@@ -702,9 +702,9 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
     tab.internal = isInternal
     Tabs.cacheTabsData()
 
-    // Reset favicon
-    if (!change.url.startsWith(tab.url.slice(0, 16)) || tab.internal) {
-      change.favIconUrl = ''
+    // Reset favicon (to cached)
+    if (tab.internal || !Utils.sameStart(change.url, tab.url, 16)) {
+      change.favIconUrl = Favicons.getFavicon(change.url)
     }
 
     // Update URL of the linked group page (for pinned tab)

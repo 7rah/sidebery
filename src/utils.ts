@@ -232,6 +232,19 @@ export function getDomainOf(url: string): string {
   return DOMAIN_RE.exec(url)?.[1] ?? url
 }
 
+export function sameStart(a: string, b: string, limit: number) {
+  const aLen = a.length
+  const bLen = b.length
+  if (!aLen || !bLen) return false
+  if (aLen > bLen) {
+    if (bLen > limit) return a.startsWith(b.slice(0, limit))
+    else return a.startsWith(b)
+  } else {
+    if (bLen > limit) return b.startsWith(a.slice(0, limit))
+    else return b.startsWith(a)
+  }
+}
+
 /**
  * Generate HSL color from string
  */

@@ -394,3 +394,5 @@ export interface CopyTemplate {
   hasU?: boolean
   hasB?: boolean
 }
+
+export type DataUriImage = string & {}

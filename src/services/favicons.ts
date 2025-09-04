@@ -1,4 +1,4 @@
-import { Stored } from 'src/types'
+import { DataUriImage, Stored } from 'src/types'
 import { FILE_RE, GROUP_PATH, IMG_RE, MUS_RE, SETUP_PATH, URL_PATH, VID_RE } from 'src/defaults'
 import * as Utils from 'src/utils'
 import * as Logs from 'src/services/logs'
@@ -53,10 +53,15 @@ let favRescaleCanvasCtx: CanvasRenderingContext2D | null = null
 let favPrescaleCanvasCtx: CanvasRenderingContext2D | null = null
 let favRescaleImg: HTMLImageElement | undefined
 
-export async function resizeFavicon(base64fav: string): Promise<string> {
-  // Skip resize if fav is a SVG containing CSS Media Queries
-  if (base64fav.length <= MAX_SVG_IMG_SIZE && Utils.svgImageContainsCssMediaQueries(base64fav)) {
-    return base64fav
+export async function resizeFavicon(fav: DataUriImage): Promise<DataUriImage> {
+  const favIsSVG = Utils.isSvg(fav)
+
+  // Image is svg
+  if (favIsSVG) {
+    // Skip resize if fav is a SVG containing CSS Media Queries
+    if (fav.length <= MAX_SVG_IMG_SIZE && Utils.svgImageContainsCssMediaQueries(fav)) {
+      return fav
+    }
   }
 
   // Prescale size
@@ -68,38 +73,39 @@ export async function resizeFavicon(base64fav: string): Promise<string> {
     favRescaleCanvasCtx = favRescaleCanvas.getContext('2d')
     favPrescaleCanvasCtx = favPrescaleCanvas.getContext('2d')
   }
-  if (!favRescaleCanvasCtx || !favPrescaleCanvasCtx) return base64fav
+  if (!favRescaleCanvasCtx || !favPrescaleCanvasCtx) return fav
   if (!favRescaleImg) favRescaleImg = new Image()
 
   favRescaleCanvasCtx.clearRect(0, 0, SIZE, SIZE)
   favPrescaleCanvasCtx.clearRect(0, 0, ds, ds)
 
-  await Utils.setImageSrc(favRescaleImg, base64fav)
+  await Utils.setImageSrc(favRescaleImg, fav)
 
   try {
     let sw = favRescaleImg.naturalWidth
     let sh = favRescaleImg.naturalHeight
-    if (sw === 0 || sh === 0) {
-      const base64svgWithSize = Utils.setSvgImageSize(base64fav, ds, ds)
-      if (!base64svgWithSize) return base64fav
+    if (favIsSVG && (sw === 0 || sh === 0)) {
+      const base64svgWithSize = Utils.setSvgImageSize(fav, ds, ds)
+      if (!base64svgWithSize) return fav
       await Utils.setImageSrc(favRescaleImg, base64svgWithSize)
       sw = favRescaleImg.naturalWidth
       sh = favRescaleImg.naturalHeight
     }
-    if (sw === 0 || sh === 0) return base64fav
-    if (sw > ds && favPrescaleCanvas) {
+    if (sw === 0 || sh === 0) return fav
+    if (!favIsSVG && sw > ds && favPrescaleCanvas) {
       favPrescaleCanvasCtx.drawImage(favRescaleImg, 0, 0, sw, sh, 0, 0, ds, ds)
       favRescaleCanvasCtx.drawImage(favPrescaleCanvas, 0, 0, ds, ds, 0, 0, SIZE, SIZE)
     } else {
-      favRescaleCanvasCtx.drawImage(favRescaleImg, 0, 0, sw, sh, 0, 0, SIZE, SIZE)
+      if (favIsSVG) favRescaleCanvasCtx.drawImage(favRescaleImg, 0, 0, SIZE, SIZE)
+      else favRescaleCanvasCtx.drawImage(favRescaleImg, 0, 0, sw, sh, 0, 0, SIZE, SIZE)
     }
   } catch (err) {
-    return base64fav
+    return fav
   }
 
   const newBase64fav = favRescaleCanvas.toDataURL('image/png')
 
-  if (newBase64fav.length + THRESHOLD_BYTES_DIFF >= base64fav.length) return base64fav
+  if (newBase64fav.length + THRESHOLD_BYTES_DIFF >= fav.length) return fav
   else return newBase64fav
 }
 

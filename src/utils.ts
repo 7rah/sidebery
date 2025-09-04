@@ -1,6 +1,6 @@
 import { GroupConfig, AnyFunc, NavItem, NavBtn, NavSpace, Panel, PanelConfig, Tab } from './types'
 import { TabsPanel, BookmarksPanel, PanelType, HistoryPanel, SyncPanel, ItemInfo } from './types'
-import { NavItemClass, SubListTitleInfo, RGBA, RGB, AnyAsyncFunc } from './types'
+import { NavItemClass, SubListTitleInfo, RGBA, RGB, AnyAsyncFunc, DataUriImage } from './types'
 import { DOMAIN_RE, GROUP_URL, NOID, URL_PAGE_RE, URL_URL } from './defaults'
 import { translate } from './dict'
 
@@ -731,10 +731,12 @@ export async function setImageSrc(img: HTMLImageElement, src: string): Promise<v
   })
 }
 
-export function setSvgImageSize(base64img: string, w: number, h: number): string | undefined {
-  if (!base64img.startsWith('data:image/svg+xml;base64,')) return
+export function isSvg(img: DataUriImage): boolean {
+  return img.startsWith('data:image/svg+xml;base64,')
+}
 
-  let base64 = base64img.slice(26)
+export function setSvgImageSize(svgImg: DataUriImage, w: number, h: number): string | undefined {
+  let base64 = svgImg.slice(26)
 
   let svg
   try {
@@ -754,10 +756,8 @@ export function setSvgImageSize(base64img: string, w: number, h: number): string
   return 'data:image/svg+xml;base64,' + base64
 }
 
-export function svgImageContainsCssMediaQueries(base64img: string): boolean {
-  if (!base64img.startsWith('data:image/svg+xml;base64,')) return false
-
-  const base64 = base64img.slice(26)
+export function svgImageContainsCssMediaQueries(svgImg: DataUriImage): boolean {
+  const base64 = svgImg.slice(26)
 
   let svgText
   try {

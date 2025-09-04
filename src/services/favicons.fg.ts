@@ -1,4 +1,4 @@
-import { Stored } from 'src/types'
+import { DataUriImage } from 'src/types'
 import * as Logs from 'src/services/logs'
 import * as Utils from 'src/utils'
 import { Tabs } from './tabs.fg'
@@ -90,14 +90,14 @@ let iconFillCanvas: HTMLCanvasElement | undefined
 let iconFillCanvasCtx: CanvasRenderingContext2D | null = null
 let iconFillImg: HTMLImageElement | undefined
 
-export async function fillIcon(base64icon: string, color: string): Promise<string> {
+export async function fillIcon(img: DataUriImage, color: string): Promise<string> {
   const ds = SIZE * 2
 
   if (!iconFillCanvas || !iconFillCanvasCtx) {
     iconFillCanvas = Utils.createCanvas(ds, ds)
     iconFillCanvasCtx = iconFillCanvas.getContext('2d')
     if (iconFillCanvasCtx) iconFillCanvasCtx.save()
-    else return base64icon
+    else return img
   }
 
   if (!iconFillImg) iconFillImg = new Image()
@@ -105,17 +105,18 @@ export async function fillIcon(base64icon: string, color: string): Promise<strin
   iconFillCanvasCtx.clearRect(0, 0, ds, ds)
 
   try {
-    await Utils.setImageSrc(iconFillImg, base64icon)
+    await Utils.setImageSrc(iconFillImg, img)
   } catch {
-    return base64icon
+    return img
   }
 
   try {
     let sw = iconFillImg.naturalWidth
     let sh = iconFillImg.naturalHeight
-    if (sw === 0 || sh === 0) {
-      const base64svgWithSize = Utils.setSvgImageSize(base64icon, ds, ds)
-      if (!base64svgWithSize) return base64icon
+    const imgIsSVG = Utils.isSvg(img)
+    if (imgIsSVG && (sw === 0 || sh === 0)) {
+      const base64svgWithSize = Utils.setSvgImageSize(img, ds, ds)
+      if (!base64svgWithSize) return img
       await Utils.setImageSrc(iconFillImg, base64svgWithSize)
       sw = iconFillImg.naturalWidth
       sh = iconFillImg.naturalHeight
@@ -126,7 +127,7 @@ export async function fillIcon(base64icon: string, color: string): Promise<strin
     iconFillCanvasCtx.drawImage(iconFillImg, 0, 0, sw, sh, 0, 0, ds, ds)
     iconFillCanvasCtx.globalCompositeOperation = 'source-over'
   } catch (err) {
-    return base64icon
+    return img
   }
 
   const filledBase64Icon = iconFillCanvas.toDataURL('image/png')

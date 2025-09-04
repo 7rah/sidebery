@@ -35,6 +35,7 @@ export async function open(section?: string): Promise<void> {
   } else {
     if (
       activeTab &&
+      activeTab.status === 'complete' &&
       !activeTab.pinned &&
       (activeTab.url === 'about:newtab' || activeTab.url === 'about:blank')
     ) {

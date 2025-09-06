@@ -545,7 +545,7 @@ function onTabCreated(nativeTab: NativeTab, attached?: boolean): void {
     if (Settings.state.colorizeTabsBranches && tab.lvl > 0) Tabs.setBranchColor(tab.id)
 
     // Inherit custom color from parent
-    if (tab.openerTabId !== undefined && Settings.state.inheritCustomColor) {
+    if (tab.openerTabId !== undefined && !tab.customColor && Settings.state.inheritCustomColor) {
       const parent = Tabs.byId[tab.openerTabId]
       if (parent?.customColor) {
         tab.reactive.customColor = tab.customColor = parent.customColor

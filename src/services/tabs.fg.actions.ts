@@ -987,6 +987,7 @@ export function switchTabWithPreselect(globaly: boolean, cycle: boolean, dir: 1 
   if (!tabs.length) return
 
   const selIsSet = Selection.isSet()
+  const skipDiscarded = Settings.state.scrollThroughTabsSkipDiscarded
   let target: Tab | undefined
 
   if (Settings.state.scrollThroughTabsPreselAct && !selIsSet) {
@@ -1003,6 +1004,7 @@ export function switchTabWithPreselect(globaly: boolean, cycle: boolean, dir: 1 
     let afterSel = false
     const tabFinder = (tab: Tab) => {
       if (tab.invisible) return false
+      if (skipDiscarded && tab.discarded) return false
       if (afterSel) return true
       if ((selIsSet && tab.sel) || (!selIsSet && tab.active)) afterSel = true
     }

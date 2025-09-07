@@ -32,7 +32,7 @@ section(ref="el")
     ToggleField(
       label="settings.scroll_through_tabs_skip_discarded"
       v-model:value="Settings.state.scrollThroughTabsSkipDiscarded"
-      :inactive="Settings.state.scrollThroughTabs === 'none' || Settings.state.scrollThroughTabs === 'psp' || Settings.state.scrollThroughTabs === 'psg'"
+      :inactive="Settings.state.scrollThroughTabs === 'none'"
       @update:value="Settings.saveDebounced(150)")
     ToggleField(
       label="settings.scroll_through_tabs_except_overflow"

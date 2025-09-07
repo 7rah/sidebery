@@ -963,11 +963,13 @@ export function switchTab(globaly: boolean, cycle: boolean, step: number, pinned
 
 let switchPreselectTabPause: number | undefined
 export function switchTabWithPreselect(globaly: boolean, cycle: boolean, dir: 1 | -1): void {
-  if (switchPreselectTabPause) return
-  switchPreselectTabPause = setTimeout(() => {
-    clearTimeout(switchPreselectTabPause)
-    switchPreselectTabPause = undefined
-  }, 50)
+  if (Settings.state.scrollThroughTabsPreselDelay > 0) {
+    if (switchPreselectTabPause) return
+    switchPreselectTabPause = setTimeout(() => {
+      clearTimeout(switchPreselectTabPause)
+      switchPreselectTabPause = undefined
+    }, Settings.state.scrollThroughTabsPreselDelay)
+  }
 
   const activePanel = Sidebar.panelsById[Sidebar.activePanelId]
   if (!Utils.isTabsPanel(activePanel)) return

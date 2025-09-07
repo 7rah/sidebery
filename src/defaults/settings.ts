@@ -214,6 +214,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   scrollThroughTabsExceptOverflow: true,
   scrollThroughTabsCyclic: false,
   scrollThroughTabsScrollArea: 0,
+  scrollThroughTabsPreselDelay: 0,
   autoMenuMultiSel: true,
   multipleMiddleClose: false,
   longClickDelay: 500,

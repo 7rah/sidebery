@@ -65,6 +65,7 @@ export const DnD = {
   srcIndex: -1,
 
   dragEndedRecently: false,
+  droppedRecently: false,
 
   ...DndActions,
 }

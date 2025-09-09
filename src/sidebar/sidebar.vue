@@ -376,7 +376,9 @@ function onMouseLeave(): void {
     Preview.closePreview()
   }
 
-  if (DnD.dragEndedRecently) return
+  // Detect if this event was fired right after drop/dragend
+  // so the mouse cursor might actually still be inside the sidebar
+  if (DnD.dragEndedRecently || DnD.droppedRecently) return
 
   Mouse.mouseIn = false
   Mouse.stopResizing()

@@ -915,10 +915,18 @@ export function onDragMove(e: DragEvent): void {
   }
 }
 
+let droppedRecentlyTimeout: number | undefined
+
 /**
  * Drop event handler
  */
 export async function onDrop(e: DragEvent): Promise<void> {
+  DnD.droppedRecently = true
+  clearTimeout(droppedRecentlyTimeout)
+  droppedRecentlyTimeout = setTimeout(() => {
+    DnD.droppedRecently = false
+  }, 100)
+
   if (e.ctrlKey) DnD.dropMode = 'copy'
 
   // Handle native firefox tabs
@@ -1241,6 +1249,12 @@ export function resetOther(): void {
 let dragEndedRecentlyTimeout: number | undefined
 
 export async function onDragEnd(e: DragEvent): Promise<void> {
+  DnD.dragEndedRecently = true
+  clearTimeout(dragEndedRecentlyTimeout)
+  dragEndedRecentlyTimeout = setTimeout(() => {
+    DnD.dragEndedRecently = false
+  }, 100)
+
   resetDragPointer()
   DnD.resetOther()
   let mode = DnD.dropMode
@@ -1305,16 +1319,6 @@ export async function onDragEnd(e: DragEvent): Promise<void> {
       Bookmarks.openInNewWindow(rootFolder.children.map(n => n.id))
     }
   }
-
-  // Set "dragEndedRecently" flag for 100ms.
-  // This is needed for detecting mouseLeave
-  // event right after dragEnd
-  // (at least on Linux)
-  DnD.dragEndedRecently = true
-  clearTimeout(dragEndedRecentlyTimeout)
-  dragEndedRecentlyTimeout = setTimeout(() => {
-    DnD.dragEndedRecently = false
-  }, 100)
 
   // Update succession of active tab
   const successionExclude = Tabs.detachingTabIds.size ? [...Tabs.detachingTabIds] : undefined

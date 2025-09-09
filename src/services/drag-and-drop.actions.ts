@@ -124,9 +124,9 @@ export function reset(): void {
 
   DnD.reactive.dstType = DropType.Nowhere
   DnD.reactive.dstIndex = -1
-  DnD.reactive.dstPanelId = ''
+  DnD.reactive.dstPanelId = NOID
   DnD.reactive.dstPin = false
-  DnD.reactive.dstParentId = ''
+  DnD.reactive.dstParentId = NOID
 
   DnD.reactive.isStarted = false
 

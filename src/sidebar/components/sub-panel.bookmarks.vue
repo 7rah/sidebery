@@ -1,6 +1,6 @@
 <template lang="pug">
-.BookmarksSubPanel(@drop="onDrop")
-  .content
+.BookmarksSubPanel
+  .content(@drop="onContentDrop")
     ScrollBox(v-if="tree && !state.loading && Permissions.reactive.bookmarks && hostPanel" ref="scrollBox")
       .bookmarks-tree
         DragAndDropPointer(:panelId="bookmarksPanel.id" :subPanel="true")
@@ -19,7 +19,9 @@
       :isMsg="!tree.length && !!Bookmarks.reactive.tree.length"
       :msg="translate('panel.nothing')")
 
-  .nav(v-if="state.active && !state.loading && props.bookmarksPanel.rootId !== NOID && props.bookmarksPanel.rootId !== BKM_ROOT_ID")
+  .nav(
+    v-if="state.active && !state.loading && props.bookmarksPanel.rootId !== NOID && props.bookmarksPanel.rootId !== BKM_ROOT_ID"
+    @drop="onNavDrop")
     .up-btn(:data-inactive="state.rootFolderId === BKM_ROOT_ID" @click="goUp")
       .dnd-layer(@dragenter.stop="goUp")
       svg: use(xlink:href="#icon_expand")
@@ -177,15 +179,18 @@ function goDown(): boolean {
   else return false
 }
 
-function onDrop(): void {
+function onContentDrop(): void {
   DnD.reactive.dstType = DropType.Bookmarks
   if (DnD.reactive.dstParentId === -1) {
-    const panel = props.bookmarksPanel
-    if (panel.rootId !== NOID && panel.rootId !== BKM_ROOT_ID) {
-      DnD.reactive.dstParentId = panel.rootId
-    } else {
-      DnD.reactive.dstParentId = BKM_OTHER_ID
-    }
+    if (state.rootFolderId === BKM_ROOT_ID) DnD.reactive.dstParentId = BKM_OTHER_ID
+    else DnD.reactive.dstParentId = state.rootFolderId
   }
+}
+
+function onNavDrop() {
+  DnD.reactive.dstType = DropType.Bookmarks
+  DnD.reactive.dstIndex = -1
+  if (state.rootFolderId === BKM_ROOT_ID) DnD.reactive.dstParentId = BKM_OTHER_ID
+  else DnD.reactive.dstParentId = state.rootFolderId
 }
 </script>

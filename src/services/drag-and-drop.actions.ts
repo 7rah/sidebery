@@ -309,7 +309,16 @@ function applyLvlOffset(lvl: number, dst: DstPlaceInfo): void {
         dst.parentId = -1
       } else if (Utils.isBookmarksPanel(panel)) {
         if (panel.rootId !== NOID && panel.rootId !== BKM_ROOT_ID) {
-          dst.parentId = panel.rootId
+          let offset = panel.reactive.rootOffset
+          if (offset > 0) {
+            let parent = Bookmarks.reactive.byId[panel.rootId]
+            while (parent && offset--) {
+              parent = Bookmarks.reactive.byId[parent.parentId]
+            }
+            dst.parentId = parent?.id ?? BKM_OTHER_ID
+          } else {
+            dst.parentId = panel.rootId
+          }
         } else {
           dst.parentId = BKM_OTHER_ID
         }

@@ -1378,7 +1378,7 @@ export function findAncestorId(tabId: ID, cb: (ancestorId: ID) => boolean): ID |
 /**
  * Close tabs duplicates
  */
-export function dedupTabs(tabIds: ID[]): void {
+export function dedupeTabs(tabIds: ID[]): void {
   if (!tabIds || !tabIds.length) return
 
   const urls: string[] = []

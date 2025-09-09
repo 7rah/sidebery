@@ -534,7 +534,7 @@ export const tabsMenuOptions: Record<string, () => MenuOption | MenuOption[] | u
     const option: MenuOption = {
       label: translate('menu.dedupe'),
       icon: 'icon_dedup_tabs',
-      onClick: () => Tabs.dedupTabs(selected),
+      onClick: () => Tabs.dedupeTabs(selected),
     }
     if (selected.length <= 1) option.inactive = true
     if (!Settings.state.ctxMenuRenderInact && option.inactive) return
@@ -738,7 +738,7 @@ export const tabsMenuOptions: Record<string, () => MenuOption | MenuOption[] | u
     const option: MenuOption = {
       label: translate('menu.tabs_panel.dedup'),
       icon: 'icon_dedup_tabs',
-      onClick: () => Tabs.dedupTabs(tabIds),
+      onClick: () => Tabs.dedupeTabs(tabIds),
     }
     if (!tabIds.length) option.inactive = true
     if (!Settings.state.ctxMenuRenderInact && option.inactive) return

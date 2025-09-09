@@ -14,7 +14,7 @@
   .sub-panel
     .header
       .header-btn(v-if="isSync" @click="Sync.reload")
-        svg.icon.-sync(): use(xlink:href="#icon_sync")
+        svg.icon.-sync(): use(href="#icon_sync")
       .title {{titles[Sidebar.reactive.subPanelType]}}
       .space-filler(v-if="isSync")
     ClosedTabsSubPanel(v-if="isRecentlyClosedTabs")

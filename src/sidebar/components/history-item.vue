@@ -10,7 +10,7 @@
     @dragstart="onDragStart($event, visit)")
     .title-line
       .fav(:title="translate('panel.history.fav_tooltip')" @mousedown.stop="onFavMouseDown($event, visit)")
-        svg(v-if="!favicon"): use(xlink:href="#icon_ff")
+        svg(v-if="!favicon"): use(href="#icon_ff")
         img(v-else :src="favicon")
       .title {{visit.reactive.title}}
     .url-line

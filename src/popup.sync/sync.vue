@@ -14,7 +14,7 @@
   :data-tabs-tree-lvl-marks="Settings.state.tabsLvlDots")
   .header
     .header-btn(@click="Sync.reload")
-      svg.icon.-sync(): use(xlink:href="#icon_sync")
+      svg.icon.-sync(): use(href="#icon_sync")
     .title {{translate('panel.sync.title')}}
     .space-filler
   SyncPanel

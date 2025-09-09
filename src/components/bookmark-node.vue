@@ -16,13 +16,13 @@
     .dnd-layer(draggable="true" data-dnd-type="bookmark" :data-dnd-id="node.id" @dragstart="onDragStart")
     .fav(v-if="node.url")
       svg(v-if="!favicon")
-        use(xlink:href="#icon_ff")
+        use(href="#icon_ff")
       img(v-else :src="favicon")
     .fav(v-else-if="node.type === 'folder'" @mousedown="onFolderFavMouseDown")
       svg(v-if="expanded")
-        use(xlink:href="#icon_folder_open")
+        use(href="#icon_folder_open")
       svg(v-else)
-        use(xlink:href="#icon_folder")
+        use(href="#icon_folder")
     .title(v-if="node.title || node.url") {{node.title || node.url}}
     .len(v-if="Settings.state.showBookmarkLen && node.len") {{node.len}}
   .children(v-if="(expanded) && children?.length" :title="node.title")

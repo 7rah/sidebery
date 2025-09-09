@@ -22,7 +22,7 @@
       .body
         .color-layer(v-if="t.customColor" :style="{ '--tab-color': t.customColor }")
         .fav(v-if="t.favicon" @dragstart.stop.prevent)
-          svg.fav-icon(v-if="t.favicon.startsWith('#')"): use(:xlink:href="t.favicon")
+          svg.fav-icon(v-if="t.favicon.startsWith('#')"): use(:href="t.favicon")
           img.fav-icon(v-else :src="t.favicon" @error="onFavError(t)" draggable="false")
         .title {{(t.customTitle ?? t.title)}}
         .containerMark(v-if="t.containerId")

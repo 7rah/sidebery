@@ -12,9 +12,9 @@
     @contextmenu="onNewTabCtxMenu")
     .dnd-layer(draggable="true")
     svg(:class="{ '-icon': !!defaultBtn.containerId }")
-      use(:xlink:href="defaultBtn.icon")
+      use(:href="defaultBtn.icon")
     svg.-badge(v-if="defaultBtn.containerId")
-      use(xlink:href="#icon_plus_badge")
+      use(href="#icon_plus_badge")
   .new-tab-btn.-custom(
     v-for="btn of btns"
     :title="btn.tooltip"
@@ -27,11 +27,11 @@
     @contextmenu="onNewTabCtxMenu")
     .dnd-layer(draggable="true")
     svg.-icon(v-if="!btn.domain && btn.containerId")
-      use(:xlink:href="btn.icon")
+      use(:href="btn.icon")
     svg.-icon(v-else-if="btn.icon && btn.icon[0] === '#'")
-      use(:xlink:href="btn.icon")
+      use(:href="btn.icon")
     img.-icon(v-else-if="btn.icon" :src="btn.icon")
-    svg.-badge: use(xlink:href="#icon_plus_badge")
+    svg.-badge: use(href="#icon_plus_badge")
 </template>
 
 <script lang="ts" setup>

@@ -18,7 +18,7 @@
             .date-time {{snapshot.dateStr}} - {{snapshot.timeStr}}
             .content-info {{getSnapInfo(snapshot)}}
           .rm-btn(:title="translate('snapshot.btn_remove')" @click="removeSnapshot(snapshot)")
-            svg: use(xlink:href="#icon_trash")
+            svg: use(href="#icon_trash")
 
     .active-snapshot-section
       .header(v-if="state.activeSnapshot" :data-empty="!state.activeSnapshot")
@@ -40,7 +40,7 @@
           .window(v-for="(win, i) in state.activeSnapshot.windows" :key="i")
             .window-bar(:data-folded="win.folded")
               .drop-down-btn(@click="win.folded = !win.folded")
-                svg.exp-icon: use(xlink:href="#icon_expand")
+                svg.exp-icon: use(href="#icon_expand")
               .win-name {{translate('snapshot.window_title') + ' ' + (i + 1)}}
               svg.win-private(v-if="win.private"): use(href="#icon_priv_win")
               .win-len ({{win.tabsLen}} {{translate('snapshot.snap_tab', win.tabsLen)}})
@@ -54,10 +54,10 @@
               .panel(v-for="panel in win.panels" :key="panel.id" :data-void="panel.id === -1")
                 .panel-bar(:data-color="panel.color" :data-folded="panel.folded")
                   .drop-down-btn(@click="panel.folded = !panel.folded")
-                    svg.exp-icon: use(xlink:href="#icon_expand")
+                    svg.exp-icon: use(href="#icon_expand")
                   .icon
                     img(v-if="panel.iconIMG" :src="panel.iconIMG")
-                    svg(v-else): use(:xlink:href="'#' + panel.iconSVG")
+                    svg(v-else): use(:href="'#' + panel.iconSVG")
                   .name {{panel.name}}
                   .len {{panel.tabs.length}} {{translate('snapshot.snap_tab', panel.tabs.length)}}
                 .tabs(v-show="!panel.folded")

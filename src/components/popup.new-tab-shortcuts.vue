@@ -10,26 +10,26 @@
         @click="editShortcut(shortcut)")
         .container-box(v-if="shortcut.container" :data-color="shortcut.containerColor")
           .icon-box
-            svg.icon: use(:xlink:href="shortcut.containerIcon")
+            svg.icon: use(:href="shortcut.containerIcon")
           .container {{shortcut.container}}
           .controls-box(@click.stop)
-            .btn-up(@click="shortcutUp(index)"): svg: use(xlink:href="#icon_expand")
-            .btn-down(@click="shortcutDown(index)"): svg: use(xlink:href="#icon_expand")
-            .btn-rm(@click="removeShortcut(index)"): svg: use(xlink:href="#icon_remove")
+            .btn-up(@click="shortcutUp(index)"): svg: use(href="#icon_expand")
+            .btn-down(@click="shortcutDown(index)"): svg: use(href="#icon_expand")
+            .btn-rm(@click="removeShortcut(index)"): svg: use(href="#icon_remove")
         .url-box(v-if="shortcut.url" :data-with-container="!!shortcut.container")
           .icon-box
-            svg.icon(v-if="shortcut.urlIcon?.startsWith('#')"): use(:xlink:href="shortcut.urlIcon")
+            svg.icon(v-if="shortcut.urlIcon?.startsWith('#')"): use(:href="shortcut.urlIcon")
             img.icon(v-else :src="shortcut.urlIcon")
           .url {{shortcut.url}}
           .controls-box(v-if="!shortcut.container" @click.stop)
-            .btn-up(@click="shortcutUp(index)"): svg: use(xlink:href="#icon_expand")
-            .btn-down(@click="shortcutDown(index)"): svg: use(xlink:href="#icon_expand")
-            .btn-rm(@click="removeShortcut(index)"): svg: use(xlink:href="#icon_remove")
+            .btn-up(@click="shortcutUp(index)"): svg: use(href="#icon_expand")
+            .btn-down(@click="shortcutDown(index)"): svg: use(href="#icon_expand")
+            .btn-rm(@click="removeShortcut(index)"): svg: use(href="#icon_remove")
         .separator(v-if="!shortcut.url && !shortcut.container" @click.stop)
           .controls-box
-            .btn-up(@click="shortcutUp(index)"): svg: use(xlink:href="#icon_expand")
-            .btn-down(@click="shortcutDown(index)"): svg: use(xlink:href="#icon_expand")
-            .btn-rm(@click="removeShortcut(index)"): svg: use(xlink:href="#icon_remove")
+            .btn-up(@click="shortcutUp(index)"): svg: use(href="#icon_expand")
+            .btn-down(@click="shortcutDown(index)"): svg: use(href="#icon_expand")
+            .btn-rm(@click="removeShortcut(index)"): svg: use(href="#icon_remove")
     .space
     h2 {{translate('popup.new_tab_shortcuts.create_title')}}
     SelectField.-no-separator(

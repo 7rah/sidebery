@@ -12,7 +12,7 @@ section(ref="el")
       :key="container.id"
       :data-color="container.color")
       .card-body(@click="SetupPage.reactive.selectedContainer = container")
-        .card-icon: svg: use(:xlink:href="'#' + container.icon")
+        .card-icon: svg: use(:href="'#' + container.icon")
         .card-name {{container.name}}
       .card-badges
         .card-badge(
@@ -20,12 +20,12 @@ section(ref="el")
           :title="translate('container.manage_reopen_rules_label')"
           :data-inactive="!container.reopenRulesActive"
           @click="Popups.openTabReopenRulesPopup(container.id)")
-          svg: use(xlink:href="#icon_reload")
+          svg: use(href="#icon_reload")
           .len {{container.reopenRules.length}}
       .card-ctrls
         .card-ctrl.-rm(
           @click="removeContainer(container)")
-          svg: use(xlink:href="#icon_remove")
+          svg: use(href="#icon_remove")
     .card-placeholder(v-if="!Object.keys(Containers.reactive.byId).length")
   .ctrls: .btn(@click="createContainer") {{translate('settings.containers_create_btn')}}
   Transition(name="popup")

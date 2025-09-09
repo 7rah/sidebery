@@ -24,12 +24,12 @@
     @drop="onNavDrop")
     .up-btn(:data-inactive="state.rootFolderId === BKM_ROOT_ID" @click="goUp")
       .dnd-layer(@dragenter.stop="goUp")
-      svg: use(xlink:href="#icon_expand")
+      svg: use(href="#icon_expand")
     .title-block
       .title(v-if="state.rootFolderTitle" :title="state.rootFolderTitle") {{state.rootFolderTitle}}
     .down-btn(:data-inactive="bookmarksPanel.reactive.rootOffset <= 0" @click="goDown")
       .dnd-layer(@dragenter.stop="goDown")
-      svg: use(xlink:href="#icon_expand")
+      svg: use(href="#icon_expand")
 </template>
 
 <script lang="ts" setup>

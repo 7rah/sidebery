@@ -8,12 +8,12 @@
       :data-color="getOptColor(activeOpt) ?? false"
       data-active="true")
       svg(v-if="((activeOpt as InputObjOpt).icon || props.icon)?.startsWith('#')")
-        use(:xlink:href="(activeOpt as InputObjOpt).icon || props.icon")
+        use(:href="(activeOpt as InputObjOpt).icon || props.icon")
       img(v-else-if="(activeOpt as InputObjOpt).icon || props.icon" :src="(activeOpt as InputObjOpt).icon || props.icon")
       p(v-else-if="props.label") {{translate(props.label + activeOpt, props.plurNum)}}
       p(v-if="(activeOpt as InputObjOpt).title") {{(activeOpt as InputObjOpt).title}}
     .opt.-exp(v-if="folded")
-      svg: use(xlink:href="#icon_expand")
+      svg: use(href="#icon_expand")
     teleport(v-if="folded && !disabledDropDownTeleport" to="#root")
       .select-input-drop-down-layer(v-if="isOpen" @wheel="onWheel")
         .select-input-drop-down(:style="dropDownStyle")
@@ -27,7 +27,7 @@
               :data-active="((opt as InputObjOpt).value ?? opt) === preSelected"
               @mousedown.stop="select(opt)")
               svg(v-if="((opt as InputObjOpt).icon || props.icon)?.startsWith('#')")
-                use(:xlink:href="((opt as InputObjOpt).icon || props.icon)")
+                use(:href="((opt as InputObjOpt).icon || props.icon)")
               img(v-else-if="(opt as InputObjOpt).icon || props.icon" :src="(opt as InputObjOpt).icon || props.icon")
               p(v-else-if="props.label") {{translate(props.label + opt, props.plurNum)}}
               p(v-if="(opt as InputObjOpt).title") {{(opt as InputObjOpt).title}}
@@ -40,7 +40,7 @@
       :data-active="isActive(opt)"
       @mousedown.stop="select(opt)")
         svg(v-if="((opt as InputObjOpt).icon || props.icon)?.startsWith('#')")
-          use(:xlink:href="((opt as InputObjOpt).icon || props.icon)")
+          use(:href="((opt as InputObjOpt).icon || props.icon)")
         img(v-else-if="(opt as InputObjOpt).icon || props.icon" :src="(opt as InputObjOpt).icon || props.icon")
         p(v-else-if="props.label") {{translate(props.label + opt, props.plurNum)}}
 </template>

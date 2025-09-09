@@ -24,15 +24,15 @@
   @contextmenu.stop="emit('contextmenu', $event)")
   .dnd-layer(:data-dnd-type="dndType" :data-dnd-id="item.id")
   img.icon(v-if="!!item.reactive.iconIMG" :src="item.reactive.iconIMG")
-  svg.icon(v-else-if="item.reactive.iconSVG"): use(:xlink:href="'#' + item.reactive.iconSVG")
+  svg.icon(v-else-if="item.reactive.iconSVG"): use(:href="'#' + item.reactive.iconSVG")
   .badge
   .audio(
     v-if="item.reactive.mediaState !== MediaState.Silent"
     @mousedown="onAudioMouseDown($event, item)"
     @mouseup.stop)
-    svg.-audible: use(xlink:href="#icon_loud_badge")
-    svg.-paused: use(xlink:href="#icon_pause_12")
-    svg.-muted: use(xlink:href="#icon_mute_badge")
+    svg.-audible: use(href="#icon_loud_badge")
+    svg.-paused: use(href="#icon_pause_12")
+    svg.-muted: use(href="#icon_mute_badge")
   .name-box: .name {{item.reactive.name}}
   .len(v-if="Settings.state.navBtnCount && (item.reactive.filteredLen ?? item.reactive.len)") {{item.reactive.filteredLen ?? item.reactive.len}}
 //- Bookmarks/History/SyncPanel
@@ -56,9 +56,9 @@
   @contextmenu.stop="emit('contextmenu', $event)")
   .dnd-layer(:data-dnd-type="dndType" :data-dnd-id="item.id")
   svg.bookmarks-badge-icon(v-if="bookmarksBadge")
-    use(xlink:href="#icon_bookmarks_badge")
+    use(href="#icon_bookmarks_badge")
   img.icon(v-if="!!item.reactive.iconIMG" :src="item.reactive.iconIMG")
-  svg.icon(v-else-if="item.reactive.iconSVG"): use(:xlink:href="'#' + item.reactive.iconSVG")
+  svg.icon(v-else-if="item.reactive.iconSVG"): use(:href="'#' + item.reactive.iconSVG")
   .badge
   .name-box: .name {{item.reactive.name}}
   .len(v-if="Settings.state.navBtnCount && (item.reactive.filteredLen ?? item.reactive.len)") {{item.reactive.filteredLen ?? item.reactive.len}}
@@ -79,7 +79,7 @@
   @contextmenu.stop="emit('contextmenu', $event)")
   .dnd-layer(:data-dnd-type="dndType" :data-dnd-id="item.id")
   img.icon(v-if="!!item.iconIMG" :src="item.iconIMG")
-  svg.icon(v-else-if="item.iconSVG"): use(:xlink:href="'#' + item.iconSVG")
+  svg.icon(v-else-if="item.iconSVG"): use(:href="'#' + item.iconSVG")
   .name-box: .name {{item.name}}
 //- Space
 .nav-item(

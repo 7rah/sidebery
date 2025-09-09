@@ -17,13 +17,13 @@
         .body
           .flash-fx
           .fav(@dragstart.stop.prevent)
-            svg.fav-icon(v-if="!rmt.favIconUrl"): use(:xlink:href="rmt.favPlaceholder")
+            svg.fav-icon(v-if="!rmt.favIconUrl"): use(:href="rmt.favPlaceholder")
             img.fav-icon(v-if="rmt.favIconUrl" :src="rmt.favIconUrl" draggable="false")
           .t-box: .title {{rmt.title}}
           .branch-btn(
             @mousedown="onBranchMouseDown($event, rmt)"
             @mouseup="onBranchMouseUp($event, rmt)")
-            svg: use(xlink:href="#icon_tree_struct")
+            svg: use(href="#icon_tree_struct")
           .container-mark(v-if="rmt.containerColor" :data-color="rmt.containerColor")
   .nothing-placeholder(v-if="Tabs.reactive.recentlyRemovedLen === 0")
     .msg {{translate('panel.nothing')}}

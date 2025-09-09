@@ -68,7 +68,7 @@
         tabindex="-1"
         @click="onCustomIconRm"
         @keydown.enter.space.prevent="onCustomIconRm")
-        svg: use(xlink:href="#icon_remove")
+        svg: use(href="#icon_remove")
         .focus-fx
     .body.-sub(v-if="state.customIconType === 'text'")
       TextInput(

@@ -462,7 +462,7 @@ function createSvgIcon(svgId: string) {
   )
 
   const useEl = document.createElementNS('http://www.w3.org/2000/svg', 'use')
-  useEl.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', svgId)
+  useEl.setAttributeNS('http://www.w3.org/1999/xlink', 'href', svgId)
   svgEl.appendChild(useEl)
 
   return svgEl
@@ -474,7 +474,7 @@ function createSvgIcon(svgId: string) {
 function setSvgId(svgEl: SVGElement, svgId: string) {
   const useEl = svgEl.childNodes[0] as SVGElement
   if (!useEl) return
-  useEl.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', svgId)
+  useEl.setAttributeNS('http://www.w3.org/1999/xlink', 'href', svgId)
 }
 
 /**

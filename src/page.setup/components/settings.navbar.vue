@@ -97,9 +97,9 @@ section(
             @dragstart.stop="onDragStart($event, 'enabled', i, btn.id)")
           .card-icon(:data-color="btn.color")
             svg.bookmarks-badge-icon(v-if="isBookmarksBadgeNeeded(btn)")
-              use(xlink:href="#icon_bookmark_badge")
+              use(href="#icon_bookmark_badge")
             svg(v-if="!btn.iconIMG")
-              use(:xlink:href="'#' + btn.iconSVG")
+              use(:href="'#' + btn.iconSVG")
             img(v-else :src="btn.iconIMG")
           .card-name {{btn.name}}
           .card-inact-note(v-if="btn.inactive") {{translate('settings.nav_bar.inact_note')}}
@@ -108,21 +108,21 @@ section(
             v-if="btn.badgeMoveRules"
             :title="translate('panel.tab_move_rules_manage_badge')"
             @click="Popups.openTabMoveRulesPopup(SidebarConfigRState.panels[btn.id])")
-            svg.-rotate270: use(xlink:href="#icon_download_in_progress")
+            svg.-rotate270: use(href="#icon_download_in_progress")
             .len {{btn.badgeMoveRules}}
           .card-badge(
             v-if="btn.badgeShortcuts"
             :title="translate('panel.new_tab_shortcuts_manage_btn')"
             @click="Popups.openNewTabShortcutsPopup(SidebarConfigRState.panels[btn.id])")
-            svg: use(xlink:href="#icon_plus")
+            svg: use(href="#icon_plus")
             .len {{btn.badgeShortcuts}}
         .card-ctrls
           .card-ctrl.-down(@click="moveBtn(i, 1)")
-            svg: use(xlink:href="#icon_expand")
+            svg: use(href="#icon_expand")
           .card-ctrl.-up(:data-inactive="i === 0" @click="moveBtn(i, -1)")
-            svg: use(xlink:href="#icon_expand")
+            svg: use(href="#icon_expand")
           .card-ctrl.-rm(@click="disableBtn(i)")
-            svg: use(xlink:href="#icon_remove")
+            svg: use(href="#icon_remove")
 
   InfoField(label="settings.nav_bar.available_elements" :inactive="!availableBtns.length").-sub-title
   .sub-fields.-disabled(v-if="availableBtns.length")
@@ -136,7 +136,7 @@ section(
         .card-dnd-layer(draggable="true" @dragstart.stop="onDragStart($event, null, null, btn.id)")
         .card-icon
           svg(v-if="!btn.iconIMG")
-            use(:xlink:href="'#' + btn.iconSVG")
+            use(:href="'#' + btn.iconSVG")
           img(v-else :src="btn.iconIMG")
         .card-name {{btn.name}}
 

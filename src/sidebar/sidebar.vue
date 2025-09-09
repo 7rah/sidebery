@@ -81,23 +81,23 @@
             v-if="Settings.state.subPanelRecentlyClosedBar"
             :data-disabled="!Tabs.reactive.recentlyRemovedLen"
             @click="Sidebar.openSubPanel(SubPanelType.RecentlyClosedTabs, activePanel)")
-            svg: use(xlink:href="#icon_trash")
+            svg: use(href="#icon_trash")
           .tool-btn.-bookmarks(
             v-if="Settings.state.subPanelBookmarks"
             @dragleave="onBSPBDragLeave"
             @click="Sidebar.openSubPanel(SubPanelType.Bookmarks, activePanel)")
             .dnd-layer(data-dnd-type="bspb")
-            svg: use(xlink:href="#icon_bookmarks")
+            svg: use(href="#icon_bookmarks")
           .tool-btn(
             v-if="Settings.state.subPanelHistory"
             @click="Sidebar.openSubPanel(SubPanelType.History, activePanel)")
-            svg: use(xlink:href="#icon_clock")
+            svg: use(href="#icon_clock")
           .tool-btn.-sync(
             v-if="Settings.state.subPanelSync"
             @dragleave="onSSPBDragLeave"
             @click="Sidebar.openSubPanel(SubPanelType.Sync, activePanel)")
             .dnd-layer(data-dnd-type="sspb")
-            svg: use(xlink:href="#icon_sync")
+            svg: use(href="#icon_sync")
 
       SubPanel
 

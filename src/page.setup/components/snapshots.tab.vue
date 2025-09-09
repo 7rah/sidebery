@@ -20,14 +20,14 @@
     @click="Snapshots.foldBranchInViewer(index, panel.tabs)"
     @mousedown.stop.prevent=""
     @mouseup.stop.prevent="")
-    svg.exp-icon: use(xlink:href="#icon_expand")
+    svg.exp-icon: use(href="#icon_expand")
     .branch-len {{tab.branchLen}}
   .icon
     img(
       v-if="tab.domain && Favicons.reactive.byDomains[tab.domain]"
       :src="Favicons.reactive.byDomains[tab.domain]")
-    svg(v-else): use(:xlink:href="tab.iconSVG")
-    svg.pin(v-if="tab.pinned"): use(xlink:href="#icon_pin")
+    svg(v-else): use(:href="tab.iconSVG")
+    svg.pin(v-if="tab.pinned"): use(href="#icon_pin")
   .title-url
     .title {{tab.customTitle ?? tab.title}}
     a.url(

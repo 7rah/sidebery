@@ -12,7 +12,7 @@
     .line
       .fav
         svg(v-if="!favicon")
-          use(xlink:href="#icon_ff")
+          use(href="#icon_ff")
         img(v-else :src="favicon")
       .title {{node.title}}
     .line

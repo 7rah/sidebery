@@ -967,7 +967,7 @@ export async function move(ids: ID[], dst: DstPlaceInfo): Promise<void> {
   }
 
   let dstIndex = dst.index
-  if (dstIndex === undefined) {
+  if (dstIndex === undefined || dstIndex < 0) {
     const parent = Bookmarks.reactive.byId[dst.parentId]
     dstIndex = parent?.children?.length ?? 0
   }
@@ -1030,7 +1030,7 @@ export async function createFrom(
   let dstIndex = dst.index
   let n = 0
 
-  if (dstIndex === undefined) {
+  if (dstIndex === undefined || dstIndex < 0) {
     const parent = Bookmarks.reactive.byId[dst.parentId]
     dstIndex = parent?.children?.length ?? 0
   }

@@ -407,8 +407,6 @@ export function onDragEnter(e: DragEvent): void {
         windowId: NOID,
       })
     }
-
-    return
   }
 
   const type = (e.target as HTMLElement).getAttribute('data-dnd-type')

@@ -433,6 +433,8 @@ export async function moveToThisWin(
 
   // Set index
   if (dst.index === undefined) dst.index = isPinned ? Tabs.pinned.length : indexFallback
+  if (isPinned && dst.index > Tabs.pinned.length) dst.index = Tabs.pinned.length
+  if (dst.index < 0) dst.index = 0
 
   const index = dst.index ?? 0
   const tabIds = tabs.map(t => t.id)

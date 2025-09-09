@@ -269,6 +269,10 @@
         {
           "version": "5.3.3.22",
           "update_link": "https://github.com/mbnuqw/sidebery/releases/download/v5.3.3/sidebery-5.3.3.22.xpi"
+        },
+        {
+          "version": "5.3.3.23",
+          "update_link": "https://github.com/mbnuqw/sidebery/releases/download/v5.3.3/sidebery-5.3.3.23.xpi"
         }
       ]
     }

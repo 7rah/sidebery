@@ -378,7 +378,15 @@ async function onExportSnapshotDropDownOpen() {
 
   if (!state.activeSnapshot) return
 
-  exportInfo = Snapshots.prepareExport(state.activeSnapshot, { JSON: true, Markdown: true })
+  const normActiveSnapshot: NormalizedSnapshot = {
+    id: state.activeSnapshot.id,
+    time: state.activeSnapshot.time,
+    containers: state.activeSnapshot.containers,
+    sidebar: state.activeSnapshot.sidebar,
+    tabs: state.activeSnapshot.tabs,
+  }
+
+  exportInfo = Snapshots.prepareExport(normActiveSnapshot, { JSON: true, Markdown: true })
   const dateStr = Utils.uDate(exportInfo.time, '.')
   const timeStr = Utils.uTime(exportInfo.time, '.')
 

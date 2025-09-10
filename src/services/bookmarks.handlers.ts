@@ -123,7 +123,7 @@ function onBookmarkMovedFg(id: ID, info: browser.bookmarks.MoveInfo): void {
   // Update length of parent folders
   const node = Bookmarks.reactive.byId[id]
   if (node && oldParent && newParent && newParent.id !== oldParent.id) {
-    const movedLen = node?.len || 1
+    const movedLen = node?.len || (node.type === 'bookmark' ? 1 : 0)
     Bookmarks.updateTreeLen(oldParent, -movedLen)
     Bookmarks.updateTreeLen(newParent, movedLen)
 
@@ -160,7 +160,7 @@ function onBookmarkRemovedFg(id: ID, info: browser.bookmarks.RemoveInfo): void {
   if (!node) return
 
   // Update length of parent folders
-  const removedLen = node.len || 1
+  const removedLen = node.len || (node.type === 'bookmark' ? 1 : 0)
   Bookmarks.updateTreeLen(parent, -removedLen)
 
   // Remove from tree

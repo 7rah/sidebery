@@ -477,14 +477,27 @@ export async function createBookmarkNode(
   type: browser.bookmarks.TreeNodeType,
   target: Bookmark
 ): Promise<void> {
+  const expandedBookmarks = Bookmarks.reactive.expanded[Sidebar.activePanelId]
   let parentId: ID | undefined
   let index = 0
 
-  if (target.type === 'bookmark' || target.type === 'separator') {
+  // Create bookmark node inside the target folder only if it's open
+  if (target.type === 'folder' && (!expandedBookmarks || expandedBookmarks[target.id])) {
+    parentId = target.id
+    if (type === 'folder') {
+      // New folder - after the last one or at the start of the list
+      const lastFolderIndex = (target.children ?? []).findLastIndex(n => n.type === 'folder')
+      if (lastFolderIndex !== -1) index = lastFolderIndex + 1
+      else index = 0
+    } else {
+      // Other types - append to the end
+      index = target.children?.length ?? 0
+    }
+  }
+  // Otherwise, create bookmark node after the target
+  else {
     parentId = target.parentId
     index = target.index + 1
-  } else if (target.type === 'folder') {
-    parentId = target.id
   }
 
   if (!parentId) parentId = BKM_OTHER_ID

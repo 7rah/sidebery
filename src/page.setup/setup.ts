@@ -41,6 +41,7 @@ async function main(): Promise<void> {
   IPC.registerActions({
     storageChanged: Store.storageChangeListener,
     connectTo: IPC.connectTo,
+    reloadFavicons: Favicons.loadFavicons,
   })
 
   SetupPage.updateActiveView()

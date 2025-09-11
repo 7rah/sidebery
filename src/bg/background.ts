@@ -40,6 +40,7 @@ void (async function main() {
     createWindowWithTabs: Windows.createWithTabs,
     isWindowTabsLocked: Windows.isWindowTabsLocked,
     saveFavicon: Favicons.saveFavicon,
+    reloadFavicons: Favicons.loadFavicons,
     saveInLocalStorage: Store.setFromRemoteFg,
     checkIpInfo: WebReq.checkIpInfo,
     disableAutoReopening: WebReq.disableAutoReopening,

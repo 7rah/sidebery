@@ -56,6 +56,7 @@ export type BgActions = {
   removeSnapshot: typeof Snapshots.removeSnapshot
   openSnapshotWindows: typeof Snapshots.openWindows
   saveFavicon: typeof Favicons.saveFavicon
+  reloadFavicons: () => any
   createWindowWithTabs: typeof Windows.createWithTabs
   isWindowTabsLocked: typeof Windows.isWindowTabsLocked
   saveInLocalStorage: typeof Store.setFromRemoteFg
@@ -73,6 +74,7 @@ export type BgActions = {
 export type SettingsActions = {
   storageChanged: typeof Store.storageChangeListener
   connectTo: (dstType: InstanceType, dstWinId?: ID, dstTabId?: ID) => void
+  reloadFavicons: () => any
 }
 
 export type PanelConfigPopupActions = {
@@ -92,6 +94,7 @@ export type SidebarActions = {
   handleReopening: (tabId: ID, dstContainerId?: string) => number | undefined
 
   loadFavicons: () => void
+  reloadFavicons: () => any
   setFavicon: (domain: string, icon: string) => void
 
   onOutsideSearchInput: (value: string) => void

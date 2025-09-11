@@ -48,6 +48,7 @@ async function main(): Promise<void> {
     stopDrag: DnD.reset,
     getGroupInfo: Tabs.getGroupInfo,
     loadFavicons: Favicons.loadFavicons,
+    reloadFavicons: Favicons.loadFavicons,
     setFavicon: Favicons.set,
     onOutsideSearchInput: Search.onOutsideSearchInput,
     onOutsideSearchNext: Search.next,

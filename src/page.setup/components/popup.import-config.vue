@@ -76,7 +76,7 @@ import { Info } from 'src/services/info'
 import { Store } from 'src/services/storage'
 import { Permissions } from 'src/services/permissions'
 import * as Logs from 'src/services/logs'
-import * as Favicons from 'src/services/favicons'
+import * as Favicons from 'src/services/favicons.fg'
 import { Menu } from 'src/services/menu'
 import { Styles } from 'src/services/styles'
 import { Snapshots } from 'src/services/snapshots'
@@ -86,7 +86,7 @@ import { NormalizedSnapshot } from 'src/types/snapshots'
 import { Containers } from 'src/services/containers'
 import { Keybindings } from 'src/services/keybindings'
 import { Settings } from 'src/services/settings'
-import { SidebarConfig, Sync } from 'src/services/_services'
+import { IPC, SidebarConfig, Sync } from 'src/services/_services'
 import { SetupPage } from 'src/services/setup-page'
 
 const props = defineProps({
@@ -661,6 +661,10 @@ async function importFavicons(backup: BackupData): Promise<void> {
     favHashes: favData.favHashes,
     favDomains: favData.favDomains,
   })
+
+  // Reload favicons in all runned instances
+  Favicons.loadFavicons()
+  IPC.broadcast({ action: 'reloadFavicons' })
 }
 
 async function importKeybindings(backup: BackupData) {

@@ -363,7 +363,7 @@ section(ref="el")
 import { ref, onMounted } from 'vue'
 import { translate } from 'src/dict'
 import { Settings } from 'src/services/settings'
-import { SetupPage } from 'src/services/setup-page'
+import { SetupPage } from 'src/services/_services'
 import ToggleField from '../../components/toggle-field.vue'
 import SelectField from '../../components/select-field.vue'
 import NumField from '../../components/num-field.vue'

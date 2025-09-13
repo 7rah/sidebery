@@ -63,9 +63,8 @@ import { CustomCssTarget } from 'src/types'
 import { Styles } from 'src/services/styles'
 import { Permissions } from 'src/services/permissions'
 import StyleField from '../../components/style-field.vue'
-import { SETTINGS_OPTIONS } from 'src/defaults'
 import { Settings } from 'src/services/settings'
-import { SetupPage } from 'src/services/setup-page'
+import { SetupPage } from 'src/services/_services'
 
 interface CssVar {
   active: boolean
@@ -98,7 +97,12 @@ const state = reactive({
   cssTarget: 'sidebar' as CustomCssTarget,
   colorSampleValue: '#000000',
   groups: [
-    { id: '--general-', label: translate('styles.vars_group.general'), vars: [], match: /^--(general|frame|toolbar)/ },
+    {
+      id: '--general-',
+      label: translate('styles.vars_group.general'),
+      vars: [],
+      match: /^--(general|frame|toolbar)/,
+    },
     { id: '--nav-', label: translate('styles.vars_group.nav'), vars: [] },
     { id: '--tabs-', label: translate('styles.vars_group.tabs'), vars: [] },
     { id: '--bookmarks-', label: translate('styles.vars_group.bookmarks'), vars: [] },

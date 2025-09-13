@@ -36,7 +36,7 @@ import { translate } from 'src/dict'
 import { BackupData } from 'src/types'
 import * as Logs from 'src/services/logs'
 import { Settings } from 'src/services/settings'
-import { SetupPage } from 'src/services/setup-page'
+import { SetupPage } from 'src/services/_services'
 import ExportConfig from './popup.export-config.vue'
 import ImportConfig from './popup.import-config.vue'
 

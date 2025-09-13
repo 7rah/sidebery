@@ -1,7 +1,7 @@
 import * as Utils from 'src/utils'
 import { Notification } from 'src/types'
 import { translate } from 'src/dict'
-import { SetupPage } from './setup-page'
+import * as SetupPage from './setup-page'
 
 export interface NotificationsState {
   list: Notification[]

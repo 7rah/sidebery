@@ -86,8 +86,7 @@ import { NormalizedSnapshot } from 'src/types/snapshots'
 import { Containers } from 'src/services/containers'
 import { Keybindings } from 'src/services/keybindings'
 import { Settings } from 'src/services/settings'
-import { IPC, SidebarConfig, Sync } from 'src/services/_services'
-import { SetupPage } from 'src/services/setup-page'
+import { IPC, SidebarConfig, Sync, SetupPage } from 'src/services/_services'
 
 const props = defineProps({
   importedData: {
@@ -600,6 +599,10 @@ async function importSnapshots(backup: BackupData): Promise<void> {
   }
 
   await Store.set({ snapshots: allSnapshots })
+
+  // Recalc info in snapshots section
+  SetupPage.updStorageInfo('snapshots', allSnapshots)
+  SetupPage.snapshotsViewer.refresh?.(allSnapshots)
 }
 
 async function importFavicons(backup: BackupData): Promise<void> {

@@ -146,7 +146,7 @@ import { TABS_MENU, BOOKMARKS_MENU } from 'src/defaults'
 import { TABS_PANEL_MENU, BOOKMARKS_PANEL_MENU } from 'src/defaults'
 import { MenuConf } from 'src/types'
 import { Menu } from 'src/services/menu'
-import { SetupPage } from 'src/services/setup-page'
+import { SetupPage } from 'src/services/_services'
 import TextInput from '../../components/text-input.vue'
 import FooterSection from './footer-section.vue'
 import Option from './menu-editor.option.vue'
@@ -367,7 +367,7 @@ function parseMenuConf(conf: MenuConf): MenuEditorGroup[] {
  * Handle scroll event
  */
 function onScroll(e: Event): void {
-  if (SetupPage.navLock) return
+  if (SetupPage.state.navLock) return
   SetupPage.updateActiveSection((e.target as HTMLElement).scrollTop)
 }
 

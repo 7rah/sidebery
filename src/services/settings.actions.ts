@@ -21,8 +21,6 @@ import { translate } from 'src/dict'
 
 type Opts = typeof SETTINGS_OPTIONS
 export async function loadSettings(): Promise<void> {
-  Logs.info('Settings.loadSettings()')
-
   const [managedResult, localResult] = await Promise.allSettled([
     browser.storage.managed.get<Stored>('settings'),
     browser.storage.local.get<Stored>('settings'),

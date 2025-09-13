@@ -200,7 +200,7 @@
 import { ref, onMounted } from 'vue'
 import { translate } from 'src/dict'
 import { Keybindings } from 'src/services/keybindings'
-import { SetupPage } from 'src/services/setup-page'
+import { SetupPage } from 'src/services/_services'
 import { Settings } from 'src/services/settings'
 import KeybindingField from 'src/page.setup/components/keybindings.keybinding.vue'
 import ToggleField from 'src/components/toggle-field.vue'

@@ -7,7 +7,7 @@ import { Info } from 'src/services/info'
 import { Sidebar } from 'src/services/sidebar'
 import { History } from 'src/services/history'
 import { Bookmarks } from 'src/services/bookmarks'
-import { SetupPage } from './setup-page'
+import { SetupPage } from './_services'
 
 /**
  * Retrieve current permissions

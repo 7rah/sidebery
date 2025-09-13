@@ -3,27 +3,27 @@
   section(ref="el")
     h2
       span {{translate('settings.storage_title')}}
-      .title-note   (~{{state.storageOveral}})
+      .title-note   (~{{SetupPage.reactive.storageOveral}})
     span.header-shadow
     .storage-section
-      .storage-prop(v-for="info in state.storedProps" @click="openStoredData(info.name)")
+      .storage-prop(v-for="info in SetupPage.reactive.storageProps" @click="openStoredData(info.name)")
         .name {{info.name}}
-        .len(v-if="info.len") {{info.len}}
-        .size {{info.sizeStr}}
+        .len(v-if="info.len") ({{info.len}})
+        .size ~{{info.sizeStr}}
         .btn.-warn(@click.stop="deleteStoredData(info.name)") {{translate('settings.storage_delete_prop')}}
 
     .ctrls
-      .btn(@click="calcStorageInfo") {{translate('settings.update_storage_info')}}
+      .btn(@click="SetupPage.calcStorageInfo") {{translate('settings.update_storage_info')}}
       .btn.-warn(@click="clearStorage") {{translate('settings.clear_storage_info')}}
 
-    .storage-section(v-if="state.faviconsCache.length")
+    .storage-section(v-if="SetupPage.reactive.faviconsCache.length")
       .sub-title: .text {{translate('settings.favs_title')}}
       .favs
-        .fav(v-for="fav in state.faviconsCache" :key="fav.tooltip" :title="fav.tooltip")
+        .fav(v-for="fav in SetupPage.reactive.faviconsCache" :key="fav.tooltip" :title="fav.tooltip")
           img(:src="fav.favicon")
     
-    .ctrls(v-if="state.faviconsCache.length")
-      .btn(@click="calcStorageInfo") {{translate('settings.update_storage_info')}}
+    .ctrls(v-if="SetupPage.reactive.faviconsCache.length")
+      .btn(@click="SetupPage.calcStorageInfo") {{translate('settings.update_storage_info')}}
       .btn.-warn(@click="clearFaviconsCache") {{translate('settings.clear_favicons_cache')}}
 
   section(v-if="Settings.state.syncUseGoogleDrive")
@@ -56,11 +56,10 @@ import { translate } from 'src/dict'
 import * as Utils from 'src/utils'
 import { Stored } from 'src/types'
 import { Store } from 'src/services/storage'
-import { SetupPage } from 'src/services/setup-page'
 import { Settings } from 'src/services/settings'
 import * as Logs from 'src/services/logs'
 import FooterSection from './footer-section.vue'
-import { Google, Sync } from 'src/services/_services'
+import { Google, Sync, SetupPage } from 'src/services/_services'
 
 interface GoogleDriveFileInfo {
   id: string
@@ -79,70 +78,12 @@ interface GoogleDriveFileInfo {
 
 const el = ref<HTMLElement | null>(null)
 const state = reactive({
-  storedProps: [] as { name: string; size: number; sizeStr: string; len: string }[],
-  storageOveral: '-',
-  faviconsCache: [] as { favicon: string; tooltip: string }[],
   googleDriveFiles: [] as GoogleDriveFileInfo[],
 })
 
 onMounted(() => {
   SetupPage.registerEl('settings_storage', el.value)
-  calcStorageInfo()
 })
-
-async function calcStorageInfo(): Promise<void> {
-  let stored: Stored
-  try {
-    stored = await browser.storage.local.get<Stored>()
-  } catch (err) {
-    return
-  }
-
-  state.storageOveral = Utils.strSize(JSON.stringify(stored))
-  state.storedProps = Object.keys(stored)
-    .map(key => {
-      const value = stored[key as keyof Stored]
-      const size = new Blob([JSON.stringify(value)]).size
-      const len = Array.isArray(value) ? `(${value.length as number}) ` : ''
-      return { name: key, size, len, sizeStr: '~' + Utils.strSize(JSON.stringify(value)) }
-    })
-    .sort((a, b) => b.size - a.size)
-
-  state.faviconsCache = []
-  if (stored.favicons_01 && stored.favDomains) {
-    const fullList = [
-      ...(stored.favicons_01 ?? []),
-      ...(stored.favicons_02 ?? []),
-      ...(stored.favicons_03 ?? []),
-      ...(stored.favicons_04 ?? []),
-      ...(stored.favicons_05 ?? []),
-    ]
-    const favsDomainsInfo: { domain: string; index: number; len: number }[][] = []
-    for (const d of Object.keys(stored.favDomains)) {
-      const domainInfo = stored.favDomains[d]
-      const fdi = favsDomainsInfo[domainInfo.index]
-      if (fdi) fdi.push({ domain: d, ...domainInfo })
-      else favsDomainsInfo[domainInfo.index] = [{ domain: d, ...domainInfo }]
-    }
-    for (let fav, domains, i = 0; i < fullList.length; i++) {
-      fav = fullList[i]
-      domains = favsDomainsInfo[i]
-      const tooltipInfo = []
-      if (fav) {
-        tooltipInfo.push(`${fav.substring(0, 32)}...\nSize: ${Utils.sizeToString(fav.length)}`)
-      }
-      if (domains?.length) {
-        const index = domains[0].index
-        tooltipInfo.push(`Index: ${index}`)
-
-        for (const domain of domains) {
-          tooltipInfo.push(`Domain: ${domain.domain} | src url len: ${domain.len}`)
-        }
-      }
-      state.faviconsCache.push({ favicon: fav, tooltip: tooltipInfo.join('\n') })
-    }
-  }
-}
 
 async function openStoredData(prop: string): Promise<void> {
   let stored
@@ -170,15 +111,17 @@ async function openStoredData(prop: string): Promise<void> {
   }
 }
 
-async function deleteStoredData(prop: string): Promise<void> {
-  if (window.confirm(translate('settings.storage_delete_confirm') + `"${prop}"?`)) {
-    try {
-      await browser.storage.local.remove(prop)
-    } catch (err) {
-      return Logs.err('deleteStoredData: Cannot remove value', err)
-    }
-    calcStorageInfo()
+async function deleteStoredData(prop: keyof Stored): Promise<void> {
+  if (!window.confirm(translate('settings.storage_delete_confirm') + `"${prop}"?`)) return
+
+  try {
+    await browser.storage.local.remove(prop)
+  } catch (err) {
+    return Logs.err('deleteStoredData: Cannot remove value', err)
   }
+  SetupPage.updStorageInfo(prop)
+
+  if (prop === 'snapshots') SetupPage.snapshotsViewer.refresh?.([])
 }
 
 async function clearStorage(): Promise<void> {

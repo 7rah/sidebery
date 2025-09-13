@@ -4,7 +4,6 @@ import { translate } from 'src/dict'
 import { Settings } from 'src/services/settings'
 import { Sidebar } from 'src/services/sidebar'
 import * as Selection from 'src/services/selection'
-import { SetupPage } from 'src/services/setup-page'
 import { Menu } from 'src/services/menu'
 import { Tabs } from 'src/services/tabs.fg'
 import { Containers } from 'src/services/containers'
@@ -13,7 +12,7 @@ import { bookmarksMenuOptions } from './menu.options.bookmarks'
 import { historyMenuOptions } from './menu.options.history'
 import { CONTAINER_ID } from 'src/defaults'
 import * as Popups from 'src/services/popups'
-import { SidebarConfig } from './_services'
+import { SetupPage, SidebarConfig } from './_services'
 
 export const menuOptions: Record<string, () => MenuOption | MenuOption[] | undefined> = {
   ...tabsMenuOptions,

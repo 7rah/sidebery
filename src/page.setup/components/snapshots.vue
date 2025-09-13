@@ -111,6 +111,7 @@ import { Store } from 'src/services/storage'
 import { Snapshots } from 'src/services/snapshots'
 import DropDownButton from 'src/components/drop-down-button.vue'
 import SnapTab from './snapshots.tab.vue'
+import { SetupPage } from 'src/services/_services'
 
 const SCROLL_CONF = { behavior: 'smooth', block: 'nearest' } as const
 
@@ -170,6 +171,13 @@ void (async function init(): Promise<void> {
 
 function onSnapshotsChange(newSnapshots?: Snapshot[]): void {
   if (!newSnapshots) newSnapshots = []
+
+  SetupPage.updStorageInfo('snapshots', newSnapshots)
+
+  updateSnapshots(newSnapshots)
+}
+
+function updateSnapshots(newSnapshots: Snapshot[]) {
   const snapshots = []
 
   // Normalize snapshots
@@ -185,6 +193,7 @@ function onSnapshotsChange(newSnapshots?: Snapshot[]): void {
   state.snapshots = snapshots
   state.activeSnapshot = activeSnapshot ?? snapshots[0]
 }
+SetupPage.snapshotsViewer.refresh = updateSnapshots
 
 function activateSnapshot(snapshot?: SnapshotState): void {
   if (!snapshot || state.activeSnapshot === snapshot) return

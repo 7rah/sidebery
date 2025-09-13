@@ -165,7 +165,7 @@ import {
   createSyncPanelConfig,
 } from 'src/services/sidebar-config'
 import { Permissions } from 'src/services/permissions'
-import { SetupPage } from 'src/services/setup-page'
+import { SetupPage } from 'src/services/_services'
 import ToggleField from '../../components/toggle-field.vue'
 import SelectField from '../../components/select-field.vue'
 import InfoField from '../../components/info-field.vue'

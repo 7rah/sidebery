@@ -35,7 +35,7 @@
 import { computed, onMounted } from 'vue'
 import { translate } from 'src/dict'
 import { Settings } from 'src/services/settings'
-import { SetupPage } from 'src/services/setup-page'
+import { SetupPage } from 'src/services/_services'
 import { Bookmarks } from 'src/services/bookmarks'
 import { Styles } from 'src/services/styles'
 import SettingsView from './components/settings.vue'

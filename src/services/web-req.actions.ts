@@ -209,8 +209,10 @@ export function updateReqHandlers(): void {
   } else {
     for (const tab of Object.values(Tabs.byId)) {
       if (!tab) continue
-      tab.proxified = false
-      Tabs.hideProxyBadge(tab.id)
+      if (tab.proxified) {
+        tab.proxified = false
+        Tabs.hideProxyBadge(tab.id)
+      }
     }
   }
 

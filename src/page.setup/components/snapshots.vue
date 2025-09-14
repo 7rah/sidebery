@@ -288,6 +288,7 @@ async function openSelectedTabs(how: SnapOpenType): Promise<void> {
       await IPC.sidebar(Windows.id, 'openTabs', items, { panelId: NOID })
     } else {
       const creating = []
+      const oldNewIds: Record<ID, ID> = {}
       for (const item of items) {
         const conf: browser.tabs.CreateProperties = {
           url: Utils.normalizeUrl(item.url, item.title),
@@ -301,14 +302,20 @@ async function openSelectedTabs(how: SnapOpenType): Promise<void> {
           conf.active = false
         }
 
-        creating.push(browser.tabs.create(conf))
+        creating.push(browser.tabs.create(conf).then(t => (oldNewIds[item.id] = t.id)))
       }
       try {
         await Promise.all(creating)
       } catch (err) {
         Logs.err('Snapshots.openSelectedTabs: Cannot open tabs in current panel:', err)
       }
-      // TODO: update openerTabId
+      // Update openerTabId to preserve tree structure
+      for (const item of items) {
+        if (item.parentId === undefined || item.parentId === NOID) continue
+        const tabId = oldNewIds[item.id]
+        const openerTabId = oldNewIds[item.parentId]
+        if (openerTabId !== undefined) browser.tabs.update(tabId, { openerTabId })
+      }
     }
   } else {
     await IPC.bg('createWindowWithTabs', items, {

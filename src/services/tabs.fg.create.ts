@@ -358,7 +358,8 @@ export async function open(
   // ---
   // Get dst panel
   let dstPanel: Panel | undefined = Sidebar.panelsById[dst.panelId ?? NOID]
-  if (dst.panelId === undefined || !dstPanel || dstPanel.type !== PanelType.tabs) {
+  if (!Utils.isTabsPanel(dstPanel)) dstPanel = Sidebar.panelsById[Sidebar.lastTabsPanelId]
+  if (!Utils.isTabsPanel(dstPanel)) {
     dstPanel = Sidebar.panels.find(p => p.type === PanelType.tabs)
   }
 

@@ -260,6 +260,7 @@ async function openSelectedTabs(how: SnapOpenType): Promise<void> {
           id: tab.id,
           url: tab.url,
           customTitle: tab.customTitle,
+          customColor: tab.customColor,
           title: tab.title,
           container: tab.containerId ?? CONTAINER_ID,
         }

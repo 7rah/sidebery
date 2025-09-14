@@ -154,6 +154,7 @@ async function openTab(tab: SnapTabState): Promise<void> {
       id: tab.id ?? NOID,
       url: Snapshots.updateInternalUrl(tab.url),
       customTitle: tab.customTitle,
+      customColor: tab.customColor,
       title: tab.title,
       container: tab.containerId ?? CONTAINER_ID,
     }

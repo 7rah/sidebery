@@ -81,7 +81,7 @@ export function updateContainers(newContainers?: Record<ID, Container> | null): 
   if (!newContainers) return
   Containers.reactive.byId = newContainers
 
-  if (Info.isBg) WebReq.updateReqHandlersDebounced()
+  if (Info.isBg) WebReq.updateReqHandlersDebounced(0)
 
   if (Info.isSidebar && Settings.state.ctxMenuIgnoreContainers) {
     Menu.parseContainersRules()

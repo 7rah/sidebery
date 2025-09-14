@@ -678,6 +678,11 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
     }
 
     Sidebar.checkDiscardedTabsInPanelDebounced(tab.panelId, 120)
+
+    if (Settings.state.hideUnloadedTabs) {
+      if (change.discarded) browser.tabs.hide?.([tabId])
+      else browser.tabs.show?.([tabId])
+    }
   }
 
   // Status change

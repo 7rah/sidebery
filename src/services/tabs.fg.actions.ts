@@ -1213,10 +1213,6 @@ export async function discardTabs(tabIds: ID[] = []): Promise<void> {
       Logs.err('Tabs.discardTabs: Cannot discard (second try):', err)
     })
   }
-
-  if (Settings.state.hideUnloadedTabs) {
-    updateNativeTabsVisibility()
-  }
 }
 
 /**

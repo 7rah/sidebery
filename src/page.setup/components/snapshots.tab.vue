@@ -15,6 +15,7 @@
   @mousedown="onTabMouseDown($event, tab)"
   @mouseup.stop.prevent="onTabMouseUp($event, tab)")
   .container-mark(v-if="tab.containerIcon")
+  .color-layer(v-if="tab.customColor" :style="{ '--tab-color': RGB_COLORS[tab.customColor as browser.ColorName] }")
   .drop-down-btn(
     v-if="tab.isParent"
     @click="Snapshots.foldBranchInViewer(index, panel.tabs)"
@@ -42,7 +43,7 @@
 
 <script lang="ts" setup>
 import { ItemInfo, SnapPanelState, SnapshotState, SnapTabState } from 'src/types'
-import { CONTAINER_ID, NOID } from 'src/defaults'
+import { CONTAINER_ID, NOID, RGB_COLORS } from 'src/defaults'
 import { Snapshots } from 'src/services/snapshots'
 import { Favicons } from 'src/services/_services.fg'
 import { IPC, Logs, Utils } from 'src/services/_services'

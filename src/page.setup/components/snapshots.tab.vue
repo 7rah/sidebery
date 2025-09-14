@@ -150,7 +150,7 @@ async function openTab(tab: SnapTabState): Promise<void> {
     Logs.err('snapshots.tab.openTab: Unable to getActivePanelConfig:', err)
   }
 
-  if (Utils.isTabsPanel(activePanel)) {
+  if (activePanel) {
     const item: ItemInfo = {
       id: tab.id ?? NOID,
       url: Snapshots.updateInternalUrl(tab.url),
@@ -159,7 +159,11 @@ async function openTab(tab: SnapTabState): Promise<void> {
       title: tab.title,
       container: tab.containerId ?? CONTAINER_ID,
     }
-    await IPC.sidebar(Windows.id, 'openTabs', [item], { panelId: activePanel.id })
+    if (Utils.isTabsPanel(activePanel)) {
+      await IPC.sidebar(Windows.id, 'openTabs', [item], { panelId: activePanel.id })
+    } else {
+      await IPC.sidebar(Windows.id, 'openTabs', [item], { panelId: NOID })
+    }
   } else {
     const conf: browser.tabs.CreateProperties = {
       url: Utils.normalizeUrl(Snapshots.updateInternalUrl(tab.url), tab.title),

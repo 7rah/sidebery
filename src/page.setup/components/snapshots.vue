@@ -102,7 +102,7 @@ import {
   SnapTabState,
   Stored,
 } from 'src/types'
-import { CONTAINER_ID } from 'src/defaults'
+import { CONTAINER_ID, NOID } from 'src/defaults'
 import { translate } from 'src/dict'
 import * as IPC from 'src/services/ipc'
 import * as Logs from 'src/services/logs'
@@ -278,9 +278,10 @@ async function openSelectedTabs(how: SnapOpenType): Promise<void> {
 
   if (how === SnapOpenType.CurrentPanel) {
     const activePanel = await IPC.sidebar(Windows.id, 'getActivePanelConfig').catch(() => undefined)
-    // TODO: or find another tab panel
     if (Utils.isTabsPanel(activePanel)) {
       await IPC.sidebar(Windows.id, 'openTabs', items, { panelId: activePanel.id })
+    } else if (activePanel) {
+      await IPC.sidebar(Windows.id, 'openTabs', items, { panelId: NOID })
     } else {
       const creating = []
       for (const item of items) {

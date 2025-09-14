@@ -228,7 +228,6 @@ export function updateReqHandlers(): void {
 
 let updateReqHandlersTimeout: number | undefined
 export function updateReqHandlersDebounced(delay = 500): void {
-  Logs.info('WebReq.updateReqHandlersDebounced')
   clearTimeout(updateReqHandlersTimeout)
   updateReqHandlersTimeout = setTimeout(() => updateReqHandlers(), delay)
 }

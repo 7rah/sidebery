@@ -157,8 +157,12 @@ export async function load(): Promise<void> {
       try {
         await restoreTabsState(isLastTry)
       } catch (err) {
-        if (err === Err.TabsLocked) again()
-        else Logs.err('Tabs.load: Cannot restore tabs state', err)
+        if (err === Err.TabsLocked) {
+          Logs.warn('Tabs.load: Err.TabsLocked, trying again...')
+          again()
+        } else {
+          Logs.err('Tabs.load: Cannot restore tabs state', err)
+        }
       }
     },
     interval: 500,
@@ -284,6 +288,8 @@ async function restoreTabsState(ignoreLockedTabs?: boolean): Promise<void> {
   const nativeTabs = Utils.settledOr(results[0], [])
   const storage = Utils.settledOr(results[1], {})
   let tabsWasMoved = false
+
+  Logs.info('Tabs.restoreTabsState: nativeTabs.length:', nativeTabs.length)
 
   // Check if tabs were locked (sidebery opened this window)
   if (isWindowTabsLocked) {

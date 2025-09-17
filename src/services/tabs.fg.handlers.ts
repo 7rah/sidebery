@@ -1295,11 +1295,14 @@ function onTabRemoved(tabId: ID, info: browser.tabs.RemoveInfo, detached?: boole
   }
 }
 
+let _ignoreMoveEvents = false
+
 /**
  * Tabs.onMoved
  */
 function onTabMoved(id: ID, info: browser.tabs.MoveInfo): void {
   if (info.windowId !== Windows.id) return
+  if (_ignoreMoveEvents) return
   if (!Tabs.ready) {
     Tabs.deferredEventHandling.push(() => onTabMoved(id, info))
     return
@@ -1421,6 +1424,14 @@ function onTabMoved(id: ID, info: browser.tabs.MoveInfo): void {
   if (!mvLen) Tabs.updateSuccessionDebounced(0)
 
   if (nativeTabsVisibilityUpdateNeeded) Tabs.updateNativeTabsVisibility()
+}
+
+const ignoreMoveEventsReasons = new Set<string>()
+
+export function ignoreMoveEvents(state: boolean, reason: string) {
+  if (state) ignoreMoveEventsReasons.add(reason)
+  else ignoreMoveEventsReasons.delete(reason)
+  _ignoreMoveEvents = ignoreMoveEventsReasons.size > 0
 }
 
 /**

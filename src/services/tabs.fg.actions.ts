@@ -257,6 +257,11 @@ export function unload(): void {
   Tabs.loadInShadowMode()
 }
 
+// function dbgTabs(msg: string, tabs: Tab[]) {
+//   const dbg = tabs.map(t => `id:${t.id}, i:${t.index}, pr:${t.parentId}, pn:${t.panelId}`)
+//   Logs.info(msg, '\n' + dbg.join('\n'))
+// }
+
 async function restoreTabsState(ignoreLockedTabs?: boolean): Promise<void> {
   if (!Sidebar.hasTabs) return
 
@@ -310,7 +315,7 @@ async function restoreTabsState(ignoreLockedTabs?: boolean): Promise<void> {
 
   // Restore tabs data from cache
   if (tabsCache) {
-    tabs = restoreTabsFromCache(nativeTabs, tabsCache, lastPanel)
+    tabs = restoreTabsFromCache([...nativeTabs], tabsCache, lastPanel)
   }
 
   // From session data
@@ -325,8 +330,12 @@ async function restoreTabsState(ignoreLockedTabs?: boolean): Promise<void> {
       tabsSessionData = []
     }
 
-    tabs = restoreTabsFromSessionData(nativeTabs, tabsSessionData, lastPanel)
+    tabs = restoreTabsFromSessionData([...nativeTabs], tabsSessionData, lastPanel)
   }
+
+  // dbgTabs('Tabs.restoreTabsState: Restored:', tabs)
+
+  tabs = await restoreTabPanelsContent(tabs)
 
   Tabs.list = tabs
   Sidebar.recalcTabsPanels()
@@ -375,55 +384,145 @@ async function restoreTabsState(ignoreLockedTabs?: boolean): Promise<void> {
   Logs.info(`Tabs.restoreTabsState: Done: ${performance.now() - ts}ms`)
 }
 
+/**
+ * Moves tabs to their panels if needed
+ */
+async function restoreTabPanelsContent(tabs: Tab[]) {
+  // Get sorted tabs
+  let sortedTabs: Tab[] = []
+  if (Settings.state.pinnedTabsPosition === 'panel') {
+    for (const panel of Sidebar.panels) {
+      sortedTabs = sortedTabs.concat(tabs.filter(t => t.pinned && t.panelId === panel.id))
+    }
+  } else {
+    for (const tab of tabs) {
+      if (tab.pinned) sortedTabs.push(tab)
+      else break
+    }
+  }
+  for (const panel of Sidebar.panels) {
+    sortedTabs = sortedTabs.concat(tabs.filter(t => !t.pinned && t.panelId === panel.id))
+  }
+
+  // Check if sorted and native tabs have different orders
+  let tabsAreUnsorted = false
+  let unmatchIndex = -1
+  for (let i = 0; i < tabs.length; i++) {
+    if (tabs[i] !== sortedTabs[i]) {
+      tabsAreUnsorted = true
+      unmatchIndex = i
+      break
+    }
+  }
+
+  if (tabsAreUnsorted) {
+    Logs.warn('Tabs.restoreTabPanelsContent: Tabs are unsorted!')
+
+    // Sort tabs
+    Tabs.ignoreMoveEvents(true, 'initsort')
+    const idsToMove = sortedTabs.map(t => t.id).slice(unmatchIndex)
+    Logs.info('Tabs.restoreTabPanelsContent: idsToMove:', idsToMove)
+    try {
+      await browser.tabs.move(idsToMove, { index: unmatchIndex })
+    } catch (err) {
+      Tabs.ignoreMoveEvents(false, 'initsort')
+      throw err
+    }
+    tabs = sortedTabs
+
+    // Update indexes
+    for (let i = unmatchIndex; i < tabs.length; i++) {
+      tabs[i].index = i
+    }
+    Tabs.ignoreMoveEvents(false, 'initsort')
+
+    // dbgTabs('Tabs.restoreTabsState: Sorted:', tabs)
+  }
+
+  return tabs
+}
+
+function restoreTab(
+  nativeTab: NativeTab,
+  idsMap: Partial<Record<ID, ID>>,
+  fallbackPanelId: ID,
+  props?: TabCache | TabSessionData
+): Tab {
+  // Convert native tab to sidebery tab
+  const tab = mutateNativeTabToSideberyTab(nativeTab)
+
+  // Restore props
+  if (props) {
+    // Parent tab
+    const actualParentId = idsMap[props.parentId ?? NOID]
+    if (actualParentId !== undefined) tab.parentId = actualParentId
+
+    tab.reactive.folded = tab.folded = !!props.folded
+    if (props.customTitle) tab.customTitle = props.customTitle
+    if (props.customColor) tab.reactive.customColor = tab.customColor = props.customColor
+  }
+
+  // Use openerTabId as fallback for parentId
+  if (tab.parentId === -1 && tab.openerTabId !== undefined && Tabs.byId[tab.openerTabId]) {
+    tab.parentId = tab.openerTabId
+  }
+
+  // Set panel
+  const panel = Sidebar.panelsById[props?.panelId ?? NOID]
+  if (panel) {
+    // Panel is found
+    if (tab.pinned && Settings.state.pinnedTabsPosition !== 'panel') {
+      // Set the first tabs panel (fallbackPanelId) as the panel for global pinned tabs
+      tab.panelId = fallbackPanelId
+    } else {
+      tab.panelId = panel.id
+    }
+  } else {
+    // Panel is not found
+    Logs.warn(`Tabs.restoreTab: cannot find panel: "${props?.panelId}"; tab index: ${tab.index}`)
+    const parentTab = Tabs.byId[tab.parentId]
+    if (!props && parentTab && parentTab.index < tab.index) {
+      // Append unknown (new) tabs to the panel of parent tab
+      tab.panelId = parentTab.panelId
+    } else if (!props && Utils.isTabsPanel(Sidebar.panelsById[Sidebar.lastActivePanelId])) {
+      // Append unknown (new) tabs to the last active tabs panel
+      tab.panelId = Sidebar.lastActivePanelId
+    } else {
+      // Or just set the fallback
+      tab.panelId = fallbackPanelId
+    }
+  }
+
+  return tab
+}
+
+/**
+ * Restores sidebery tabs props from cache
+ */
 function restoreTabsFromCache(
   nativeTabs: NativeTab[],
   cache: Record<ID, TabCache>,
-  lastPanel: Panel
+  fallbackPanel: Panel
 ): Tab[] {
   Logs.info('Tabs.restoreTabsFromCache')
 
-  const firstPanelId = lastPanel.id
-  const idsMap: Record<ID, ID> = {}
   const tabs: Tab[] = []
+
+  // Get ids map
+  const idsMap: Partial<Record<ID, ID>> = {}
+  for (const nativeTab of [...nativeTabs]) {
+    const data = cache[nativeTab.id]
+    if (data) idsMap[data.id] = nativeTab.id
+  }
 
   // Go through tabs and restore sidebery props
   Tabs.byId = {}
   for (const nativeTab of [...nativeTabs]) {
     const data = cache[nativeTab.id]
+    const tab = restoreTab(nativeTab, idsMap, fallbackPanel.id, data)
 
-    // Normalize tab
-    const tab = mutateNativeTabToSideberyTab(nativeTab)
-    if (tab.pinned) tab.panelId = firstPanelId
-
-    if (data) {
-      if (data.parentId === undefined) data.parentId = NOID
-
-      // Restore props
-      tab.panelId = data.panelId ?? lastPanel.id
-      const actualParentId = idsMap[data.parentId]
-      if (actualParentId !== undefined) tab.parentId = actualParentId
-      tab.reactive.folded = tab.folded = !!data.folded
-      if (data.customTitle) tab.customTitle = data.customTitle
-      if (data.customColor) tab.reactive.customColor = tab.customColor = data.customColor
-      idsMap[data.id] = tab.id
-    }
-
-    // Normalize panelId
-    const panel = Sidebar.panelsById[tab.panelId]
-    if (!panel) {
-      tab.panelId = lastPanel.id
-    } else {
-      if (!tab.pinned) {
-        // Check order of panels
-        if (panel.index < lastPanel.index) tab.panelId = lastPanel.id
-        else lastPanel = panel
-      }
-    }
-
-    // Use openerTabId as fallback for parentId
-    if (tab.parentId === -1 && tab.openerTabId !== undefined && Tabs.byId[tab.openerTabId]) {
-      tab.parentId = tab.openerTabId
-    }
+    // Update fallback panel so the next tab without panelId will be appended to it
+    if (!tab.pinned) fallbackPanel = Sidebar.panelsById[tab.panelId] ?? fallbackPanel
 
     Tabs.reactivateTab(tab)
     Tabs.byId[tab.id] = tab
@@ -433,80 +532,41 @@ function restoreTabsFromCache(
   return tabs
 }
 
+/**
+ * Restores sidebery tabs props from session data
+ */
 function restoreTabsFromSessionData(
   nativeTabs: NativeTab[],
   tabsData: (TabSessionData | undefined)[],
-  lastPanel: Panel
+  fallbackPanel: Panel
 ): Tab[] {
   Logs.info('Tabs.restoreTabsFromSessionData')
 
-  const firstPanelId = lastPanel.id
-  const idsMap: Record<ID, ID> = {}
   const tabs: Tab[] = []
+
+  // Get ids map
+  const idsMap: Partial<Record<ID, ID>> = {}
+  for (let data, nativeTab, i = 0; i < nativeTabs.length; i++) {
+    nativeTab = nativeTabs[i]
+    data = tabsData[i]
+    if (data && nativeTab) idsMap[data.id] = nativeTab.id
+  }
 
   // Set tabs initial props and update state
   Tabs.byId = {}
   for (let data, nativeTab, i = 0; i < nativeTabs.length; i++) {
     nativeTab = nativeTabs[i]
-    if (!nativeTab) {
-      Logs.err('Tabs.restoreTabsFromSessionData: No tab')
-      break
-    }
-
     data = tabsData[i]
+    if (!nativeTab) throw `Tabs.restoreTabsFromSessionData: ${i}'st native tab is undefined`
 
-    const tab = mutateNativeTabToSideberyTab(nativeTab)
-    if (tab.pinned) tab.panelId = firstPanelId
+    const tab = restoreTab(nativeTab, idsMap, fallbackPanel.id, data)
 
-    if (data) {
-      if (data.parentId === undefined) data.parentId = NOID
-
-      // Restore props
-      tab.panelId = data.panelId ?? lastPanel.id
-      const actualParentId = idsMap[data.parentId]
-      if (actualParentId !== undefined) tab.parentId = actualParentId
-      tab.reactive.folded = tab.folded = !!data.folded
-      if (data.customTitle) tab.customTitle = data.customTitle
-      if (data.customColor) tab.reactive.customColor = tab.customColor = data.customColor
-      idsMap[data.id] = tab.id
-    }
-
-    // Normalize panelId
-    const panel = Sidebar.panelsById[tab.panelId]
-    if (!panel) tab.panelId = lastPanel.id
-
-    // Use openerTabId as fallback for parentId
-    if (tab.parentId === -1 && tab.openerTabId !== undefined && Tabs.byId[tab.openerTabId]) {
-      tab.parentId = tab.openerTabId
-    }
+    // Update fallback panel so the next tab without panelId will be appended to it
+    if (!tab.pinned) fallbackPanel = Sidebar.panelsById[tab.panelId] ?? fallbackPanel
 
     Tabs.reactivateTab(tab)
     Tabs.byId[tab.id] = tab
     tabs.push(tab)
-  }
-
-  let lastPanelIndex = -1
-  for (const panel of Sidebar.panels) {
-    if (!Utils.isTabsPanel(panel)) continue
-
-    let prevTabIndex = -1
-    for (let ti = 0; ti < tabs.length; ti++) {
-      const tab = tabs[ti]
-      if (tab.pinned) continue
-
-      if (tab.panelId !== panel.id) continue
-
-      if (tab.index <= lastPanelIndex || (prevTabIndex !== -1 && tab.index - 1 !== prevTabIndex)) {
-        let prevTab = tabs[ti - 1] as Tab | undefined
-        if (prevTab?.pinned) prevTab = undefined
-        tab.panelId = prevTab?.panelId ?? firstPanelId
-        continue
-      }
-
-      prevTabIndex = tab.index
-    }
-
-    lastPanelIndex = prevTabIndex
   }
 
   return tabs

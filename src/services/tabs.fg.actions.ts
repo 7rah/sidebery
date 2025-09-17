@@ -522,13 +522,25 @@ function findCachedData(
   let maxEqualityCounter = 1
   let result: Record<ID, TabCache> | undefined
 
+  Logs.info('Tabs.findCachedData')
+  Logs.info('Tabs.findCachedData: cached windows count:', data.length)
+
+  if (tabs.length <= 1) {
+    Logs.info('Tabs.findCachedData: Skipping')
+    return
+  }
+
   if (Windows.uniqWinId && Windows.uniqWinId !== NOID) {
     const winTabsCache = data.find(winTabs => winTabs[0]?.uniqWinId === Windows.uniqWinId)
     if (winTabsCache) data = [winTabsCache]
+    Logs.info('Tabs.findCachedData: Window has uniqWinId, matched cache found:', !!winTabsCache)
   }
 
   for (const winTabs of data) {
     let equalityCounter = 0
+    let blindspotCounter = 0
+
+    Logs.info('Tabs.findCachedData:   cached tabs length:', winTabs.length)
 
     const existedTabs: Record<ID, TabCache> = {}
 
@@ -542,6 +554,7 @@ function findCachedData(
 
       // Match
       const blindspot = tab.status === 'loading' && tab.url === 'about:blank'
+      if (blindspot) blindspotCounter++
       if ((tabData.url === tab.url && !!tabData.pin === tab.pinned) || blindspot) {
         existedTabs[tab.id] = tabData
         equalityCounter++
@@ -563,12 +576,14 @@ function findCachedData(
       }
     }
 
+    Logs.info('Tabs.findCachedData:     equalityCounter:', equalityCounter)
+    Logs.info('Tabs.findCachedData:     blindspotCounter:', blindspotCounter)
+
     const mismatchedLen = tabs.length - equalityCounter
-    const mismatchedTh = tabs.length < 3 ? 0 : tabs.length < 10 ? 1 : 2
 
     if (
-      (tabs.length <= winTabs.length && mismatchedLen > mismatchedTh) ||
-      (tabs.length > winTabs.length && mismatchedLen > mismatchedTh + tabs.length - winTabs.length)
+      (tabs.length <= winTabs.length && mismatchedLen > 0) ||
+      (tabs.length > winTabs.length && mismatchedLen > tabs.length - winTabs.length)
     ) {
       Logs.warn('Tabs.findCachedData: mismatched:', mismatchedLen, tabs.length, winTabs.length)
       continue

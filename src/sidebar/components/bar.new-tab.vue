@@ -75,7 +75,7 @@ const defaultBtn = computed<NewTabBtn>(() => {
   const btn: NewTabBtn = { id: 'default' }
 
   const contianer = Containers.reactive.byId[props.panel.reactive.newTabCtx]
-  if (contianer) {
+  if (contianer && !Windows.incognito) {
     btn.containerId = contianer.id
     btn.containrtName = contianer.name
     btn.icon = '#' + contianer.icon

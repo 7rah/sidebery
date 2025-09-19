@@ -1,5 +1,6 @@
 import { DragInfo, DstPlaceInfo, ItemInfo, Panel, PanelType, Tab, TabsPanel } from 'src/types'
 import { ASKID, CONTAINER_ID, GROUP_URL, INITIAL_TITLE_RE, NEWID, NOID } from 'src/defaults'
+import { PRIVATE_CONTAINER_ID } from 'src/defaults'
 import { Sidebar } from 'src/services/sidebar'
 import { Tabs } from 'src/services/tabs.fg'
 import { Settings } from 'src/services/settings'
@@ -103,6 +104,7 @@ export async function createTabInPanel(panel: Panel, conf?: browser.tabs.CreateP
   if (conf?.active !== undefined) config.active = conf.active
   if (index !== undefined) Tabs.setNewTabPosition(index, parentId ?? NOID, panel.id)
   if (panel.newTabCtx !== 'none' && !conf?.cookieStoreId) config.cookieStoreId = panel.newTabCtx
+  if (Windows.incognito && config.cookieStoreId) config.cookieStoreId = PRIVATE_CONTAINER_ID
 
   _creatingTabInPanel = true
   await browser.tabs.create(config).catch(err => {

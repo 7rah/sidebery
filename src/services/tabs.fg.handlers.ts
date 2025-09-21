@@ -842,6 +842,9 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
     tab.reactive.mediaPaused = false
   }
 
+  const pinned = change.pinned !== undefined && !tab.pinned && change.pinned
+  const unpinned = change.pinned !== undefined && tab.pinned && !change.pinned
+
   // Update tab object
   Object.assign(tab, change)
 
@@ -851,7 +854,7 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
   }
 
   // Handle unpinned tab
-  if (change.pinned !== undefined && !change.pinned) {
+  if (unpinned) {
     Tabs.cacheTabsData(640)
 
     let panel
@@ -897,7 +900,7 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
   }
 
   // Handle pinned tab
-  if (change.pinned !== undefined && change.pinned) {
+  if (pinned) {
     Tabs.cacheTabsData(640)
 
     const prevPanelId = tab.prevPanelId

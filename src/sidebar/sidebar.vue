@@ -47,6 +47,7 @@
   Transition(name="popup" type="transition"): DialogPopup(v-if="Popups.reactive.dialog" :dialog="Popups.reactive.dialog")
   Transition(name="popup" type="transition"): NewTabShortcutsPopup(v-if="Popups.reactive.newTabShortcutsPopup")
   Transition(name="popup" type="transition"): SiteConfigPopup(v-if="Popups.reactive.siteConfigPopup")
+  Transition(name="popup" type="transition"): SessionRestorePopup(v-if="Popups.reactive.sessionRestorePopup")
   CtxMenuPopup
   DragAndDropTooltip
   NotificationsPopup
@@ -145,6 +146,7 @@ import GroupConfigPopup from './components/popup.group-config.vue'
 import DialogPopup from 'src/components/popup.dialog.vue'
 import NewTabShortcutsPopup from '../components/popup.new-tab-shortcuts.vue'
 import SiteConfigPopup from '../components/popup.site-config.vue'
+import SessionRestorePopup from './components/popup.session-restore.vue'
 import SubPanel from './components/sub-panel.vue'
 import * as Utils from 'src/utils'
 import * as Popups from 'src/services/popups'

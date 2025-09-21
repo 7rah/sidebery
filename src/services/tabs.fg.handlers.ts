@@ -183,9 +183,6 @@ async function tryToRestoreTabsStateFromSessionData(
   // Show popup about restoring the tabs
   Popups.openSessionRestorePopup()
 
-  // Wait 250ms to be sure that popup is blocking layout
-  await Utils.sleep(250)
-
   // Unload tabs
   Tabs.unload()
 
@@ -206,7 +203,7 @@ async function tryToRestoreTabsStateFromSessionData(
   // Load tabs
   await Tabs.load(LoadSrc.SessionOnly)
 
-  // Another sleep
+  // Wait for the browser to render the tabs calmly
   await Utils.sleep(100)
 
   // Close popup

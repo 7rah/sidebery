@@ -467,6 +467,8 @@ function restoreTab(
     tab.reactive.folded = tab.folded = !!props.folded
     if (props.customTitle) tab.customTitle = props.customTitle
     if (props.customColor) tab.reactive.customColor = tab.customColor = props.customColor
+  } else {
+    Logs.warn(`Tabs.restoreTab: no props for: "${tab.id} i${tab.index} url${tab.url}"`)
   }
 
   // Use openerTabId as fallback for parentId

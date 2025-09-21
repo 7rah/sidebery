@@ -83,6 +83,10 @@ export interface ReactiveTabProps {
   preview: boolean
 }
 
+export const enum LoadSrc {
+  SessionOnly = 1,
+}
+
 export interface InlineTabData {
   lvl: number
   panelId: ID

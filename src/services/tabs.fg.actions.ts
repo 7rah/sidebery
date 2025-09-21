@@ -4,7 +4,7 @@ import { BKM_OTHER_ID, ADDON_HOST, BKM_ROOT_ID } from 'src/defaults'
 import { translate } from 'src/dict'
 import { Stored, Tab, Panel, TabCache, ActiveTabsHistory, ReactiveTabProps } from 'src/types'
 import { Notification, TabSessionData, TabsTreeData, NativeTab, DstPlaceInfo } from 'src/types'
-import { ItemInfo, TabTreeData, TabStatus, CopyTemplate } from 'src/types'
+import { ItemInfo, TabTreeData, TabStatus, CopyTemplate, LoadSrc } from 'src/types'
 import { Tabs } from 'src/services/tabs.fg'
 import * as IPC from 'src/services/ipc'
 import * as Logs from 'src/services/logs'
@@ -142,10 +142,6 @@ export async function waitForTabsReady(): Promise<void> {
   return new Promise(ok => {
     waitingForTabs.push(ok)
   })
-}
-
-export const enum LoadSrc {
-  SessionOnly = 1,
 }
 
 export async function load(src?: LoadSrc): Promise<void> {

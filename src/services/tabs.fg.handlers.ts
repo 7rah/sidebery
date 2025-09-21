@@ -1,5 +1,6 @@
 import * as Utils from 'src/utils'
 import { NativeTab, Tab, TabStatus, TabsPanel, RemovedTabInfo, TabSessionData } from 'src/types'
+import { LoadSrc } from 'src/types'
 import { NOID, GROUP_URL, ADDON_HOST, GROUP_INITIAL_TITLE } from 'src/defaults'
 import { DEFAULT_CONTAINER_ID } from 'src/defaults'
 import * as Logs from 'src/services/logs'
@@ -17,6 +18,7 @@ import * as Preview from 'src/services/tabs.preview'
 import { Search } from './search'
 import { Containers } from './containers'
 import { Mouse } from './mouse'
+import { Popups } from './_services'
 
 const EXT_HOST = browser.runtime.getURL('').slice(16)
 const URL_HOST_PATH_RE = /^([a-z0-9-]{1,63}\.)+\w+(:\d+)?\/[A-Za-z0-9-._~:/?#[\]%@!$&'()*+,;=]*$/
@@ -122,6 +124,11 @@ function checkIfSessionRestoring(newTab: Tab) {
         .getTabValue<TabSessionData | undefined>(t.id, 'data')
         .catch(() => undefined)
     })
+    Promise.all([...suspectTabsDataQuerying])
+      .then(tabsData => {
+        if (tabsData.every(d => !!d)) Popups.openSessionRestorePopup()
+      })
+      .catch(() => {})
   }
 
   if (!suspectTabs) suspectTabs = [newTab]
@@ -149,6 +156,8 @@ function checkIfSessionRestoring(newTab: Tab) {
       }
 
       tryToRestoreTabsStateFromSessionData(suspectTabs, tabsSessionData)
+    } else {
+      Popups.closeSessionRestorePopup()
     }
 
     suspectTabs = null
@@ -161,71 +170,47 @@ async function tryToRestoreTabsStateFromSessionData(
   tabs: Tab[],
   sData: (TabSessionData | undefined)[]
 ) {
-  Logs.info('Tabs.tryToRestoreTabsStateFromSessionData', tabs.length)
+  Logs.info('Tabs.tryToRestoreTabsStateFromSessionData', tabs.length, sData.length)
 
-  const idsMap: Record<ID, ID> = {}
+  // Check if there is enough session data
+  const tabsWithSessionDataLen = sData.filter(d => !!d).length
+  if (tabsWithSessionDataLen < SR_GET_TAB_SESSION_DATA_THRESHOLD) {
+    Logs.warn('Tabs.tryToRestoreTabsStateFromSessionData: Not enough session data')
+    Popups.closeSessionRestorePopup()
+    return
+  }
 
+  // Show popup about restoring the tabs
+  Popups.openSessionRestorePopup()
+
+  // Wait 250ms to be sure that popup is blocking layout
+  await Utils.sleep(250)
+
+  // Unload tabs
+  Tabs.unload()
+
+  // ReSave restored session data
+  const resavingSessionData = []
   for (let data, tab, i = 0; i < tabs.length; i++) {
     tab = tabs[i]
     data = sData[i]
     if (!tab || !data) continue
 
-    // Check if tab was auto-reopened
-    if (tab.reopening && tab.reopening.id !== NOID) {
-      const newTab = Tabs.byId[tab.reopening.id]
-      if (newTab) tab = newTab
-    }
-
-    if (Sidebar.panelsById[data.panelId]) tab.panelId = data.panelId
-    const actualParentId = idsMap[data.parentId]
-    if (actualParentId !== undefined) tab.parentId = actualParentId
-    tab.reactive.folded = tab.folded = !!data.folded
-    tab.reactive.unread = tab.unread = false
-    if (data.customTitle) {
-      tab.customTitle = data.customTitle
-      Tabs.renderTitle(tab)
-    }
-    if (data.customColor) tab.reactive.customColor = tab.customColor = data.customColor
-
-    idsMap[data.id] = tab.id
+    const saving = browser.sessions.setTabValue(tab.id, 'data', data).catch(err => {
+      Logs.warn('Tabs.tryToRestoreTabsStateFromSessionData: Cannot resave session data:', err)
+    })
+    resavingSessionData.push(saving)
   }
+  await Promise.all(resavingSessionData)
 
-  // Sort tabs by panels
-  let nonPinnedIndex = Tabs.list.findIndex(t => !t.pinned)
-  if (nonPinnedIndex === -1) nonPinnedIndex = 0
+  // Load tabs
+  await Tabs.load(LoadSrc.SessionOnly)
 
-  const sortedTabs: Tab[] = Tabs.list.slice(0, nonPinnedIndex)
+  // Another sleep
+  await Utils.sleep(100)
 
-  for (const panel of Sidebar.panels) {
-    if (!Utils.isTabsPanel(panel)) continue
-    for (let tab, i = nonPinnedIndex; i < Tabs.list.length; i++) {
-      tab = Tabs.list[i]
-      if (tab?.panelId === panel.id) sortedTabs.push(tab)
-    }
-  }
-  for (let tab, i = 0; i < sortedTabs.length; i++) {
-    tab = sortedTabs[i]
-    if (tab) tab.index = i
-  }
-
-  // Recalc local state
-  Tabs.list = sortedTabs
-  Sidebar.recalcTabsPanels()
-  if (Settings.state.tabsTree) Tabs.updateTabsTree()
-  Sidebar.recalcVisibleTabs()
-
-  // Move native tabs
-  const ids = sortedTabs.map(t => {
-    t.moving = true
-    return t.id
-  })
-  await Utils.GLOBAL_QUEUE.add(browser.tabs.move, ids, { index: nonPinnedIndex }).catch(e => {
-    Logs.err('Tabs.tryToRestoreTabsStateFromSessionData: Move:', e)
-  })
-  sortedTabs.forEach(t => (t.moving = false))
-
-  Tabs.cacheTabsData(640)
-  tabs.forEach(t => Tabs.saveTabData(t.id))
+  // Close popup
+  Popups.closeSessionRestorePopup()
 }
 
 function onTabCreated(nativeTab: NativeTab, attached?: boolean): void {

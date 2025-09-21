@@ -144,7 +144,11 @@ export async function waitForTabsReady(): Promise<void> {
   })
 }
 
-export async function load(): Promise<void> {
+export const enum LoadSrc {
+  SessionOnly = 1,
+}
+
+export async function load(src?: LoadSrc): Promise<void> {
   const ts = performance.now()
   Logs.info('Tabs.load')
 
@@ -155,7 +159,7 @@ export async function load(): Promise<void> {
   await Utils.retry({
     action: async (again, isLastTry) => {
       try {
-        await restoreTabsState(isLastTry)
+        await restoreTabsState(src, isLastTry)
       } catch (err) {
         if (err === Err.TabsLocked) {
           Logs.warn('Tabs.load: Err.TabsLocked, trying again...')
@@ -268,7 +272,7 @@ export function reloadInShadowMode() {
 //   Logs.info(msg, '\n' + dbg.join('\n'))
 // }
 
-async function restoreTabsState(ignoreLockedTabs?: boolean): Promise<void> {
+async function restoreTabsState(src?: LoadSrc, ignoreLockedTabs?: boolean): Promise<void> {
   if (!Sidebar.hasTabs) return
 
   const ts = performance.now()
@@ -292,9 +296,10 @@ async function restoreTabsState(ignoreLockedTabs?: boolean): Promise<void> {
   // Clear deferredEventHandling
   Tabs.deferredEventHandling = []
 
+  const sessionOnly = src === LoadSrc.SessionOnly
   const results = await Promise.allSettled([
     browser.tabs.query({ windowId: browser.windows.WINDOW_ID_CURRENT }),
-    browser.storage.local.get<Stored>('tabsDataCache'),
+    sessionOnly ? ({} as Stored) : browser.storage.local.get<Stored>('tabsDataCache'),
   ])
   const nativeTabs = Utils.settledOr(results[0], [])
   const storage = Utils.settledOr(results[1], {})
@@ -316,8 +321,10 @@ async function restoreTabsState(ignoreLockedTabs?: boolean): Promise<void> {
   const lastPanel = Sidebar.panels.find(p => Utils.isTabsPanel(p))
   if (!lastPanel) return Logs.err('Cannot load tabs: No tabs panels')
 
-  // Find most appropriate cache data
-  if (storage.tabsDataCache) tabsCache = findCachedData(nativeTabs, storage.tabsDataCache)
+  // Find the most appropriate cache data
+  if (storage.tabsDataCache && !sessionOnly) {
+    tabsCache = findCachedData(nativeTabs, storage.tabsDataCache)
+  }
 
   // Restore tabs data from cache
   if (tabsCache) {

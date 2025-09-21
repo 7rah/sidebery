@@ -359,11 +359,13 @@ function onTabCreated(nativeTab: NativeTab, attached?: boolean): void {
     // Parent tab doesn't exist
     else {
       // Old index is ok
-      if (
+      const pinnedIndexOk = tab.pinned && tab.index <= panel.startTabIndex
+      const unpinnedIndexOk =
+        !tab.pinned &&
         (!nextTab || (nextTab.panelId === panel.id && nextTab.lvl === 0)) &&
         tab.index >= panel.startTabIndex &&
         tab.index <= panel.nextTabIndex
-      ) {
+      if (pinnedIndexOk || unpinnedIndexOk) {
         index = tab.index
       }
 

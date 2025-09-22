@@ -144,6 +144,7 @@ function reopenCachedWindow(cache: TabCache[]) {
       folded: !!cachedTab.folded,
     })
   }
+  items[0].active = true
   Windows.createWithTabs(items, { incognito })
 }
 

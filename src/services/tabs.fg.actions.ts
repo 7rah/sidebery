@@ -176,8 +176,11 @@ export async function load(src?: LoadSrc): Promise<void> {
   const activeTab = Tabs.byId[Tabs.activeId]
   if (activeTab && !activeTab.pinned) Tabs.scrollToTab(activeTab.id)
 
+  const sessionRestoreTabOnly =
+    Tabs.list.length === 1 && Tabs.list[0]?.url === 'about:sessionrestore'
+
   Tabs.updateNativeTabsVisibility()
-  Tabs.cacheTabsData(1000)
+  if (!sessionRestoreTabOnly) Tabs.cacheTabsData(1000)
   Tabs.list.forEach(t => {
     Tabs.updateUrlCounter(t.url, 1)
 

@@ -294,7 +294,7 @@ export function search(value?: string, noSel?: boolean): void {
     //CJK Unified Ideographs Extension A
     //Hiragana, Katakana, Bopomofo
     //Hangul Syllables
-    if (value.length < MIN_SEARCH_QUERY_LEN) value = (value.match(regexCJK) === null) ? '' : value
+    if (value.length < MIN_SEARCH_QUERY_LEN) value = value.match(regexCJK) === null ? '' : value
     if (Search.reactive.value === value) return
 
     Search.prevValue = Search.reactive.value

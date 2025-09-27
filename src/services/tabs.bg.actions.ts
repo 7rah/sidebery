@@ -45,6 +45,7 @@ export async function loadTabs(): Promise<void> {
     }
 
     tab.internal = tab.url.startsWith(ADDON_HOST)
+    if (tab.internal) tab.isGroup = Utils.isGroupUrl(tab.url)
 
     // Forcefully discard pinned tab for the case of
     // browser.sessionstore.restore_pinned_tabs_on_demand = true

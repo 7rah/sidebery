@@ -644,8 +644,12 @@ export function getUrlPageInitData(winId: ID, tabId: ID): UrlPageInitData {
 const injectingGroup = new Set<ID>()
 
 export async function injectGroupPageScript(winId: ID, tabId: ID): Promise<void> {
+  // Already injecting
   if (injectingGroup.has(tabId)) return
+  // No sidebar
   if (!IPC.state.sidebarConnections.has(winId)) return
+  // Already connected, therefore group is initialized
+  if (IPC.state.groupPageConnections.has(tabId)) return
 
   injectingGroup.add(tabId)
 

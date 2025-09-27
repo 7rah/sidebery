@@ -12,8 +12,8 @@ const OUTPUT_DIR = ADDON_PATH
 const NORM_SRC_DIR = path.normalize(SRC_DIR)
 const TS_CONFIG = getTSConfig()
 const BUNDLES = {
-  'src/injections/group.ts': true,
-  'src/injections/url.ts': true,
+  'src/injections/group.ts': { format: 'iife' },
+  'src/injections/url.ts': { format: 'iife' },
   'src/injections/tab-preview.ts': { format: 'iife' },
   'src/popup.tab-preview/tab-preview.ts': true,
 }

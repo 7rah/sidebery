@@ -34,7 +34,7 @@ export const sidebarTranslations: Translations = {
     de: n => `Möchten Sie diese ${n} Tabs wirklich schließen?`,
     fr: n =>
       n === 1
-        ? `Voulez-vous vraiment fermer un onglet?`
+        ? 'Voulez-vous vraiment fermer un onglet?'
         : `Voulez-vous vraiment fermer ${n} onglets?`,
     hu: n => `Biztosan bezárható a lap: „${n}”?`,
     pl: n => `jesteś pewnien, że chcesz zamknąć karty ${n}?`,

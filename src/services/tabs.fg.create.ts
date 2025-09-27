@@ -118,9 +118,14 @@ export async function createTabInPanel(panel: Panel, conf?: browser.tabs.CreateP
   }
 }
 
-export function handleReopening(tabId: ID, dstContainerId?: string): number | undefined {
+export async function handleReopening(tabId: ID, dstContainerId?: string) {
   const targetTab = Tabs.byId[tabId]
-  if (!targetTab) return
+  if (!targetTab) {
+    Logs.warn('Tabs.handleReopening: No such tab:', tabId)
+    return
+  }
+
+  await Tabs.waitForTabsReady()
 
   if (!dstContainerId) dstContainerId = CONTAINER_ID
 

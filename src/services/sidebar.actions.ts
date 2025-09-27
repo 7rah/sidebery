@@ -2235,9 +2235,9 @@ export function updateSidebarTitle(delay = 456): void {
       const panel = Sidebar.panelsById[Sidebar.activePanelId]
       if (!panel) return
 
-      browser.sidebarAction.setTitle({ title: panel.name, windowId: Windows.id })
+      browser.sidebarAction?.setTitle?.({ title: panel.name, windowId: Windows.id })
     } else {
-      browser.sidebarAction.setTitle({ title: 'Sidebery', windowId: Windows.id })
+      browser.sidebarAction?.setTitle?.({ title: 'Sidebery', windowId: Windows.id })
     }
   }, delay)
 }

@@ -425,6 +425,7 @@ function requestPermissions(): void {
 type OldNewIds = Record<string, string>
 async function importContainers(backup: BackupData): Promise<OldNewIds> {
   if (!backup.containers) throw 'No containers data'
+  if (!Containers.isSupported) return {}
 
   let ffContainers = await browser.contextualIdentities.query({})
   let storage = await browser.storage.local.get<Stored>({ containers: {} })

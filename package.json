@@ -62,7 +62,10 @@
     "src": "./src"
   },
   "browserslist": [
-    "Firefox >= 128"
+    "Firefox >= 128",
+    "Chrome >= 120"
   ],
-  "sideEffects": false
+  "sideEffects": [
+    "src/polyfills/browser.ts"
+  ]
 }

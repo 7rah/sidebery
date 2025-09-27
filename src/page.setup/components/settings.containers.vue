@@ -59,6 +59,8 @@ onMounted(() => SetupPage.registerEl('settings_containers', el.value))
  * Create container
  */
 async function createContainer(): Promise<void> {
+  if (!Containers.isSupported) return
+
   let containersCount = Object.keys(Containers.reactive.byId).length
   const newFFContainer = await browser.contextualIdentities.create({
     name: `New Container ${containersCount + 1}`,
@@ -80,6 +82,8 @@ async function createContainer(): Promise<void> {
  * Remove container
  */
 async function removeContainer(container: Container): Promise<void> {
+  if (!Containers.isSupported) return
+
   let preMsg = translate('settings.contianer_remove_confirm_prefix')
   let postMsg = translate('settings.contianer_remove_confirm_postfix')
   if (window.confirm(preMsg + container.name + postMsg)) {

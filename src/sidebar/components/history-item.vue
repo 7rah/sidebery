@@ -162,7 +162,7 @@ function onCtxMenu(e: MouseEvent, visit: Visit): void {
     return
   }
 
-  browser.menus.overrideContext({ showDefaults: false })
+  browser.menus?.overrideContext?.({ showDefaults: false })
 
   if (!Selection.isSet()) Selection.selectHistory(visit.id)
 

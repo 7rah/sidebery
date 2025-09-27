@@ -173,6 +173,7 @@ function onNameInput(value: string): void {
 }
 
 function updateContainer(): void {
+  if (!Containers.isSupported) return
   if (!props.conf.name || !props.conf.id) return
   browser.contextualIdentities.update(props.conf.id, {
     name: props.conf.name,

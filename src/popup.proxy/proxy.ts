@@ -5,6 +5,10 @@ import { Styles } from 'src/services/styles'
 import * as IPC from 'src/services/ipc'
 import { SETUP_URL } from 'src/defaults'
 
+const contextualIdentities = (browser as unknown as {
+  contextualIdentities?: typeof browser.contextualIdentities
+}).contextualIdentities
+
 void (async function () {
   Info.setInstanceType(InstanceType.proxy)
 
@@ -90,13 +94,15 @@ void (async function () {
  * Init title
  */
 async function initTitle() {
+  if (!contextualIdentities) return
+
   const [activeTab] = await browser.tabs.query({
     currentWindow: true,
     active: true,
   })
   if (!activeTab) return
 
-  const container = await browser.contextualIdentities.get(activeTab.cookieStoreId)
+  const container = await contextualIdentities.get(activeTab.cookieStoreId)
   if (!container) return
 
   const popupTitleEl = document.getElementById('popup_title')
@@ -113,6 +119,8 @@ async function initTitle() {
  * Init static config
  */
 async function initConfigInfo() {
+  if (!contextualIdentities) return
+
   const [activeTab] = await browser.tabs.query({
     currentWindow: true,
     active: true,

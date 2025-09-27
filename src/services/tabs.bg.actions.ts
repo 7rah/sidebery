@@ -258,43 +258,37 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo): void {
     return
   }
 
-  let groupScriptInjectionIsNeeded = false
   const tab = Tabs.byId[tabId]
-  if (!tab) return
+  if (!tab) {
+    Logs.warn('Tabs.onTabUpdated: No tab with id:', tabId, change)
+    return
+  }
 
   if (change.url) {
     const isInternal = change.url.startsWith(ADDON_HOST)
     tab.internal = isInternal
+    tab.isGroup = false
     if (isInternal) {
+      tab.isGroup = Utils.isGroupUrl(change.url)
       if (Utils.isUrlUrl(change.url)) injectUrlPageScript(tab.windowId, tabId)
     }
-  }
-
-  // Check if injection of group-page script is needed
-  if (
-    tab.internal &&
-    change.status === 'complete' &&
-    !change.title &&
-    tab.title === GROUP_INITIAL_TITLE
-  ) {
-    groupScriptInjectionIsNeeded = true
-  }
-
-  // Check if injection of group-page script is needed
-  if (change.title && tab.internal && !tab.discarded && change.title === GROUP_INITIAL_TITLE) {
-    groupScriptInjectionIsNeeded = true
   }
 
   if (!tab.internal && change.favIconUrl?.startsWith('data:')) {
     Favicons.saveFavicon(tab.url, change.favIconUrl)
   }
 
-  // Inject group page script if internal page has initial title
-  if (groupScriptInjectionIsNeeded) {
+  Object.assign(tab, change)
+
+  // Inject group page script
+  if (
+    tab.isGroup &&
+    !tab.discarded &&
+    (change.title !== undefined || change.url || change.status === 'complete') &&
+    tab.title === GROUP_INITIAL_TITLE
+  ) {
     injectGroupPageScript(tab.windowId, tabId)
   }
-
-  Object.assign(tab, change)
 
   if (WebReq.containersProxies[tab.cookieStoreId]) {
     tab.proxified = true

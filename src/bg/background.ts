@@ -1,3 +1,5 @@
+import 'src/polyfills/browser'
+
 import { InstanceType } from 'src/types'
 import { NOID } from 'src/defaults'
 import * as IPC from 'src/services/ipc'
@@ -71,6 +73,11 @@ void (async function main() {
   await Sidebar.loadNav()
   Sidebar.setupListeners()
 
+  const sidePanel = (browser as unknown as {
+    sidePanel?: { setOptions?: (options: { path: string; enabled: boolean }) => Promise<void> | void }
+  }).sidePanel
+  void sidePanel?.setOptions?.({ path: './sidebar/sidebar.html', enabled: true })
+
   WebReq.updateReqHandlers()
 
   Tabs.setupTabsListeners()
@@ -101,7 +108,7 @@ void (async function main() {
     }
   })
 
-  window.getSideberyState = () => {
+  ;(globalThis as any).getSideberyState = () => {
     // prettier-ignore
     return {
       IPC, Info, Settings, Windows, Tabs, Containers,
@@ -123,8 +130,9 @@ void (async function main() {
 function initToolbarButton(): void {
   Menu.createBrowserActionMenu()
 
-  browser.browserAction.onClicked.addListener((_, info): void => {
+  const browserAction = browser.action ?? browser.browserAction
+  browserAction?.onClicked.addListener((_, info): void => {
     if (info && info.button === 1) browser.runtime.openOptionsPage()
-    else browser.sidebarAction.toggle()
+    else if (browser.sidebarAction?.toggle) browser.sidebarAction.toggle()
   })
 }

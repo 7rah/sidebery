@@ -438,7 +438,7 @@ function onCtxMenu(e: MouseEvent): void {
     return
   }
 
-  browser.menus.overrideContext({ context: 'tab', tabId: tab.id })
+  browser.menus?.overrideContext?.({ context: 'tab', tabId: tab.id })
 
   if (!Selection.isSet()) select()
 

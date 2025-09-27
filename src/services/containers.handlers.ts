@@ -7,13 +7,22 @@ import { Tabs } from 'src/services/tabs.fg'
 import { Info } from 'src/services/info'
 
 export function setupContainersListeners(): void {
+  const contextualIdentities = (browser as unknown as {
+    contextualIdentities?: typeof browser.contextualIdentities
+  }).contextualIdentities
+
+  if (!contextualIdentities) {
+    Store.onKeyChange('containers', Containers.updateContainers)
+    return
+  }
+
   if (Info.isBg) {
-    browser.contextualIdentities.onCreated.addListener(onContainerCreated)
-    browser.contextualIdentities.onRemoved.addListener(onContainerRemovedBg)
-    browser.contextualIdentities.onUpdated.addListener(onContainerUpdated)
+    contextualIdentities.onCreated.addListener(onContainerCreated)
+    contextualIdentities.onRemoved.addListener(onContainerRemovedBg)
+    contextualIdentities.onUpdated.addListener(onContainerUpdated)
     Store.onKeyChange('containers', Containers.updateContainers)
   } else {
-    browser.contextualIdentities.onRemoved.addListener(onContainerRemovedFg)
+    contextualIdentities.onRemoved.addListener(onContainerRemovedFg)
     Store.onKeyChange('containers', Containers.updateContainers)
   }
 }

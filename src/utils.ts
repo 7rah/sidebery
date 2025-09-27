@@ -1,3 +1,5 @@
+import 'src/polyfills/browser'
+
 import { GroupConfig, AnyFunc, NavItem, NavBtn, NavSpace, Panel, PanelConfig, Tab } from './types'
 import { TabsPanel, BookmarksPanel, PanelType, HistoryPanel, SyncPanel, ItemInfo } from './types'
 import { NavItemClass, SubListTitleInfo, RGBA, RGB, AnyAsyncFunc, DataUriImage } from './types'

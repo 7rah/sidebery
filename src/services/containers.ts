@@ -13,6 +13,7 @@ export interface ContainerProxy {
 }
 
 export const Containers = {
+  isSupported: !!(browser as unknown as { contextualIdentities?: unknown }).contextualIdentities,
   reactive: { byId: {} } as ContainersState,
 
   ...ContainersHandlers,

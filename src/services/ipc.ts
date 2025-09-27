@@ -1,3 +1,5 @@
+import 'src/polyfills/browser'
+
 import { AnyFunc, Actions, Message, InstanceType, ActionsKeys } from 'src/types'
 import { ActionsType } from 'src/types'
 import { NOID } from 'src/defaults'

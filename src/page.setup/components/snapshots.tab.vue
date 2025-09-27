@@ -144,8 +144,8 @@ function onTabDragStart(e: DragEvent): void {
 }
 
 async function openTab(tab: SnapTabState): Promise<void> {
-  const activePanel = await browser.sidebarAction
-    .isOpen({ windowId: Windows.id })
+  const sidebarAction = browser.sidebarAction
+  const activePanel = await sidebarAction?.isOpen?.({ windowId: Windows.id })
     .then(isOpen => (isOpen ? IPC.sidebar(Windows.id, 'getActivePanelConfig') : undefined))
     .catch(() => undefined)
 

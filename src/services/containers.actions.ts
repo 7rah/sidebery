@@ -10,10 +10,24 @@ import { Info } from 'src/services/info'
 import { Settings } from './settings'
 import { Tabs } from './tabs.fg'
 
+const contextualIdentities = (browser as unknown as {
+  contextualIdentities?: typeof browser.contextualIdentities
+}).contextualIdentities
+
 export async function load(): Promise<void> {
+  if (!contextualIdentities) {
+    if (Info.isBg) {
+      Containers.reactive.byId = {}
+      await Store.set({ containers: {} })
+    } else {
+      Containers.reactive.byId = {}
+    }
+    return
+  }
+
   if (Info.isBg) {
     const [ffContainers, storage] = await Promise.all([
-      browser.contextualIdentities.query({}),
+      contextualIdentities.query({}),
       browser.storage.local.get<Stored>('containers'),
     ])
     const containers = storage.containers ?? {}
@@ -39,7 +53,7 @@ export async function load(): Promise<void> {
       const ffContainer = ffContainers.find(c => c.cookieStoreId === container.id)
       if (!ffContainer) {
         const conf = { name: container.name, color: container.color, icon: container.icon }
-        const newFFContainer = await browser.contextualIdentities.create(conf)
+        const newFFContainer = await contextualIdentities.create(conf)
         delete containers[id]
         container.id = newFFContainer.cookieStoreId
         container.cookieStoreId = newFFContainer.cookieStoreId
@@ -97,7 +111,9 @@ export function updateContainers(newContainers?: Record<ID, Container> | null): 
 }
 
 export async function create(name: string, color: string, icon: string): Promise<Container> {
-  const newRawContainer = await browser.contextualIdentities.create({ name, color, icon })
+  if (!contextualIdentities) throw new Error('Containers API is not available')
+
+  const newRawContainer = await contextualIdentities.create({ name, color, icon })
   const newContainer = Utils.recreateNormalizedObject(
     newRawContainer as Container,
     DEFAULT_CONTAINER

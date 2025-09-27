@@ -386,9 +386,12 @@ async function moveTabsToWin(tabIds: ID[], dst: DstPlaceInfo): Promise<void> {
 
   let sidebarIsOpen
   if (dst.windowId !== Windows.id) {
-    sidebarIsOpen = await browser.sidebarAction
-      .isOpen({ windowId: dst.windowId })
-      .catch(() => false)
+    const sidebarAction = browser.sidebarAction
+    if (sidebarAction?.isOpen) {
+      sidebarIsOpen = await sidebarAction.isOpen({ windowId: dst.windowId }).catch(() => false)
+    } else {
+      sidebarIsOpen = false
+    }
   }
 
   let moved

@@ -281,8 +281,8 @@ async function openSelectedTabs(how: SnapOpenType): Promise<void> {
   }
 
   if (how === SnapOpenType.CurrentPanel) {
-    const activePanel = await browser.sidebarAction
-      .isOpen({ windowId: Windows.id })
+    const sidebarAction = browser.sidebarAction
+    const activePanel = await sidebarAction?.isOpen?.({ windowId: Windows.id })
       .then(isOpen => (isOpen ? IPC.sidebar(Windows.id, 'getActivePanelConfig') : undefined))
       .catch(() => undefined)
     if (Utils.isTabsPanel(activePanel)) {

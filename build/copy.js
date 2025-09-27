@@ -157,34 +157,67 @@ async function handleManifest(srcPath, dstPath) {
     const srcData = await fs.promises.readFile(srcPath, 'utf-8')
     const data = JSON.parse(srcData)
 
-    // Remove unsupported keys
+    // Base adjustments for Chromium MV3
+    data.manifest_version = 3
     delete data.page_action
     delete data.browser_specific_settings
 
-    // Reset commands
-    for (const key of Object.keys(data.commands)) {
-      const cmd = data.commands[key]
-      if (key === '_execute_sidebar_action') {
-        cmd.suggested_key.windows = cmd.suggested_key.default
-      } else {
-        delete cmd.suggested_key
+    const browserAction = data.browser_action ?? {}
+    data.action = {
+      default_icon: browserAction.default_icon,
+      default_title: browserAction.default_title,
+      theme_icons: browserAction.theme_icons,
+    }
+    delete data.browser_action
+
+    if (data.sidebar_action?.default_panel) {
+      data.side_panel = { default_path: data.sidebar_action.default_panel }
+    }
+    delete data.sidebar_action
+
+    data.background = {
+      service_worker: 'bg/background.js',
+      type: 'module',
+    }
+
+    const commands = data.commands ?? {}
+    for (const key of Object.keys(commands)) {
+      const cmd = commands[key]
+      if (!cmd) continue
+      if (cmd.suggested_key) {
+        if (key === '_execute_sidebar_action' && cmd.suggested_key.windows) {
+          cmd.suggested_key.windows = cmd.suggested_key.default
+        } else {
+          delete cmd.suggested_key
+        }
       }
     }
 
-    // Clean up permissions
-    const contextualIdentitiesIndex = data.permissions.indexOf('contextualIdentities')
-    if (contextualIdentitiesIndex !== -1) data.permissions.splice(contextualIdentitiesIndex, 1)
-    const menusIndex = data.permissions.indexOf('menus')
-    if (menusIndex !== -1) data.permissions.splice(menusIndex, 1)
-    const menusOverrideContextIndex = data.permissions.indexOf('menus.overrideContext')
-    if (menusOverrideContextIndex !== -1) data.permissions.splice(menusOverrideContextIndex, 1)
-    const tabHideIndex = data.permissions.indexOf('tabHide')
-    if (tabHideIndex !== -1) data.permissions.splice(tabHideIndex, 1)
-    const proxyIndex = data.optional_permissions.indexOf('proxy')
-    if (proxyIndex !== -1) data.optional_permissions.splice(proxyIndex, 1)
-    data.permissions.push('proxy')
+    const permissions = new Set(data.permissions ?? [])
+    permissions.delete('contextualIdentities')
+    permissions.delete('tabHide')
+    permissions.delete('menus.overrideContext')
+    permissions.delete('theme')
+    if (permissions.delete('menus')) permissions.add('contextMenus')
+    permissions.add('sidePanel')
+    data.permissions = Array.from(permissions)
 
-    const dstData = JSON.stringify(data)
+    const optionalPermissions = new Set(data.optional_permissions ?? [])
+    optionalPermissions.delete('tabHide')
+    data.optional_permissions = Array.from(optionalPermissions)
+
+    const allUrlsIndex = data.optional_permissions.indexOf('<all_urls>')
+    if (allUrlsIndex !== -1) data.optional_permissions.splice(allUrlsIndex, 1)
+    data.host_permissions = ['<all_urls>']
+
+    data.web_accessible_resources = [
+      {
+        resources: ['**/*'],
+        matches: ['<all_urls>'],
+      },
+    ]
+
+    const dstData = JSON.stringify(data, null, 2)
     await fs.promises.writeFile(dstPath, dstData)
   }
 

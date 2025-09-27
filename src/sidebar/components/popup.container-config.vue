@@ -85,6 +85,11 @@ async function onSave(): Promise<void> {
   const popup = Popups.reactive.containerConfigPopup
 
   if (!valid.value) return
+  if (!Containers.isSupported) {
+    Popups.reactive.containerConfigPopup.done(null)
+    Popups.reactive.containerConfigPopup = null
+    return
+  }
 
   let container = Containers.reactive.byId[Popups.reactive.containerConfigPopup.id]
   if (container) {

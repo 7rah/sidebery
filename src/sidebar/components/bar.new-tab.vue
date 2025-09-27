@@ -293,7 +293,7 @@ function onNewTabCtxMenu(e: MouseEvent): void {
   }
 
   let nativeCtx = { showDefaults: false }
-  browser.menus.overrideContext(nativeCtx)
+  browser.menus?.overrideContext?.(nativeCtx)
 
   if (!Selection.isSet()) Selection.selectNewTabBtn(props.panel.id)
 

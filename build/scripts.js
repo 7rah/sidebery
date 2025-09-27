@@ -11,9 +11,21 @@ const SRC_DIR = './src'
 const OUTPUT_DIR = ADDON_PATH
 const NORM_SRC_DIR = path.normalize(SRC_DIR)
 const TS_CONFIG = getTSConfig()
+const IIFE_BANNER_WITH_REINJECT_GUARD = `"use strict";\n(() => {
+if (window.sideberyInjected) return;
+else window.sideberyInjected = true;`
+const IIFE_FOOTER = '})();'
 const BUNDLES = {
-  'src/injections/group.ts': { format: 'iife' },
-  'src/injections/url.ts': { format: 'iife' },
+  'src/injections/group.ts': {
+    format: 'esm',
+    banner: { js: IIFE_BANNER_WITH_REINJECT_GUARD },
+    footer: { js: IIFE_FOOTER },
+  },
+  'src/injections/url.ts': {
+    format: 'esm',
+    banner: { js: IIFE_BANNER_WITH_REINJECT_GUARD },
+    footer: { js: IIFE_FOOTER },
+  },
   'src/injections/tab-preview.ts': { format: 'iife' },
   'src/popup.tab-preview/tab-preview.ts': true,
 }
@@ -201,6 +213,9 @@ async function compileTSFile(file) {
       minify: !IS_DEV,
       treeShaking: true,
       bundle: true,
+      inject: conf.inject ? conf.inject : undefined,
+      banner: conf.banner ? conf.banner : undefined,
+      footer: conf.footer ? conf.footer : undefined,
       format: conf.format ? conf.format : 'esm',
       outfile: file.outPath,
     })
@@ -332,13 +347,20 @@ async function main() {
         'src/injections/play-media.ts',
         'src/injections/pause-media.ts',
         'src/injections/check-paused-media.ts',
-        'src/injections/group.ts',
-        'src/injections/url.ts',
       ],
       splitting: false,
       outdir: path.join(ADDON_PATH, 'injections'),
     })
-    // Bundled script for preview
+    // Bundled group and url scripts for injection
+    const buildingGroupAndUrlScripts = esbuild.build({
+      ...PROD_ESBUILD_BASE_CONF,
+      entryPoints: ['src/injections/group.ts', 'src/injections/url.ts'],
+      splitting: false,
+      banner: { js: IIFE_BANNER_WITH_REINJECT_GUARD },
+      footer: { js: IIFE_FOOTER },
+      outdir: path.join(ADDON_PATH, 'injections'),
+    })
+    // Bundled script for preview injection (in-page)
     const buildingInjectionPreviewScript = esbuild.build({
       ...PROD_ESBUILD_BASE_CONF,
       entryPoints: ['src/injections/tab-preview.ts'],
@@ -346,7 +368,7 @@ async function main() {
       format: 'iife',
       outdir: path.join(ADDON_PATH, 'injections'),
     })
-    // Bundled script for preview
+    // Bundled script for preview popup (window)
     const buildingWindowPreviewScript = esbuild.build({
       ...PROD_ESBUILD_BASE_CONF,
       entryPoints: ['src/popup.tab-preview/tab-preview.ts'],
@@ -356,6 +378,7 @@ async function main() {
     await Promise.all([
       buildingSplittedScripts,
       buildingBundledScripts,
+      buildingGroupAndUrlScripts,
       buildingInjectionPreviewScript,
       buildingWindowPreviewScript,
     ])

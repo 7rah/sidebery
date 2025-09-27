@@ -653,8 +653,9 @@ export async function injectGroupPageScript(winId: ID, tabId: ID): Promise<void>
 
   injectingGroup.add(tabId)
 
+  const injecting = []
   try {
-    browser.tabs
+    const injectingScript = browser.tabs
       .executeScript(tabId, {
         file: '/injections/group.js',
         runAt: 'document_start',
@@ -663,9 +664,10 @@ export async function injectGroupPageScript(winId: ID, tabId: ID): Promise<void>
       .catch(err => {
         Logs.warn('Tabs.injectGroupPageScript: Cannot inject script, tabId:', tabId, err)
       })
+    injecting.push(injectingScript)
     const initData = await getGroupPageInitData(winId, tabId)
     const initDataJson = JSON.stringify(initData)
-    browser.tabs
+    const injectingData = browser.tabs
       .executeScript(tabId, {
         code: `window.sideberyInitData=${initDataJson};window.onSideberyInitDataReady?.()`,
         runAt: 'document_start',
@@ -683,9 +685,12 @@ export async function injectGroupPageScript(winId: ID, tabId: ID): Promise<void>
           tab.reloadOnActivation = true
         }
       })
+    injecting.push(injectingData)
   } catch (err) {
     Logs.err('Injected group-page script', err)
   }
+
+  await Promise.all(injecting)
 
   injectingGroup.delete(tabId)
 }

@@ -68,7 +68,12 @@ export async function loadTabs(): Promise<void> {
 }
 
 export async function reinitTabs(msg: string) {
+  if (!Tabs.ready) {
+    Logs.warn('Tabs.reinitTabs: Tabs are not ready:', msg)
+    return
+  }
   Logs.warn('Tabs.reinitTabs:', msg)
+
   Tabs.ready = false
   Tabs.byId = {}
   Tabs.cacheByWin = {}
@@ -372,7 +377,7 @@ function onTabMoved(id: ID, info: browser.tabs.MoveInfo): void {
 
   const tab = Tabs.byId[id]
   if (!tab) {
-    Logs.warn('onTabMoved: No tab')
+    Logs.warn(`onTabMoved: No tab: id:${id}, ${info.fromIndex} > ${info.toIndex}`)
     return
   }
 

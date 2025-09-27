@@ -641,17 +641,17 @@ export function getUrlPageInitData(winId: ID, tabId: ID): UrlPageInitData {
   }
 }
 
-const injectingGroup = new Set<ID>()
+const injectingGroups = new Set<ID>()
 
 export async function injectGroupPageScript(winId: ID, tabId: ID): Promise<void> {
   // Already injecting
-  if (injectingGroup.has(tabId)) return
+  if (injectingGroups.has(tabId)) return
   // No sidebar
   if (!IPC.state.sidebarConnections.has(winId)) return
   // Already connected, therefore group is initialized
   if (IPC.state.groupPageConnections.has(tabId)) return
 
-  injectingGroup.add(tabId)
+  injectingGroups.add(tabId)
 
   const injecting = []
   try {
@@ -692,7 +692,7 @@ export async function injectGroupPageScript(winId: ID, tabId: ID): Promise<void>
 
   await Promise.all(injecting)
 
-  injectingGroup.delete(tabId)
+  injectingGroups.delete(tabId)
 }
 
 export interface GroupPageInitData {

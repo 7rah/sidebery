@@ -130,6 +130,17 @@ export const sidebarTranslations: Translations = {
     zh_TW: url => `開啟新分頁「${url}」`,
     ja: url => `新しいタブで「${url}」を開く`,
   },
+  'newTabBar.default_container_name': {
+    en: 'Default',
+    de: 'Standard',
+    fr: 'Défaut',
+    hu: 'Alapértelmezett',
+    pl: 'Domyślny',
+    ru: 'Стандартный',
+    zh_CN: '默认',
+    zh_TW: '預設',
+    ja: 'デフォルト',
+  },
   'newTabBar.new_tab_in_container': {
     en: name => `Open a new tab in "${name}" container`,
     de: name => `Öffne einen neuen Tab in der Umgebung "${name}"`,
@@ -148,7 +159,7 @@ export const sidebarTranslations: Translations = {
     zh_TW: (url, name) => `在「${name}」容器中開啟新分頁「${url}」`,
     ja: (url, name) => `「${name}」コンテナの新しいタブで「${url}」を開く`,
   },
-  'newTabBar.open_child_tab_in_default_container': {
+  'newTabBar.open_child_tab': {
     en: 'Middle click: Open a child tab',
     de: 'Mittelklick: Öffne einen untergeordneten Tab',
     fr: 'Clic milieu: Ouvrir un onglet enfant',
@@ -159,7 +170,7 @@ export const sidebarTranslations: Translations = {
     zh_TW: '中鍵點選：開啟子分頁',
     ja: '中クリック：子タブを開く',
   },
-  'newTabBar.open_child_tab_in_default_container_with_url': {
+  'newTabBar.open_child_tab_with_url': {
     en: url => `Middle click: Open "${url}" in a child tab`,
     fr: url => `Clic milieu: Ouvrir “${url}” dans un onglet enfant`,
     zh_CN: url => `中键单击：打开子标签页 "${url}"`,
@@ -194,8 +205,7 @@ export const sidebarTranslations: Translations = {
   },
   'newTabBar.middle_click_reopen_active_tab_in_default_container_with_url': {
     en: url => `Middle click: Load "${url}" in active tab in default container`,
-    fr: url =>
-      `Clic milieu: Charger “${url}” dans l’onglet actif dans le conteneur par défaut`,
+    fr: url => `Clic milieu: Charger “${url}” dans l’onglet actif dans le conteneur par défaut`,
     zh_CN: url => `中键点击：在默认容器中加载 "${url}" 于活动标签页`,
     zh_TW: url => `中鍵點選：在預設容器中載入「${url}」於當前分頁`,
     ja: url => `中クリック：デフォルトのコンテナでアクティブタブに「${url}」を読み込む`,
@@ -213,8 +223,7 @@ export const sidebarTranslations: Translations = {
       `Clic milieu: Charger “${url}” dans l’onglet actif dans le conteneur “${name}”`,
     zh_CN: (url, name) => `中键点击：在 "${name}" 容器中加载 "${url}" 于活动标签页`,
     zh_TW: (url, name) => `中鍵點選：在「${name}」容器中載入「${url}」於當前分頁`,
-    ja: (url, name) =>
-      `中クリック: 「${name}」コンテナでアクティブタブに「${url}」を読み込みます`,
+    ja: (url, name) => `中クリック: 「${name}」コンテナでアクティブタブに「${url}」を読み込みます`,
   },
 
   // ---

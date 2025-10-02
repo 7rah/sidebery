@@ -651,6 +651,17 @@ export const commonTranslations: Translations = {
     zh: '容器',
     ja: 'コンテナ',
   },
+  'popup.new_tab_shortcuts.new_shortcut_not_set_container': {
+    en: 'Not set',
+    de: 'Nicht festgelegt',
+    fr: 'Non défini',
+    hu: 'Nincs megadva',
+    pl: 'Nie ustawiono',
+    ru: 'Не задан',
+    zh_CN: '未设置',
+    zh_TW: '未設定',
+    ja: '未設定',
+  },
   'popup.new_tab_shortcuts.new_shortcut_default_container': {
     en: 'Default container',
     de: 'Standardumgebung',

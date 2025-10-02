@@ -61,7 +61,7 @@
 import { ref, computed } from 'vue'
 import { translate } from 'src/dict'
 import { Container } from 'src/types'
-import { DOMAIN_RE } from 'src/defaults'
+import { DEFAULT_CONTAINER_ID, DOMAIN_RE } from 'src/defaults'
 import { Sidebar } from 'src/services/sidebar'
 import { Windows } from 'src/services/windows'
 import { Containers } from 'src/services/containers'
@@ -104,6 +104,7 @@ const addBtnActive = computed<boolean>(() => {
 const shortcuts = computed<NewTabShortcut[]>(() => {
   if (!Popups.reactive.newTabShortcutsPopup) return []
 
+  const defaultTitle = translate('popup.new_tab_shortcuts.new_shortcut_default_container')
   const rawShortcuts = Popups.reactive.newTabShortcutsPopup.rawShortcuts
   const shortcuts: NewTabShortcut[] = []
   const ids: Record<string, string> = {}
@@ -139,13 +140,19 @@ const shortcuts = computed<NewTabShortcut[]>(() => {
 
       // Container?
       if (!container) {
-        container = Object.values(Containers.reactive.byId).find(c => c.name === part)
-        if (container && !Windows.incognito) {
-          shortcut.container = container.name
-          shortcut.containerId = container.id
-          shortcut.containerIcon = '#' + container.icon
-          shortcut.containerColor = container.color
-          continue
+        if (part === DEFAULT_CONTAINER_ID) {
+          shortcut.container = defaultTitle
+          shortcut.containerId = DEFAULT_CONTAINER_ID
+          shortcut.containerIcon = '#icon_ff'
+        } else {
+          container = Object.values(Containers.reactive.byId).find(c => c.name === part)
+          if (container && !Windows.incognito) {
+            shortcut.container = container.name
+            shortcut.containerId = container.id
+            shortcut.containerIcon = '#' + container.icon
+            shortcut.containerColor = container.color
+            continue
+          }
         }
       }
     }
@@ -162,12 +169,20 @@ const availableContainersOpts = computed<ContainerOption[]>(() => {
   const panel = Info.isSidebar ? Sidebar.panelsById[panelId] : SidebarConfigRState.panels[panelId]
   if (!Utils.isTabsPanel(panel)) return []
 
+  const notSetTitle = translate('popup.new_tab_shortcuts.new_shortcut_not_set_container')
   const defaultTitle = translate('popup.new_tab_shortcuts.new_shortcut_default_container')
   const result: ContainerOption[] = [
     {
       value: 'none',
       color: 'inactive',
       icon: '#icon_none',
+      title: notSetTitle,
+      tooltip: notSetTitle,
+    },
+    {
+      value: 'default',
+      color: 'inactive',
+      icon: '#icon_ff',
       title: defaultTitle,
       tooltip: defaultTitle,
     },
@@ -209,6 +224,7 @@ function onAdd() {
   const container = Containers.reactive.byId[newShortcutContainerId.value]
   const btnConfig = []
   if (container?.name) btnConfig.push(container.name)
+  else if (newShortcutContainerId.value === 'default') btnConfig.push(DEFAULT_CONTAINER_ID)
   if (newShortcutURL.value) btnConfig.push(newShortcutURL.value)
   if (!btnConfig.length) return
 

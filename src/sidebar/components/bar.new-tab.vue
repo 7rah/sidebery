@@ -45,6 +45,7 @@ import { Tabs } from 'src/services/tabs.fg'
 import { Mouse } from 'src/services/mouse'
 import { Containers } from 'src/services/containers'
 import { CONTAINER_ID, DOMAIN_RE, INITIAL_TITLE_RE, NEWID } from 'src/defaults'
+import { DEFAULT_CONTAINER_ID } from 'src/defaults'
 import * as Favicons from 'src/services/favicons.fg'
 import * as Utils from 'src/utils'
 import * as Logs from 'src/services/logs'
@@ -60,7 +61,7 @@ interface NewTabBtn {
   title?: string
   icon?: string
   containerId?: string
-  containrtName?: string
+  containerName?: string
   url?: string
   domain?: string
   children?: NewTabBtn[]
@@ -77,7 +78,7 @@ const defaultBtn = computed<NewTabBtn>(() => {
   const contianer = Containers.reactive.byId[props.panel.reactive.newTabCtx]
   if (contianer && !Windows.incognito) {
     btn.containerId = contianer.id
-    btn.containrtName = contianer.name
+    btn.containerName = contianer.name
     btn.icon = '#' + contianer.icon
   } else {
     btn.icon = '#icon_plus'
@@ -125,12 +126,18 @@ const btns = computed<NewTabBtn[]>(() => {
 
       // Container?
       if (!container) {
-        container = Object.values(Containers.reactive.byId).find(c => c.name === part)
-        if (container && !Windows.incognito) {
-          btn.containerId = container.id
-          btn.containrtName = container.name
-          if (!btn.title) btn.title = container.name
-          continue
+        if (part === DEFAULT_CONTAINER_ID) {
+          btn.containerId = CONTAINER_ID
+          btn.containerName = translate('newTabBar.default_container_name')
+          if (!btn.title) btn.title = btn.containerName
+        } else {
+          container = Object.values(Containers.reactive.byId).find(c => c.name === part)
+          if (container && !Windows.incognito) {
+            btn.containerId = container.id
+            btn.containerName = container.name
+            if (!btn.title) btn.title = container.name
+            continue
+          }
         }
       }
     }
@@ -138,6 +145,7 @@ const btns = computed<NewTabBtn[]>(() => {
     if (btn.domain) btn.icon = Favicons.reactive.byDomains[btn.domain]
     if (!btn.icon && btn.url) btn.icon = Favicons.getFavPlaceholder(btn.url)
     if (!btn.icon && container) btn.icon = '#' + container.icon
+    if (!btn.icon && btn.containerId === CONTAINER_ID) btn.icon = '#icon_ff'
 
     btn.tooltip = createTooltip(btn)
 
@@ -151,24 +159,24 @@ function createTooltip(btn: NewTabBtn): string {
   const newTabMiddleClickOpenNewChild = Settings.state.newTabMiddleClickAction === 'new_child'
   let tooltip = null
 
-  if (btn.containrtName) {
+  if (btn.containerName) {
     if (btn.url) {
       tooltip =
-        translate('newTabBar.new_tab_in_container_with_url', btn.url, btn.containrtName) + '\n'
+        translate('newTabBar.new_tab_in_container_with_url', btn.url, btn.containerName) + '\n'
       tooltip += translate(
         newTabMiddleClickOpenNewChild
           ? 'newTabBar.open_child_tab_in_container_with_url'
           : 'newTabBar.middle_click_reopen_active_tab_in_container_with_url',
         btn.url,
-        btn.containrtName
+        btn.containerName
       )
     } else {
-      tooltip = translate('newTabBar.new_tab_in_container', btn.containrtName) + '\n'
+      tooltip = translate('newTabBar.new_tab_in_container', btn.containerName) + '\n'
       tooltip += translate(
         newTabMiddleClickOpenNewChild
           ? 'newTabBar.open_child_tab_in_container'
           : 'newTabBar.middle_click_reopen_active_tab_in_container',
-        btn.containrtName
+        btn.containerName
       )
     }
   } else {
@@ -176,7 +184,7 @@ function createTooltip(btn: NewTabBtn): string {
       tooltip = translate('newTabBar.new_tab_in_default_container_with_url', btn.url) + '\n'
       tooltip += translate(
         newTabMiddleClickOpenNewChild
-          ? 'newTabBar.open_child_tab_in_default_container_with_url'
+          ? 'newTabBar.open_child_tab_with_url'
           : 'newTabBar.middle_click_reopen_active_tab_in_default_container_with_url',
         btn.url
       )
@@ -184,7 +192,7 @@ function createTooltip(btn: NewTabBtn): string {
       tooltip = translate('newTabBar.new_tab') + '\n'
       tooltip += translate(
         newTabMiddleClickOpenNewChild
-          ? 'newTabBar.open_child_tab_in_default_container'
+          ? 'newTabBar.open_child_tab'
           : 'newTabBar.middle_click_reopen_active_tab_in_default_container'
       )
     }

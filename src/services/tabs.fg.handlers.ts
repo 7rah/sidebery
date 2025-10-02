@@ -381,8 +381,7 @@ function onTabCreated(nativeTab: NativeTab, attached?: boolean): void {
 
       index = Tabs.getIndexForNewTab(panel, tab)
       if (!autoGroupTab) {
-        if (!Settings.state.groupOnOpen) tab.openerTabId = undefined
-        else tab.openerTabId = Tabs.getParentForNewTab(panel, tab.openerTabId)
+        tab.openerTabId = Tabs.getParentForNewTab(panel, tab.openerTabId)
       }
     }
   }

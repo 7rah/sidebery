@@ -115,7 +115,6 @@ export const DEFAULT_SETTINGS: SettingsState = {
 
   // Tabs tree
   tabsTree: true,
-  groupOnOpen: true,
   tabsTreeLimit: 'none',
   autoFoldTabs: false,
   autoFoldTabsExcept: 'none',

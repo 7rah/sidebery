@@ -208,11 +208,6 @@ section(ref="el")
       label="settings.tabs_tree_layout"
       v-model:value="Settings.state.tabsTree"
       @update:value="Settings.saveDebounced(150)")
-    ToggleField(
-      label="settings.group_on_open_layout"
-      v-model:value="Settings.state.groupOnOpen"
-      :inactive="!Settings.state.tabsTree"
-      @update:value="Settings.saveDebounced(150)")
     SelectField(
       label="settings.tabs_tree_limit"
       optLabel="settings.tabs_tree_limit_"

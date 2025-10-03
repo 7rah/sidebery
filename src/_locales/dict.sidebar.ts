@@ -203,12 +203,12 @@ export const sidebarTranslations: Translations = {
     zh_TW: '中鍵點選：在預設容器中重新開啟當前分頁',
     ja: '中クリック：デフォルトのコンテナでアクティブタブを再度開く',
   },
-  'newTabBar.middle_click_reopen_active_tab_in_default_container_with_url': {
-    en: url => `Middle click: Load "${url}" in active tab in default container`,
-    fr: url => `Clic milieu: Charger “${url}” dans l’onglet actif dans le conteneur par défaut`,
-    zh_CN: url => `中键点击：在默认容器中加载 "${url}" 于活动标签页`,
-    zh_TW: url => `中鍵點選：在預設容器中載入「${url}」於當前分頁`,
-    ja: url => `中クリック：デフォルトのコンテナでアクティブタブに「${url}」を読み込む`,
+  'newTabBar.middle_click_reload_active_tab_with_url': {
+    en: url => `Middle click: Load "${url}" in active tab`,
+    fr: url => `Clic milieu: Charger “${url}” dans l’onglet actif`,
+    zh_CN: url => `中键点击：中加载 "${url}" 于活动标签页`,
+    zh_TW: url => `中鍵點選：中載入「${url}」於當前分頁`,
+    ja: url => `中クリック: アクティブなタブに「${url}」を読み込む`,
   },
   'newTabBar.middle_click_reopen_active_tab_in_container': {
     en: name => `Middle click: Reopen active tab in "${name}" container`,

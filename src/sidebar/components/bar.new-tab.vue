@@ -185,7 +185,7 @@ function createTooltip(btn: NewTabBtn): string {
       tooltip += translate(
         newTabMiddleClickOpenNewChild
           ? 'newTabBar.open_child_tab_with_url'
-          : 'newTabBar.middle_click_reopen_active_tab_in_default_container_with_url',
+          : 'newTabBar.middle_click_reload_active_tab_with_url',
         btn.url
       )
     } else {
@@ -343,15 +343,16 @@ async function applyBtnRules(btn?: NewTabBtn): Promise<void> {
   if (!targetTabs.length) return
   if (targetTabs.some(t => t.panelId !== props.panel.id)) return
 
-  const targetContainerId = btn?.containerId ?? CONTAINER_ID
+  const targetContainerId =
+    btn?.id === 'default' ? (btn?.containerId ?? CONTAINER_ID) : btn?.containerId
   const toReopen: ItemInfo[] = []
   for (const tab of targetTabs) {
-    // Updating url of exited tab
-    if (tab.cookieStoreId === targetContainerId && btn?.url) {
+    // Updating url
+    if ((!targetContainerId || tab.cookieStoreId === targetContainerId) && btn?.url) {
       await browser.tabs.update(tab.id, { url: btn.url })
     }
     // Reopening tab
-    else if (tab.cookieStoreId !== targetContainerId) {
+    else if (targetContainerId && tab.cookieStoreId !== targetContainerId) {
       const info: ItemInfo = Utils.cloneObject(tab)
       if (btn?.url) info.url = btn.url
       else if (info.url === 'about:blank' && tab.title && INITIAL_TITLE_RE.test(tab.title)) {
@@ -362,7 +363,7 @@ async function applyBtnRules(btn?: NewTabBtn): Promise<void> {
     }
   }
 
-  if (toReopen.length > 0) {
+  if (targetContainerId && toReopen.length > 0) {
     const dst: DstPlaceInfo = {
       containerId: targetContainerId,
       panelId: props.panel.id,

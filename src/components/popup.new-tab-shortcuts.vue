@@ -111,7 +111,7 @@ const shortcuts = computed<NewTabShortcut[]>(() => {
   let container: Container | undefined
 
   for (const conf of rawShortcuts) {
-    // Ignore empty config
+    // Handle empty config
     if (conf === '') {
       shortcuts.push({ id: Math.random().toString(36) })
       continue
@@ -157,6 +157,9 @@ const shortcuts = computed<NewTabShortcut[]>(() => {
       }
     }
 
+    // Ignore shortcuts with no correct data
+    if (!shortcut.url && !shortcut.container) continue
+
     shortcuts.push(shortcut)
   }
 
@@ -196,6 +199,22 @@ const availableContainersOpts = computed<ContainerOption[]>(() => {
   return result
 })
 
+function toRawShortcuts(shortcuts: NewTabShortcut[]): string[] {
+  const result: string[] = []
+
+  for (const s of shortcuts) {
+    const sConfig = []
+    if (s.containerId === DEFAULT_CONTAINER_ID) sConfig.push(DEFAULT_CONTAINER_ID)
+    else if (s.container) sConfig.push(s.container)
+    if (s.url) sConfig.push(s.url)
+
+    const rawShortcut = sConfig.join(', ')
+    result.push(rawShortcut)
+  }
+
+  return result
+}
+
 function onAddBr() {
   if (!Popups.reactive.newTabShortcutsPopup) return
 
@@ -203,13 +222,14 @@ function onAddBr() {
   const panel = Info.isSidebar ? Sidebar.panelsById[panelId] : SidebarConfigRState.panels[panelId]
   if (!Utils.isTabsPanel(panel)) return
 
-  const rawShortcuts = Popups.reactive.newTabShortcutsPopup.rawShortcuts
+  const rawShortcuts = toRawShortcuts(shortcuts.value)
   const shortcut = ''
   rawShortcuts.push(shortcut)
-  panel.newTabBtns.push(shortcut)
+  panel.newTabBtns = Utils.clone(rawShortcuts)
 
   newShortcutURL.value = ''
   newShortcutContainerId.value = 'none'
+  Popups.reactive.newTabShortcutsPopup.rawShortcuts = rawShortcuts
 
   if (Info.isSidebar) panel.reactive.newTabBtns = Utils.cloneArray(panel.newTabBtns)
   if (Info.isSidebar) Sidebar.saveSidebar(1000)
@@ -221,10 +241,13 @@ function onAdd() {
   if (!addBtnActive.value) return
   if (!newShortcutURL.value && newShortcutContainerId.value === 'none') return
 
-  const container = Containers.reactive.byId[newShortcutContainerId.value]
   const btnConfig = []
-  if (container?.name) btnConfig.push(container.name)
-  else if (newShortcutContainerId.value === 'default') btnConfig.push(DEFAULT_CONTAINER_ID)
+  if (newShortcutContainerId.value === 'default') {
+    btnConfig.push(DEFAULT_CONTAINER_ID)
+  } else {
+    const container = Containers.reactive.byId[newShortcutContainerId.value]
+    if (container?.name) btnConfig.push(container.name)
+  }
   if (newShortcutURL.value) btnConfig.push(newShortcutURL.value)
   if (!btnConfig.length) return
 
@@ -232,10 +255,16 @@ function onAdd() {
   const panel = Info.isSidebar ? Sidebar.panelsById[panelId] : SidebarConfigRState.panels[panelId]
   if (!Utils.isTabsPanel(panel)) return
 
-  const rawShortcuts = Popups.reactive.newTabShortcutsPopup.rawShortcuts
+  const rawShortcuts = toRawShortcuts(shortcuts.value)
   const shortcut = btnConfig.join(', ')
+
+  // Stop if it's a dupe TODO: tell user about this
+  if (rawShortcuts.includes(shortcut)) return
+
   rawShortcuts.push(shortcut)
-  panel.newTabBtns.push(shortcut)
+  Popups.reactive.newTabShortcutsPopup.rawShortcuts = rawShortcuts
+
+  panel.newTabBtns = Utils.clone(rawShortcuts)
 
   newShortcutURL.value = ''
   newShortcutContainerId.value = 'none'
@@ -259,13 +288,13 @@ function shortcutUp(index: number) {
 
   if (index <= 0) return
 
-  const rawShortcuts = Popups.reactive.newTabShortcutsPopup.rawShortcuts
+  const rawShortcuts = toRawShortcuts(shortcuts.value)
   const shortcut = rawShortcuts[index]
   rawShortcuts.splice(index, 1)
   rawShortcuts.splice(index - 1, 0, shortcut)
+  Popups.reactive.newTabShortcutsPopup.rawShortcuts = rawShortcuts
 
-  panel.newTabBtns.splice(index, 1)
-  panel.newTabBtns.splice(index - 1, 0, shortcut)
+  panel.newTabBtns = Utils.clone(rawShortcuts)
 
   if (Info.isSidebar) panel.reactive.newTabBtns = Utils.cloneArray(panel.newTabBtns)
   if (Info.isSidebar) Sidebar.saveSidebar(1000)
@@ -280,13 +309,13 @@ function shortcutDown(index: number): void {
 
   if (index >= panel.newTabBtns.length - 1) return
 
-  const rawShortcuts = Popups.reactive.newTabShortcutsPopup.rawShortcuts
+  const rawShortcuts = toRawShortcuts(shortcuts.value)
   const shortcut = rawShortcuts[index]
   rawShortcuts.splice(index, 1)
   rawShortcuts.splice(index + 1, 0, shortcut)
+  Popups.reactive.newTabShortcutsPopup.rawShortcuts = rawShortcuts
 
-  panel.newTabBtns.splice(index, 1)
-  panel.newTabBtns.splice(index + 1, 0, shortcut)
+  panel.newTabBtns = Utils.clone(rawShortcuts)
 
   if (Info.isSidebar) panel.reactive.newTabBtns = Utils.cloneArray(panel.newTabBtns)
   if (Info.isSidebar) Sidebar.saveSidebar(1000)
@@ -299,10 +328,11 @@ function removeShortcut(index: number): void {
   const panel = Info.isSidebar ? Sidebar.panelsById[panelId] : SidebarConfigRState.panels[panelId]
   if (!Utils.isTabsPanel(panel)) return
 
-  const rawShortcuts = Popups.reactive.newTabShortcutsPopup.rawShortcuts
+  const rawShortcuts = toRawShortcuts(shortcuts.value)
   rawShortcuts.splice(index, 1)
+  Popups.reactive.newTabShortcutsPopup.rawShortcuts = rawShortcuts
 
-  panel.newTabBtns.splice(index, 1)
+  panel.newTabBtns = Utils.clone(rawShortcuts)
 
   if (Info.isSidebar) panel.reactive.newTabBtns = Utils.cloneArray(panel.newTabBtns)
   if (Info.isSidebar) Sidebar.saveSidebar(1000)
@@ -311,13 +341,20 @@ function removeShortcut(index: number): void {
 
 function editShortcut(shortcut: NewTabShortcut) {
   if (editing.value === shortcut.id) {
-    return onCancel()
+    return onCancelEdit()
   }
 
   editing.value = shortcut.id
 
-  if (shortcut.containerId) newShortcutContainerId.value = shortcut.containerId
-  else newShortcutContainerId.value = 'none'
+  if (shortcut.containerId) {
+    if (shortcut.containerId === DEFAULT_CONTAINER_ID) {
+      newShortcutContainerId.value = 'default'
+    } else {
+      newShortcutContainerId.value = shortcut.containerId
+    }
+  } else {
+    newShortcutContainerId.value = 'none'
+  }
 
   if (shortcut.url) newShortcutURL.value = shortcut.url
   else newShortcutURL.value = ''
@@ -335,9 +372,13 @@ function onSaveEdit() {
   const sIndex = shortcuts.value.findIndex(s => s.id === id)
   if (sIndex === -1) return
 
-  const container = Containers.reactive.byId[newShortcutContainerId.value]
   const sConfig = []
-  if (container?.name) sConfig.push(container.name)
+  if (newShortcutContainerId.value === 'default') {
+    sConfig.push(DEFAULT_CONTAINER_ID)
+  } else {
+    const container = Containers.reactive.byId[newShortcutContainerId.value]
+    if (container?.name) sConfig.push(container.name)
+  }
   if (newShortcutURL.value) sConfig.push(newShortcutURL.value)
   if (!sConfig.length) return
 
@@ -346,9 +387,14 @@ function onSaveEdit() {
   if (!Utils.isTabsPanel(panel)) return
 
   const rawShortcut = sConfig.join(', ')
-  const rawShortcuts = Popups.reactive.newTabShortcutsPopup.rawShortcuts
+  const rawShortcuts = toRawShortcuts(shortcuts.value)
+
+  // Stop if it's a duplicate TODO: tell user about this
+  if (rawShortcuts.includes(rawShortcut)) return
+
   rawShortcuts.splice(sIndex, 1, rawShortcut)
-  panel.newTabBtns.splice(sIndex, 1, rawShortcut)
+  Popups.reactive.newTabShortcutsPopup.rawShortcuts = rawShortcuts
+  panel.newTabBtns = Utils.clone(rawShortcuts)
 
   newShortcutURL.value = ''
   newShortcutContainerId.value = 'none'

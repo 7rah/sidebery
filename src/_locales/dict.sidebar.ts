@@ -484,6 +484,29 @@ export const sidebarTranslations: Translations = {
     zh_TW: '不再顯示',
     ja: '再表示しない',
   },
+  // - Session restore
+  'popup.ses_res.title': {
+    en: 'Session Restore',
+    de: 'Sitzung wiederherstellen',
+    fr: 'Restauration de session',
+    hu: 'Munkamenet visszaállítása',
+    pl: 'Przywrócenie sesji',
+    ru: 'Восстановление сеанса',
+    zh_CN: '会话恢复',
+    zh_TW: '會話還原',
+    ja: 'セッション復元',
+  },
+  'popup.ses_res.desc': {
+    en: 'Sidebery is reinitializing tabs for restored session, please wait...',
+    de: 'Sidebery initialisiert die Registerkarten für die wiederhergestellte Sitzung neu. Bitte warten Sie...',
+    fr: 'Sidebery réinitialise les onglets pour la session restaurée, veuillez patienter...',
+    hu: 'Sidebery újraindítja a visszaállított munkamenet lapjait, kérjük, várjon...',
+    pl: 'Sidebery ponownie inicjuje karty dla przywróconej sesji, proszę czekać...',
+    ru: 'Sidebery инициализирует вкладки для восстановленной сессии, пожалуйста, подождите...',
+    zh_CN: 'Sidebery正在为恢复的会话重新初始化标签页，请稍候...',
+    zh_TW: 'Sidebery 正為還原的會話重新初始化分頁，請稍候...',
+    ja: 'Sideberyは復元されたセッションのタブを再初期化中です。お待ちください...',
+  },
 
   // ---
   // -- Sub-panels

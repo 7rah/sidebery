@@ -101,6 +101,8 @@ export interface SettingsState {
   moveNewTabPin: (typeof SETTINGS_OPTIONS.moveNewTabPin)[number]
   moveNewTabParent: (typeof SETTINGS_OPTIONS.moveNewTabParent)[number]
   moveNewTabParentActPanel: boolean
+  moveNewTabButton: (typeof SETTINGS_OPTIONS.moveNewTab)[number]
+  moveNewTabButtonActivePin: (typeof SETTINGS_OPTIONS.moveNewTabActivePin)[number]
   moveNewTab: (typeof SETTINGS_OPTIONS.moveNewTab)[number]
   moveNewTabActivePin: (typeof SETTINGS_OPTIONS.moveNewTabActivePin)[number]
   autoScrollToNewTab: boolean

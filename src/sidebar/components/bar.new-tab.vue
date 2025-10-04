@@ -234,6 +234,8 @@ function onNewTabMouseUp(e: MouseEvent, btn?: NewTabBtn): void {
     return
   }
 
+  const newTabConf = { url: btn?.url, cookieStoreId: btn?.containerId, fromNewTabButton: true }
+
   // Left
   if (e.button === 0) {
     if (e.ctrlKey) {
@@ -242,7 +244,7 @@ function onNewTabMouseUp(e: MouseEvent, btn?: NewTabBtn): void {
       if (actTab && !actTab.pinned && actTab.panelId === props.panel.id) {
         Tabs.createChildTab(actTab.id, btn?.url, btn?.containerId)
       } else {
-        Tabs.createTabInPanel(props.panel, { url: btn?.url, cookieStoreId: btn?.containerId })
+        Tabs.createTabInPanel(props.panel, newTabConf)
       }
       return
     }
@@ -254,7 +256,7 @@ function onNewTabMouseUp(e: MouseEvent, btn?: NewTabBtn): void {
 
     if (Selection.isSet() && !props.panel.selNewTab) Selection.resetSelection()
 
-    Tabs.createTabInPanel(props.panel, { url: btn?.url, cookieStoreId: btn?.containerId })
+    Tabs.createTabInPanel(props.panel, newTabConf)
   }
 
   // Middle
@@ -264,7 +266,7 @@ function onNewTabMouseUp(e: MouseEvent, btn?: NewTabBtn): void {
       if (actTab && !actTab.pinned && actTab.panelId === props.panel.id) {
         Tabs.createChildTab(actTab.id, btn?.url, btn?.containerId)
       } else {
-        Tabs.createTabInPanel(props.panel, { url: btn?.url, cookieStoreId: btn?.containerId })
+        Tabs.createTabInPanel(props.panel, newTabConf)
       }
     } else if (Settings.state.newTabMiddleClickAction === 'reopen') {
       applyBtnRules(btn)

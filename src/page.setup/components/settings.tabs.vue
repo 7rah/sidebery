@@ -162,6 +162,23 @@ section(ref="el")
         :inactive="Settings.state.moveNewTabParent === 'none'"
         v-model:value="Settings.state.moveNewTabParentActPanel"
         @update:value="Settings.saveDebounced(150)")
+    //- Place new tab (from New Tab button). options are reused from moveNewTab
+    SelectField(
+      label="settings.move_new_tab_button"
+      optLabel="settings.move_new_tab_"
+      v-model:value="Settings.state.moveNewTabButton"
+      :opts="Settings.getOpts('moveNewTab')"
+      :folded="true"
+      @update:value="Settings.saveDebounced(150)")
+    .sub-fields
+      SelectField(
+        :inactive="!newTabBtnPosRelativeToActiveTab"
+        label="settings.move_new_tab_active_pin"
+        optLabel="settings.move_new_tab_pin_"
+        v-model:value="Settings.state.moveNewTabButtonActivePin"
+        :opts="Settings.getOpts('moveNewTabActivePin')"
+        @update:value="Settings.saveDebounced(150)")
+    //- Place new tab (general rule)
     SelectField(
       label="settings.move_new_tab"
       optLabel="settings.move_new_tab_"
@@ -171,7 +188,7 @@ section(ref="el")
       @update:value="Settings.saveDebounced(150)")
     .sub-fields
       SelectField(
-        :inactive="!relativeToActiveTab"
+        :inactive="!newTabPosRelativeToActiveTab"
         label="settings.move_new_tab_active_pin"
         optLabel="settings.move_new_tab_pin_"
         v-model:value="Settings.state.moveNewTabActivePin"
@@ -498,12 +515,21 @@ const tabsColorEl = ref<HTMLElement | null>(null)
 const tabsPreviewEl = ref<HTMLElement | null>(null)
 const nativeTabsEl = ref<HTMLElement | null>(null)
 
-const relativeToActiveTab = computed<boolean>(() => {
+const newTabPosRelativeToActiveTab = computed<boolean>(() => {
   return (
     Settings.state.moveNewTab === 'after' ||
     Settings.state.moveNewTab === 'before' ||
     Settings.state.moveNewTab === 'first_child' ||
     Settings.state.moveNewTab === 'last_child'
+  )
+})
+
+const newTabBtnPosRelativeToActiveTab = computed<boolean>(() => {
+  return (
+    Settings.state.moveNewTabButton === 'after' ||
+    Settings.state.moveNewTabButton === 'before' ||
+    Settings.state.moveNewTabButton === 'first_child' ||
+    Settings.state.moveNewTabButton === 'last_child'
   )
 })
 

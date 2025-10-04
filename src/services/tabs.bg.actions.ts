@@ -703,6 +703,7 @@ export interface GroupPageInitData {
   groupLayout?: (typeof SETTINGS_OPTIONS.groupLayout)[number]
   animations?: boolean
   groupInfo?: GroupInfo | null
+  newTabPos?: 'first_child' | 'last_child'
   winId?: ID
   tabId?: ID
 }
@@ -720,6 +721,7 @@ export async function getGroupPageInitData(winId: ID, tabId: ID): Promise<GroupP
     groupLayout: Settings.state.groupLayout,
     animations: Settings.state.animations,
     groupInfo,
+    newTabPos: Settings.state.moveNewTabParent === 'first_child' ? 'first_child' : 'last_child',
     winId,
     tabId,
   }

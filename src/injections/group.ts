@@ -1,5 +1,5 @@
 import { sleep } from 'src/utils'
-import { GroupPin, GroupedTabInfo, InstanceType, GroupConfig } from 'src/types'
+import { GroupPin, GroupedTabInfo, InstanceType, GroupConfig, DstPlaceInfo } from 'src/types'
 import { GroupPageInitData } from 'src/services/tabs.bg.actions'
 import { getFavPlaceholder } from 'src/services/favicons'
 import { NOID, SETTINGS_OPTIONS } from 'src/defaults'
@@ -17,6 +17,7 @@ let groupWinId: ID
 let groupTabId: ID
 let groupTabIndex: number
 let groupLayout: (typeof SETTINGS_OPTIONS.groupLayout)[number]
+let groupNewTabPos: 'first_child' | 'last_child'
 let pinTab: GroupPin | undefined
 let tabs: GroupedTabInfo[]
 let groupLen: number, groupParentId: ID | undefined
@@ -56,6 +57,7 @@ async function main() {
 
   groupWinId = initData.winId ?? -1
   groupTabId = initData.tabId ?? -1
+  groupNewTabPos = initData.newTabPos ?? 'last_child'
 
   IPC.setWinId(groupWinId)
   IPC.setTabId(groupTabId)
@@ -319,12 +321,10 @@ function createNewTabButton() {
   newTabEl.addEventListener('mousedown', (event: MouseEvent) => {
     event.stopPropagation()
     event.preventDefault()
-    IPC.bg('tabsApiProxy', 'create', {
-      windowId: groupWinId,
-      index: groupTabIndex + groupLen + 1,
-      openerTabId: groupTabId,
-      active: event.button === 0 ? true : false,
-    })
+    const index = (groupNewTabPos === 'last_child' ? groupTabIndex + groupLen : groupTabIndex) + 1
+    const newTabConf = { id: 0, url: 'about:newtab', active: true }
+    const dst: DstPlaceInfo = { windowId: groupWinId, parentId: groupTabId, index }
+    IPC.bg('openTabs', [newTabConf], dst)
   })
   newTabEl.addEventListener('mouseup', event => {
     event.stopPropagation()

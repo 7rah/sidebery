@@ -16,6 +16,7 @@ import { versionToInt } from 'src/services/info.actions'
 import { Menu } from 'src/services/menu'
 import { WebReq } from 'src/services/web-req'
 import { Sync } from 'src/services/_services'
+import { Styles } from 'src/services/styles'
 
 void (async function main() {
   Info.setInstanceType(InstanceType.bg)
@@ -110,6 +111,7 @@ void (async function main() {
   }
 
   initToolbarButton()
+  Styles.initColorScheme()
 
   browser.runtime.onUpdateAvailable.addListener(details => {
     const currentVersion = versionToInt(browser.runtime.getManifest().version)

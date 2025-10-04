@@ -550,10 +550,6 @@ export async function updateBgTabsTreeData(): Promise<void> {
 }
 
 export async function initInternalPageScripts(tabs: Tab[]) {
-  if (!Styles.theme) {
-    await Styles.initColorScheme()
-  }
-
   for (const tab of tabs) {
     if (!Windows.byId[tab.windowId]) continue
 
@@ -646,8 +642,6 @@ const injectingGroups = new Set<ID>()
 export async function injectGroupPageScript(winId: ID, tabId: ID): Promise<void> {
   // Already injecting
   if (injectingGroups.has(tabId)) return
-  // No sidebar
-  if (!IPC.state.sidebarConnections.has(winId)) return
   // Already connected, therefore group is initialized
   if (IPC.state.groupPageConnections.has(tabId)) return
 
@@ -708,10 +702,13 @@ export interface GroupPageInitData {
   tabId?: ID
 }
 export async function getGroupPageInitData(winId: ID, tabId: ID): Promise<GroupPageInitData> {
-  const groupInfo = await IPC.sidebar(winId, 'getGroupInfo', tabId).catch(err => {
-    Logs.err('Tabs: Cannot get tabs info for group page', err)
-    return null
-  })
+  let groupInfo = null
+  if (IPC.isConnected(InstanceType.sidebar, winId)) {
+    groupInfo = await IPC.sidebar(winId, 'getGroupInfo', tabId).catch(err => {
+      Logs.err('Tabs: Cannot get tabs info for group page', err)
+      return null
+    })
+  }
 
   return {
     theme: Settings.state.theme,

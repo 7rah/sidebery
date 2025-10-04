@@ -814,8 +814,7 @@ export function getParentForNewTab(panel: Panel, conf?: ParentForNewTabConf): ID
     if (Settings.state.moveNewTabParent === 'last_child') return openerTabId
     if (Settings.state.moveNewTabParent === 'start') return
     if (Settings.state.moveNewTabParent === 'end') return
-    if (Settings.state.moveNewTabParent === 'default') return openerTabId
-    if (Settings.state.moveNewTabParent === 'none') return openerTabId
+    if (Settings.state.moveNewTabParent === 'default') return parent.parentId
   }
 
   // Place new tab (for the other cases)

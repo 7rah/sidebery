@@ -1,5 +1,5 @@
 import * as Utils from 'src/utils'
-import { DEFAULT_SETTINGS, SETTINGS_OPTIONS } from 'src/defaults'
+import { DEFAULT_SETTINGS, NOID, SETTINGS_OPTIONS } from 'src/defaults'
 import { SettingsState, Stored, InstanceType, CopyTemplate } from 'src/types'
 import { Settings } from 'src/services/settings'
 import { Store } from './storage'
@@ -174,7 +174,8 @@ export function updateSettingsFg(settings?: SettingsState | null): void {
     prev.activateAfterClosing !== next.activateAfterClosing ||
     prev.activateAfterClosingNoDiscarded !== next.activateAfterClosingNoDiscarded
   const resetTree = prev.tabsTree !== next.tabsTree && prev.tabsTree
-  const updateTree = prev.tabsTreeLimit !== next.tabsTreeLimit
+  const reviveTree = prev.tabsTree !== next.tabsTree && !prev.tabsTree
+  const tabsTreeLimit = prev.tabsTreeLimit !== next.tabsTreeLimit
   const hideFoldedTabs = prev.hideFoldedTabs !== next.hideFoldedTabs
   const hideUnloadedTabs = prev.hideUnloadedTabs !== next.hideUnloadedTabs
   const hideFoldedParent = prev.hideFoldedParent !== next.hideFoldedParent
@@ -237,7 +238,15 @@ export function updateSettingsFg(settings?: SettingsState | null): void {
     Sidebar.recalcVisibleTabs()
   }
 
-  if (updateTree && Sidebar.hasTabs) {
+  if (reviveTree && Sidebar.hasTabs) {
+    for (const tab of Tabs.list) {
+      tab.parentId = tab.openerTabId ?? NOID
+    }
+    Tabs.updateTabsTree()
+    Sidebar.recalcVisibleTabs()
+  }
+
+  if (tabsTreeLimit && Sidebar.hasTabs) {
     Tabs.updateTabsTree()
     Sidebar.recalcVisibleTabs()
   }

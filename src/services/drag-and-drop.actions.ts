@@ -214,8 +214,11 @@ function getDstInfo(): DstPlaceInfo {
   info.panelId = dstPanel.id
 
   if (Utils.isTabsPanel(dstPanel)) {
-    const destContainer = Containers.reactive.byId[dstPanel.dropTabCtx ?? '']
-    if (destContainer) info.containerId = dstPanel.dropTabCtx
+    if (dstPanel.dropTabCtx === CONTAINER_ID) info.containerId = CONTAINER_ID
+    else {
+      const dstContainer = Containers.reactive.byId[dstPanel.dropTabCtx ?? '']
+      if (dstContainer) info.containerId = dstPanel.dropTabCtx
+    }
   }
 
   if (info.index === -1) {

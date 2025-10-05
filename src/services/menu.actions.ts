@@ -94,7 +94,7 @@ export async function importCtxMenu(ctxMenu: MenuConfs) {
 
 export function createBrowserActionMenu() {
   createSettingsMenu()
-  TabsBg.createReopenFromCacheMenu()
+  TabsBg.createOpenFromCacheMenu()
 }
 
 export function createSettingsMenu(): void {

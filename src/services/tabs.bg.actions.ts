@@ -83,7 +83,7 @@ export async function reinitTabs(msg: string) {
   await loadTabs()
 }
 
-export function createReopenFromCacheMenu() {
+export function createOpenFromCacheMenu() {
   // No cache
   if (!_tabsDataCache) return
 
@@ -95,8 +95,8 @@ export function createReopenFromCacheMenu() {
     browser.menus.create({
       id: 'reopen_cached_win',
       title: translate('menu.browserAction.reopen_cached_win_first', winCache.length),
-      icons: { '16': 'assets/undo-native.svg' },
-      onclick: () => reopenCachedWindow(winCache),
+      icons: { '16': 'assets/window-native.svg' },
+      onclick: () => openCachedWindow(winCache),
       contexts: ['browser_action'],
     })
   }
@@ -106,7 +106,7 @@ export function createReopenFromCacheMenu() {
     const parentId = browser.menus.create({
       id: 'reopen_cached_wins',
       title: translate('menu.browserAction.reopen_cached_wins'),
-      icons: { '16': 'assets/undo-native.svg' },
+      icons: { '16': 'assets/window-native.svg' },
       contexts: ['browser_action'],
     })
 
@@ -127,21 +127,21 @@ export function createReopenFromCacheMenu() {
         parentId,
         title: translate('menu.browserAction.reopen_cached_win', winCache.length, panelIds.size),
         icons: { '16': icon },
-        onclick: () => reopenCachedWindow(winCache),
+        onclick: () => openCachedWindow(winCache),
         contexts: ['browser_action'],
       })
     }
   }
 }
 
-function reopenCachedWindow(cache: TabCache[]) {
+function openCachedWindow(cache: TabCache[]) {
   const incognito = !!cache[0]?.privWin
   const items: ItemInfo[] = []
   for (const cachedTab of cache) {
     items.push({
       id: cachedTab.id,
-      url: cachedTab.url,
-      title: cachedTab.customTitle ?? cachedTab.url,
+      url: Utils.denormalizeUrl(cachedTab.url),
+      title: cachedTab.customTitle ?? cachedTab.url.replace(/^https?:\/\//, ''),
       parentId: cachedTab.parentId ?? NOID,
       panelId: cachedTab.panelId ?? NOID,
       pinned: !!cachedTab.pin,

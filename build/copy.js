@@ -19,7 +19,6 @@ const COPY = {
   './src/assets/group-page-favicon.svg': `${ADDON_PATH}/assets/`,
   './src/assets/snapshot-native.svg': `${ADDON_PATH}/assets/`,
   './src/assets/proxy-native.svg': `${ADDON_PATH}/assets/`,
-  './src/assets/undo-native.svg': `${ADDON_PATH}/assets/`,
   './src/assets/window-native.svg': `${ADDON_PATH}/assets/`,
   './src/assets/private-window-native.svg': `${ADDON_PATH}/assets/`,
   [`./node_modules/vue/dist/${VUE_DIST}`]: `${ADDON_PATH}/vendor/`,

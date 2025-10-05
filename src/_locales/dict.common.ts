@@ -1078,16 +1078,16 @@ export const commonTranslations: Translations = {
   },
   'menu.browserAction.reopen_cached_win_first': {
     en: tabsCount => {
-      if (tabsCount === 1) return `Reopen cached window (${tabsCount} tab)`
-      return `Reopen cached window (${tabsCount} tabs)`
+      if (tabsCount === 1) return `Open cached window (${tabsCount} tab)`
+      return `Open cached window (${tabsCount} tabs)`
     },
-    zh_CN: tabsCount => `重开已缓存窗口（${tabsCount} 个标签页）`,
-    zh_TW: tabsCount => `重開已快取視窗（${tabsCount} 個分頁）`,
+    zh_CN: tabsCount => `打开缓存窗口（${tabsCount} 个标签页）`,
+    zh_TW: tabsCount => `開啟快取視窗（${tabsCount} 個分頁）`,
   },
   'menu.browserAction.reopen_cached_wins': {
-    en: 'Reopen cached window',
-    zh_CN: '重开已缓存窗口',
-    zh_TW: '重開已快取視窗',
+    en: 'Open cached window',
+    zh_CN: '打开缓存窗口',
+    zh_TW: '開啟快取視窗',
   },
   'menu.browserAction.reopen_cached_win': {
     en: (tabsCount, panelsCount) => {

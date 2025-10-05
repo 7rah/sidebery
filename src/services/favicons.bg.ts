@@ -26,6 +26,7 @@ export async function loadFavicons(): Promise<void> {
     return Logs.err('loadFavicons: Cannot get favicons', err)
   }
 
+  saveAll = true
   favicons = []
   hashes = []
   domainsInfo = {}

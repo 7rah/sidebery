@@ -386,18 +386,9 @@ function onTabCreated(nativeTab: NativeTab, attached?: boolean): void {
     }
   }
 
-  // If new tab has wrong possition - move it
+  // If the new tab has wrong possition - move it
   if (panel && !tab.pinned && tab.index !== index) {
-    tab.dstPanelId = panel.id
-    Tabs.movingTabs.push(tab.id)
-    tab.moving = true
-    Utils.GLOBAL_QUEUE.add(browser.tabs.move, tab.id, { index })
-      .catch(err => {
-        Logs.err('Tabs.onTabCreated: Cannot move the tab to the correct position:', err)
-      })
-      .finally(() => {
-        tab.moving = undefined
-      })
+    handleNewTabMove(tab)
   }
 
   // Update tabs indexses after inserted one.
@@ -601,6 +592,45 @@ function onTabCreated(nativeTab: NativeTab, attached?: boolean): void {
   if (attached && (tab.audible || tab.mediaPaused || tab.mutedInfo?.muted)) {
     Sidebar.updateMediaStateOfPanelDebounced(100, tab.panelId, tab)
   }
+}
+
+const NEW_TAB_MOVE_DELAY = 200
+
+let handleNewTabMoveTimeout: number | undefined
+let newTabToMove: Tab | undefined
+
+function handleNewTabMove(newTab: Tab) {
+  // There is already a new tab waiting for move
+  if (newTabToMove) {
+    // Reset the previous new tab to sort all tabs
+    newTabToMove = undefined
+  }
+  // There is no new tab and timeout is not started
+  else if (handleNewTabMoveTimeout === undefined) {
+    // Set tab to move as this is the first new tab in a while (NEW_TAB_MOVE_DELAY)
+    newTabToMove = newTab
+  }
+
+  clearTimeout(handleNewTabMoveTimeout)
+  handleNewTabMoveTimeout = setTimeout(() => {
+    handleNewTabMoveTimeout = undefined
+
+    const tab = newTabToMove
+    newTabToMove = undefined
+
+    if (!tab) {
+      Tabs.sortNativeTabs()
+    } else {
+      tab.moving = true
+      Utils.GLOBAL_QUEUE.add(browser.tabs.move, tab.id, { index: tab.index })
+        .catch(err => {
+          Logs.err('Tabs.handleNewTabMove: Cannot move the tab to the correct position:', err)
+        })
+        .finally(() => {
+          tab.moving = undefined
+        })
+    }
+  }, NEW_TAB_MOVE_DELAY)
 }
 
 /**
@@ -992,6 +1022,8 @@ function onTabRemoved(tabId: ID, info: browser.tabs.RemoveInfo, detached?: boole
   if (info.isWindowClosing) return
   if (Tabs.ignoreTabsEvents) return
   if (Tabs.tabsReinitializing) return Tabs.reinitTabs()
+  // Reset the new tab for deferred moving to sort all tabs
+  if (handleNewTabMoveTimeout !== undefined) newTabToMove = undefined
 
   // Logs.info('Tabs.onTabRemoved', tabId)
 
@@ -1296,6 +1328,8 @@ function onTabMoved(id: ID, info: browser.tabs.MoveInfo): void {
   if (Tabs.ignoreTabsEvents) return
   if (Tabs.tabsReinitializing) return Tabs.reinitTabs()
   if (Tabs.detachingTabIds.has(id)) return
+  // Reset the new tab for deferred moving to sort all tabs
+  if (handleNewTabMoveTimeout !== undefined) newTabToMove = undefined
 
   const tab = Tabs.byId[id]
   if (!tab) {

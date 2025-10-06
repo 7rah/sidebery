@@ -892,96 +892,18 @@ export function reinitTabs(delay = 500): void {
   }, delay)
 }
 
-let sortNativeTabsTimeout: number | undefined
-let sortingNativeTabs = false
-export function sortNativeTabs(delayMS = 500): void {
-  sortingNativeTabs = false
-
-  clearTimeout(sortNativeTabsTimeout)
-  sortNativeTabsTimeout = setTimeout(async () => {
-    sortingNativeTabs = true
-
-    const nativeTabs = await browser.tabs.query({ currentWindow: true })
-    if (!sortingNativeTabs) return sortNativeTabs()
-    const nativeTabsById: Record<ID, NativeTab> = {}
-
-    for (const nativeTab of nativeTabs) {
-      nativeTabsById[nativeTab.id] = nativeTab
-
-      const tab = Tabs.byId[nativeTab.id]
-      if (!tab) {
-        Logs.warn(`Tabs.sortNativeTabs: Cannot find sidebery tab: ${nativeTab.id}`)
-        return Tabs.reinitTabs()
-      }
-    }
-
-    type Move = { index: number; ids: ID[]; step: number }
-    const moves: Move[] = []
-    let prevMove: Move | undefined
-    let prevMoveStep = 0
-    for (const tab of Tabs.list) {
-      const nativeTabById = nativeTabsById[tab.id]
-      if (!nativeTabById) {
-        Logs.warn('Tabs.sortNativeTabs: Cannot find native tab')
-        return Tabs.reinitTabs()
-      }
-
-      const nativeTabByIndex = nativeTabs[tab.index]
-      if (!nativeTabByIndex || nativeTabByIndex.id !== tab.id) {
-        const step = nativeTabById.index - tab.index
-
-        nativeTabs.splice(nativeTabById.index, 1)
-        nativeTabs.splice(tab.index, 0, nativeTabById)
-
-        if (prevMoveStep === step && prevMove) {
-          prevMove.ids.push(tab.id)
-        } else {
-          prevMove = { index: tab.index, ids: [tab.id], step: step }
-          moves.push(prevMove)
-        }
-
-        prevMoveStep = step
-      } else {
-        prevMove = undefined
-        prevMoveStep = 0
-      }
-    }
-
-    for (const move of moves) {
-      // Invert moving tabs
-      if (move.step < move.ids.length) {
-        const k = move.index + move.ids.length
-        const targetIndex = move.index + move.ids.length
-        const tabs = Tabs.list.slice(k, k + move.step)
-        const ids = tabs.map(t => {
-          t.moving = true
-          return t.id
-        })
-        Tabs.movingTabs.push(...ids)
-        await browser.tabs.move(ids, { index: targetIndex, windowId: Windows.id }).catch(err => {
-          Logs.err('Tabs.sortNativeTabs: Cannot move tabs', err)
-        })
-        tabs.forEach(t => (t.moving = undefined))
-      } else {
-        Tabs.movingTabs.push(...move.ids)
-        move.ids.forEach(id => {
-          const tab = Tabs.byId[id]
-          if (tab) tab.moving = true
-        })
-        await browser.tabs.move(move.ids, { index: move.index, windowId: Windows.id }).catch(e => {
-          Logs.err('Tabs.sortNativeTabs: Cannot move tabs', e)
-        })
-        move.ids.forEach(id => {
-          const tab = Tabs.byId[id]
-          if (tab) tab.moving = undefined
-        })
-      }
-      Tabs.movingTabs = []
-    }
-
-    sortingNativeTabs = false
-  }, delayMS)
+export async function sortNativeTabs() {
+  const ids = Tabs.list.map(t => {
+    t.moving = true
+    return t.id
+  })
+  await Utils.GLOBAL_QUEUE.add(browser.tabs.move, ids, { index: 0 }).catch(err => {
+    Logs.err('Tabs.sortNativeTabs: Cannot sort the tabs:', err)
+  })
+  Tabs.list.forEach(t => (t.moving = undefined))
 }
+
+export const sortNativeTabsDebounced = Utils.debounce(sortNativeTabs)
 
 let switchTabPause: number | undefined
 /**

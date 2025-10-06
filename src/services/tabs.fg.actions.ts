@@ -1040,12 +1040,13 @@ export function switchTabWithPreselect(globaly: boolean, cycle: boolean, dir: 1 
   }
 
   if (!target) {
+    const tabFinder = (tab: Tab) => !tab.invisible && (!skipDiscarded || !tab.discarded)
     if (cycle) {
-      if (dir > 0) target = tabs[0]
-      else target = tabs[tabs.length - 1]
+      if (dir > 0) target = tabs.find(tabFinder)
+      else target = tabs.findLast(tabFinder)
     } else {
-      if (dir > 0) target = tabs[tabs.length - 1]
-      else target = tabs[0]
+      if (dir > 0) target = tabs.findLast(tabFinder)
+      else target = tabs.find(tabFinder)
     }
   }
   if (!target) return

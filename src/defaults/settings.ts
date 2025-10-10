@@ -193,7 +193,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
 
   // Snapshots
   snapNotify: true,
-  snapExcludePrivate: false,
+  snapExcludePrivate: true,
   snapInterval: 0,
   snapIntervalUnit: 'min',
   snapLimit: 0,

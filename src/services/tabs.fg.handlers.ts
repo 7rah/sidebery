@@ -1189,7 +1189,7 @@ function onTabRemoved(tabId: ID, info: browser.tabs.RemoveInfo, detached?: boole
       }
 
       // Save updated child tabs
-      if (!willBeRemoved) Tabs.saveTabData(t.id)
+      if (!willBeRemoved) Tabs.saveTabData(t.id, false, 250)
     }
 
     // Remove child tabs

@@ -677,6 +677,10 @@ function findCachedData(
  */
 export function cacheTabsData(delay = 300): void {
   // Logs.info('Tabs.cacheTabsData', delay)
+
+  // Ignore private windows
+  if (Windows.incognito) return
+
   if (cacheTabsDataTimeout) clearTimeout(cacheTabsDataTimeout)
   cacheTabsDataTimeout = setTimeout(() => {
     if (Tabs.tabsReinitializing) return
@@ -697,9 +701,6 @@ export function cacheTabsData(delay = 300): void {
 
     // Set unique window id
     if (Windows.uniqWinId && data[0]) data[0].uniqWinId = Windows.uniqWinId
-
-    // Set private flag... hm, or I should ignore such windows?
-    if (Windows.incognito && data[0]) data[0].privWin = true
 
     IPC.bg('cacheTabsData', Windows.id, data)
   }, delay)

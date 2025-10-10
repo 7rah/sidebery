@@ -119,14 +119,11 @@ export function createOpenFromCacheMenu() {
         panelIds.add(tab.panelId)
       }
 
-      const incognito = !!winCache[0]?.privWin
-      const icon = incognito ? 'assets/private-window-native.svg' : 'assets/window-native.svg'
-
       browser.menus.create({
         id: `reopen_cached_win_${i}`,
         parentId,
         title: translate('menu.browserAction.reopen_cached_win', winCache.length, panelIds.size),
-        icons: { '16': icon },
+        icons: { '16': 'assets/window-native.svg' },
         onclick: () => openCachedWindow(winCache),
         contexts: ['browser_action'],
       })
@@ -135,7 +132,6 @@ export function createOpenFromCacheMenu() {
 }
 
 function openCachedWindow(cache: TabCache[]) {
-  const incognito = !!cache[0]?.privWin
   const items: ItemInfo[] = []
   for (const cachedTab of cache) {
     items.push({
@@ -151,7 +147,7 @@ function openCachedWindow(cache: TabCache[]) {
     })
   }
   items[0].active = true
-  Windows.createWithTabs(items, { incognito })
+  Windows.createWithTabs(items)
 }
 
 /**

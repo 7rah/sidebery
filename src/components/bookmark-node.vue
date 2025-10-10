@@ -355,6 +355,7 @@ function onDragStart(e: DragEvent): void {
     y: e.clientY,
   }
 
+  DnD.broadcastDragInfo(dragInfo)
   DnD.start(dragInfo, DropType.Bookmarks)
 
   // Set native drag info

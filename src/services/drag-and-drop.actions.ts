@@ -21,7 +21,7 @@ let lastDragStartTime = 0
 /**
  * Start dragging something
  */
-export function start(info: DragInfo, dstType?: DropType): void {
+export function start(info: DragInfo, dstType?: DropType, dstPanelId?: ID): void {
   if (info.windowId === undefined) info.windowId = Windows.id
   if (info.panelId === undefined) info.panelId = Sidebar.activePanelId
 
@@ -54,7 +54,7 @@ export function start(info: DragInfo, dstType?: DropType): void {
   DnD.srcPanelId = info.panelId
   DnD.srcIndex = info.index ?? -1
   DnD.dropMode = info.copy ? 'copy' : 'auto'
-  DnD.reactive.dstPanelId = info.panelId
+  DnD.reactive.dstPanelId = dstPanelId ?? info.panelId
 
   if (dstType) DnD.reactive.dstType = dstType
   updateTooltip(info)
@@ -213,7 +213,9 @@ function getDstInfo(): DstPlaceInfo {
 
   info.panelId = dstPanel.id
 
-  if (Utils.isTabsPanel(dstPanel)) {
+  if (Windows.incognito !== DnD.srcIncognito) info.containerId = CONTAINER_ID
+
+  if (Utils.isTabsPanel(dstPanel) && !Windows.incognito) {
     if (dstPanel.dropTabCtx === CONTAINER_ID) info.containerId = CONTAINER_ID
     else {
       const dstContainer = Containers.reactive.byId[dstPanel.dropTabCtx ?? '']
@@ -226,6 +228,13 @@ function getDstInfo(): DstPlaceInfo {
     info.inside = true
   }
   return info
+}
+
+function getInitialDstType(): DropType {
+  const actPanel = Sidebar.panelsById[Sidebar.activePanelId]
+  if (Utils.isTabsPanel(actPanel)) return DropType.Tabs
+  if (Utils.isBookmarksPanel(actPanel)) return DropType.Bookmarks
+  return DropType.Nowhere
 }
 
 function getDstPanel(dstType: DropType, dstPanelId: ID): Panel | undefined {
@@ -372,21 +381,32 @@ export function onDragEnter(e: DragEvent): void {
 
   // Handle drag and drop from outside
   if (!DnD.reactive.isStarted && !e?.relatedTarget) {
-    if (!e.dataTransfer?.items.length) return
+    let dragInfo = DnD.dragInfo
 
-    const dndInfo = e.dataTransfer?.getData('application/x-sidebery-dnd')
+    // Maybe there is data from another profile, try to get it
+    if (!dragInfo && e.dataTransfer?.items.length) {
+      const infoJSON = e.dataTransfer?.getData('application/x-sidebery-dnd')
+      if (infoJSON) {
+        try {
+          dragInfo = JSON.parse(infoJSON) as DragInfo
+        } catch (err) {
+          Logs.err('DnD.onDragEnter: Cannot parse x-sidebery-dnd info:', err)
+        }
+      }
+
+      // Remove containers info b/c it's a different profile, hence containerId
+      // refers to a different container.
+      if (dragInfo?.items) {
+        dragInfo.items.forEach(i => (i.container = undefined))
+      }
+    }
 
     Sidebar.updateBounds()
 
     // From other sidebery sidebar
-    if (dndInfo) {
-      let info: DragInfo
-      try {
-        info = JSON.parse(dndInfo) as DragInfo
-      } catch (err) {
-        return
-      }
-      DnD.start(info, DropType.Tabs)
+    if (dragInfo) {
+      const dstType = getInitialDstType()
+      DnD.start(dragInfo, dstType, getDstPanel(dstType, NOID)?.id)
 
       if (DnD.srcType === DragType.TabsPanel || DnD.srcType === DragType.BookmarksPanel) {
         Selection.selectNavItem(DnD.srcPanelId)
@@ -1256,6 +1276,11 @@ export function resetOther(): void {
   }, 150)
 }
 
+export function onExternalStop() {
+  DnD.resetDragInfo()
+  DnD.reset()
+}
+
 let dragEndedRecentlyTimeout: number | undefined
 
 export async function onDragEnd(e: DragEvent): Promise<void> {
@@ -1265,6 +1290,9 @@ export async function onDragEnd(e: DragEvent): Promise<void> {
     DnD.dragEndedRecently = false
   }, 100)
 
+  const info = DnD.dragInfo
+
+  resetDragInfo()
   resetDragPointer()
   DnD.resetOther()
   let mode = DnD.dropMode
@@ -1276,24 +1304,12 @@ export async function onDragEnd(e: DragEvent): Promise<void> {
   const droppedOutside = e.x < 0 || e.x > Sidebar.width || e.y < 0 || e.y > Sidebar.height
 
   // Dropped outside sidebar
-  if (
-    droppedOutside &&
-    e.dataTransfer?.types.length === 1 &&
-    Date.now() - lastDragStartTime > 250
-  ) {
-    const dndInfoStr = e.dataTransfer?.getData('application/x-sidebery-dnd')
-
+  if (droppedOutside && Date.now() - lastDragStartTime > 250) {
     // If the drop effect is not 'none' it was consumed by another drop target
     if (e.dataTransfer?.dropEffect !== 'none') return
 
-    // Parse transferred data
-    if (!dndInfoStr) return
-    let info: DragInfo
-    try {
-      info = JSON.parse(dndInfoStr) as DragInfo
-    } catch (err) {
-      return
-    }
+    // No drag info
+    if (!info) return
 
     const fromTabs = info.type === DragType.Tabs
     const fromTabsPanel = info.type === DragType.TabsPanel
@@ -1333,4 +1349,21 @@ export async function onDragEnd(e: DragEvent): Promise<void> {
   // Update succession of active tab
   const successionExclude = Tabs.detachingTabIds.size ? [...Tabs.detachingTabIds] : undefined
   Tabs.updateSuccessionDebounced(0, successionExclude)
+}
+
+export function broadcastDragInfo(dragInfo: DragInfo) {
+  DnD.setDragInfo(dragInfo)
+  IPC.broadcast({
+    dstType: InstanceType.sidebar,
+    action: 'setDragInfo',
+    arg: dragInfo,
+  })
+}
+
+export function setDragInfo(dragInfo: DragInfo) {
+  DnD.dragInfo = dragInfo
+}
+
+export function resetDragInfo() {
+  DnD.dragInfo = null
 }

@@ -694,6 +694,7 @@ function onNavDragStart(e: DragEvent, item: NavItem) {
     dragItems.push({ id: item.id })
   }
 
+  DnD.broadcastDragInfo(dragInfo)
   DnD.start(dragInfo, DropType.NavItem)
 
   // Set native drag info

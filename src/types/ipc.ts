@@ -1,5 +1,5 @@
 import { Tab, GroupInfo, TabsTreeData } from './tabs'
-import { ItemInfo, DstPlaceInfo, Notification, PanelConfig } from '../types'
+import { ItemInfo, DstPlaceInfo, Notification, PanelConfig, DragInfo } from '../types'
 import { Stored } from './storage'
 import { Tabs } from 'src/services/tabs.bg'
 import { Snapshots } from 'src/services/snapshots'
@@ -90,6 +90,7 @@ export type SidebarActions = {
   getTabsTreeData: () => TabsTreeData
   getActivePanelConfig: () => PanelConfig | undefined
   stopDrag: () => void
+  setDragInfo: (dragInfo: DragInfo) => void
   getGroupInfo: (groupTabId: ID) => Promise<GroupInfo | null>
   handleReopening: (tabId: ID, dstContainerId?: string) => Promise<number | undefined>
 

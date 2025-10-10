@@ -181,10 +181,16 @@ export async function createFromDragEvent(e: DragEvent, dst: DstPlaceInfo): Prom
     } catch (err) {
       return
     }
-    if (info.items) {
+
+    if (info?.items) {
       const groupUrlStartRe = /^moz-extension:\/\/.{36}\/(page.)?group\/group\.html(.+)$/
-      // Update sidebery internal urls
       for (const item of info.items) {
+        // Remove containers info b/c it's a different profile, hence containerId
+        // refers to a different container.
+        // TODO: tell user about this
+        delete item.container
+
+        // Update sidebery internal urls
         if (item.url && groupUrlStartRe.test(item.url)) {
           item.url = item.url.replace(groupUrlStartRe, (_, _1, $2: string) => GROUP_URL + $2)
         }

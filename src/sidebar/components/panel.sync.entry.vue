@@ -273,6 +273,7 @@ function onTabDragStart(e: DragEvent, tab: Sync.EntryTab, entry: Sync.SyncedEntr
     copy: true,
   }
 
+  DnD.broadcastDragInfo(dragInfo)
   DnD.start(dragInfo, DropType.Tabs)
 
   // Set native drag info

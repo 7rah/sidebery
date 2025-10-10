@@ -157,6 +157,7 @@ function onTabDragStart(e: DragEvent, tab: RecentlyClosedTabInfo) {
     copy: true,
   }
 
+  DnD.broadcastDragInfo(dragInfo)
   DnD.start(dragInfo, DropType.Tabs)
 
   // Set native drag info

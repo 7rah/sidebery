@@ -525,6 +525,7 @@ function onDragStart(e: DragEvent): void {
     y: e.clientY,
   }
 
+  DnD.broadcastDragInfo(dragInfo)
   DnD.start(dragInfo, DropType.Tabs)
 
   // Set native drag info

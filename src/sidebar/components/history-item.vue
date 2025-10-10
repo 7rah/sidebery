@@ -182,6 +182,7 @@ function onDragStart(e: DragEvent, visit: Visit): void {
     y: e.clientY,
   }
 
+  DnD.broadcastDragInfo(dragInfo)
   DnD.start(dragInfo)
 
   // Set native drag info

@@ -154,7 +154,7 @@ function tempLockCloseBtn(): void {
   clearTimeout(tempLockCloseBtnTimeout)
   tempLockCloseBtnTimeout = setTimeout(() => {
     closeLock = false
-  }, 1000)
+  }, 100)
 }
 function onMouseDownClose(e: MouseEvent): void {
   if (closeLock) return

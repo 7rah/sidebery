@@ -158,6 +158,10 @@ section(ref="el")
       v-model:value="Settings.state.activateOnMouseUp"
       @update:value="onActivateOnMouseUpUpdate")
     ToggleField(
+      label="settings.tab_close_on_mouse_up"
+      v-model:value="Settings.state.tabCloseOnMouseUp"
+      @update:value="Settings.saveDebounced(150)")
+    ToggleField(
       label="settings.shift_selection_from_active"
       v-model:value="Settings.state.shiftSelAct"
       @update:value="Settings.saveDebounced(150)")

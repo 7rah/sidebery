@@ -230,6 +230,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   shiftSelAct: true,
   ctrlSelAct: true,
   activateOnMouseUp: false,
+  tabCloseOnMouseUp: true,
   tabLongLeftClick: 'none',
   tabLongRightClick: 'none',
   tabMiddleClick: 'close',

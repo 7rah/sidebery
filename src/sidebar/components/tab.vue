@@ -69,6 +69,8 @@
       .title(ref="titleEl") {{tab.customTitle ?? tab.title}}
     .close(
       v-if="!iconOnly && Settings.state.tabRmBtn !== 'none'"
+      draggable="true"
+      @dragstart.stop.prevent
       @mousedown.stop="onMouseDownClose"
       @mouseup.stop="onMouseUpClose"
       @contextmenu.stop.prevent)
@@ -163,11 +165,37 @@ function onMouseDownClose(e: MouseEvent): void {
     Menu.close()
     return
   }
+
   if (Tabs.editableTabId === tab.id) {
-    tab.customTitle = tab.title
-  } else if (e.button === 0) {
+    Tabs.setEditingValue(tab.title)
+    Mouse.resetTarget()
+  }
+
+  tempLockCloseBtn()
+
+  if (!Settings.state.tabCloseOnMouseUp) closeBtnAction(e)
+}
+function onMouseUpClose(e: MouseEvent): void {
+  if (!Mouse.isTarget('tab.close', tab.id)) {
+    e.stopPropagation()
+    e.preventDefault()
+    Mouse.resetTarget()
+    Mouse.stopLongClick()
+    return
+  }
+  Mouse.resetTarget()
+  Mouse.stopLongClick()
+  Mouse.stopMultiSelection()
+  Selection.resetSelection()
+
+  if (Settings.state.tabCloseOnMouseUp) closeBtnAction(e)
+}
+function closeBtnAction(e: MouseEvent) {
+  if (e.button === 0) {
     if (shouldBeConvertedToGroup()) return convertToGroup()
     Tabs.removeTabs([tab.id])
+    e.preventDefault()
+    e.stopPropagation()
   } else if (e.button === 1) {
     if (Settings.state.tabCloseMiddleClick === 'close') {
       if (shouldBeConvertedToGroup()) return convertToGroup()
@@ -181,13 +209,6 @@ function onMouseDownClose(e: MouseEvent): void {
   } else if (e.button === 2) {
     Tabs.removeBranches([tab.id])
   }
-  tempLockCloseBtn()
-}
-function onMouseUpClose(e: MouseEvent): void {
-  Mouse.resetTarget()
-  Mouse.stopLongClick()
-  Mouse.stopMultiSelection()
-  Selection.resetSelection()
 }
 
 function onMouseDown(e: MouseEvent): void {

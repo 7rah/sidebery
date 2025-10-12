@@ -674,6 +674,7 @@ export function getPanelForNewTab(tab: Tab): TabsPanel | undefined {
 }
 
 interface IndexForNewTabConf {
+  pinned?: boolean
   openerTabId?: ID
   autoGroupped?: boolean
   index?: number
@@ -691,6 +692,13 @@ export function getIndexForNewTab(panel: TabsPanel, conf?: IndexForNewTabConf): 
   const autoGroupped = conf?.autoGroupped ?? false
   const fallbackIndex = conf?.index ?? nextIndex
   const fromNewTabButton = conf?.fromNewTabButton ?? false
+
+  // Place pinned tab
+  if (conf?.pinned) {
+    const pinLen = Tabs.pinned.length
+    if (conf?.index !== undefined && conf.index <= pinLen) return conf.index
+    else return pinLen
+  }
 
   // Place new tab opened from pinned tab
   if (parent && parent.pinned) {

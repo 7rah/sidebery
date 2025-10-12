@@ -222,8 +222,8 @@ export async function load(src?: LoadSrc): Promise<void> {
 export function unload(): void {
   Tabs.ready = false
   Tabs.resetTabsListeners()
-  Tabs.resetSaveTabDataTimeouts()
-  Tabs.resetCacheTabsDataTimeout()
+  Tabs.cancelSavingTabData()
+  Tabs.cancelCachingTabsData()
 
   Tabs.reactive.pinnedIds = []
   Tabs.reactive.recentlyRemovedLen = 0
@@ -707,7 +707,7 @@ export function cacheTabsData(delay = 300): void {
 }
 let cacheTabsDataTimeout: number | undefined
 
-export function resetCacheTabsDataTimeout() {
+export function cancelCachingTabsData() {
   clearTimeout(cacheTabsDataTimeout)
 }
 
@@ -735,7 +735,7 @@ export function saveTabData(tabId: ID, forced?: boolean, delay?: number): void {
   }
 }
 
-export function resetSaveTabDataTimeouts() {
+export function cancelSavingTabData() {
   for (const [_, timeout] of saveTabDataTimeouts) {
     clearTimeout(timeout)
   }

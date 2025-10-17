@@ -47,8 +47,7 @@ export function mutateNativeTabToSideberyTab(nativeTab: NativeTab): Tab {
   if (tab.internal) tab.favIconUrl = undefined
   else {
     if (tab.favIconUrl === 'chrome://global/skin/icons/warning.svg') tab.warn = true
-    if (tab.favIconUrl === undefined) tab.favIconUrl = undefined
-    else if (tab.favIconUrl.startsWith('chrome:')) tab.favIconUrl = undefined
+    if (tab.favIconUrl?.startsWith('chrome:')) tab.favIconUrl = undefined
   }
   if (tab.mediaPaused === undefined) tab.mediaPaused = false
   if (tab.isGroup === undefined) tab.isGroup = tab.internal && Utils.isGroupUrl(tab.url)

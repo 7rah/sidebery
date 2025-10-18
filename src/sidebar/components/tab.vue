@@ -173,6 +173,9 @@ function onMouseDownClose(e: MouseEvent): void {
 
   tempLockCloseBtn()
 
+  // Prevent auto-scrolling with middle-btn
+  if (e.button === 1) e.preventDefault()
+
   if (!Settings.state.tabCloseOnMouseUp) closeBtnAction(e)
 }
 function onMouseUpClose(e: MouseEvent): void {

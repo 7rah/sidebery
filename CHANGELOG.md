@@ -4,14 +4,213 @@
 
 ### Added
 
+- Tabs: an option to trigger the close button action on mouse-up (resolves [#1788](https://github.com/mbnuqw/sidebery/issues/1788), [#1437](https://github.com/mbnuqw/sidebery/issues/1437), [#1682](https://github.com/mbnuqw/sidebery/issues/1682), [#299](https://github.com/mbnuqw/sidebery/issues/299))
+- New tab position for tabs opened with the sidebery new tab button (resolves [#2008](https://github.com/mbnuqw/sidebery/issues/2008), [#1096](https://github.com/mbnuqw/sidebery/issues/1096))
+- BrowserAction context menu option for reopening cached windows
+- Snapshots: display the tabs custom colors
+- Mouse: tabs preselect: make it possible to skip unloaded tabs
+- Option to config automatic tab-panel scrolling (by [@deviant](https://github.com/deviant): [#2180](https://github.com/mbnuqw/sidebery/issues/2180))
+- Add support for configuration through central policies (by [@spl3g](https://github.com/spl3g): [#2016](https://github.com/mbnuqw/sidebery/issues/2016))
+- Tab preview: hide preview box of unloaded tabs (by [@the-nelsonator](https://github.com/the-nelsonator): [#2081](https://github.com/mbnuqw/sidebery/issues/2081)) (resolves [#2078](https://github.com/mbnuqw/sidebery/issues/2078))
+- Snapshots: mark private windows
+- Support opening Snapshots in private windows (by [@zachswasey](https://github.com/zachswasey): [#2116](https://github.com/mbnuqw/sidebery/issues/2116))
+- Tabs: support deduplicate a selection (by [@mgcsysinfcat](https://github.com/mgcsysinfcat): [#2141](https://github.com/mbnuqw/sidebery/issues/2141))  
+- Add option to disable auto-scroll to new tab (by [@ingjieye](https://github.com/ingjieye): [#2150](https://github.com/mbnuqw/sidebery/issues/2150)) (resolves [#1270](https://github.com/mbnuqw/sidebery/issues/1270))  
+- Option to hide unloaded native tabs (resolves [#2011](https://github.com/mbnuqw/sidebery/issues/2011))
+- Snapshots: select/deselect folded child tabs with their parent tab
+- Support using shift after clicking the first tab to open in a new window for snapshots (by [@zachswasey](https://github.com/zachswasey): [#2114](https://github.com/mbnuqw/sidebery/issues/2114))
+- Option to include container name in tab tooltip ([#2067](https://github.com/mbnuqw/sidebery/issues/2067)) (by [@GodKratos](https://github.com/GodKratos): [#2075](https://github.com/mbnuqw/sidebery/issues/2075))
+- Paste from clipboard (resolves [#2091](https://github.com/mbnuqw/sidebery/issues/2091))  
+  - Optional permission "clipboardRead"
+  - Context menu options for tabs, bookmarks and panels
+  - Parsing text from clipboard for urls, Markdown and HTML links preserving tree structure (via indents)
+  - Handling Ctrl/Command+V shortcuts in focused sidebar
+- Keybindings: lock/unlock selection (for marking individual tabs/bookmarks) (resolves [#2097](https://github.com/mbnuqw/sidebery/issues/2097))
+- Copy by templates (tabs/bookmarks) (resolves [#1132](https://github.com/mbnuqw/sidebery/issues/1132))  
+  - two basic default templates: HTML and Markdown links
+  - context menu options
+  - keybindings for the first five templates
+- Option to set a list mark when copying multiple items
+- Option to add an indent when copying tabs/bookmarks tree (resolves [#2090](https://github.com/mbnuqw/sidebery/issues/2090))
+- A setting to include active tab on initial ctrl+click (by [@the-nelsonator](https://github.com/the-nelsonator): [#2083](https://github.com/mbnuqw/sidebery/issues/2083)) (resolves [#2078](https://github.com/mbnuqw/sidebery/issues/2078))
+- Add unload to long-click tab actions (by [@the-nelsonator](https://github.com/the-nelsonator): [#2068](https://github.com/mbnuqw/sidebery/issues/2068))  
+  * Add unload a.k.a. discard to double/long click actions
+  * Remove unload on double click option
+- Option to set default font-family for sidebar ([#2031](https://github.com/mbnuqw/sidebery/issues/2031))  
 - Snapshots: fold/unfold windows/panels/tabs (resolves [#1071](https://github.com/mbnuqw/sidebery/issues/1071))  
 
 ### Fixed
 
+- Tabs: hidden native tabs keeps being highlighted  
+  Firefox ignores `browser.tabs.highlight(...)` call for hidden tabs
+- Tab: prevent auto-scrolling with middle-click on the close btn
+- Tabs: session restore detection and handling  
+  - Check pinned tabs too
+  - Stop handling new tabs and other events if there is a possibility of session restore (perf)
+  - Reinit tabs on false-positive detection (when batched new tabs have no Sidebery's data in session storage)
+  - Correctly deal with deferred moving of newtab (cancel it)
+- Tabs: incorrect index for a new pinned tab
+- Tabs: reduce the time of the close button lock  
+  From 1s to 100ms. It's still helping with misbehaved mouse buttons but also will allow faster triggering of combined actions (e.g. mid-click: unload or close tab).
+- Tabs: skip unloaded on tab flip by default
+- Snapshots: exclude private windows by default
+- Tabs: don't cache private windows
+- Drag and Drop: broken drag and drop to the private window and between different profiles  
+  - Firefox no longer passes the 'application/x-sidebery-dnd' item via dataTransfer to windows in different incognito mode (an empty string instead), so pass this info the other way (IPC). The 'application/x-sidebery-dnd' is still needed to pass the info to sidebars of the other profiles.
+  - Clear containers of dropped items from the other profile since their containerId refers to a different container.
+- Mouse wheel tab switching with preselect: incorrect selection of the first/last tabs
+- Tabs: incorrect tabs positioning when Firefox creates multiple tabs  
+- Setup-page: Broken favicons cache after import  
+  Set the saveAll flag true on loadFavicons to forcefully save the whole
+  cache on the first favicon after import.
+- Settings: Try to restore tabs tree after re-enabling 'Tabs tree structure'
+- Tabs: Position of the new tab for options 'do not move it' and 'use general rule'  
+  - For 'use general rule', original openerTabId was used instead of using the general rule.  
+  - For 'do not move it', original openerTabId was used which moved the new tab horizontally (indenting it), creating the branch. Now, the flat list of tabs will be produced, which will emulate Firefox positioning for child tabs.
+- New-tab-shortcuts editor: incorrect handling of duplicates
+- New tab buttons shortcuts: 'Default container' option behaves as 'Not set' when opening new child tabs with middle click. Container is inherited from the parent tab instead of using the default one.  
+  Rename 'Default container' option into 'Not set';  
+  Add 'Default container' option which will open a new child tab in the default container.
+- Tabs: remove redundant setting 'Create sub-tree on opening...' (resolves [#1725](https://github.com/mbnuqw/sidebery/issues/1725))  
+  This ancient setting (groupOnOpen) is conflicting with 'New tab
+  position' configs, which are controlling when a new branch should be
+  created.
+- Tabs: wait until tabs service ready before auto-reopening tab in different container
+- Fragile initialization of group/url-placeholder pages
+- Tabs: Don't save tabs cache if there is only one session restore tab
+- Tabs: incorrect handling of session restore (ref [#1709](https://github.com/mbnuqw/sidebery/issues/1709))  
+  Instead of patching only unpinned tabs state, this will start a complete
+  tabs reinitialization from session data.
+- Tabs: incorrect index of reopened pinned tab
+- Tabs: handle pin/unpin only if this state was actually changed
+- New-tab-bar: wrong container for default button in private windows
+- Windows: set the correct initial incognito flag
+- Tabs: can't create tab in a private window with incorrectly set default container in tab panel  
+  Force use of PRIVATE_CONTAINER_ID in private windows in `createTabInPanel`.
+- Tabs init: move tabs to their panels on init (if needed) (ref [#1709](https://github.com/mbnuqw/sidebery/issues/1709))  
+  - Refactored restoring tabs from cache and from session data.
+  - Added detection of incorrect order of tabs and sorting to the right panels.
+  - Moving unknown (new) tabs to the last active panel if possible.
+- Tabs init: strictier cache invalidation rules (ref [#1709](https://github.com/mbnuqw/sidebery/issues/1709))  
+  Use cache if it's fully matched with native tabs (except unknown (new)
+  tabs and blindspots).
+- Snapshots: check if sidebar is open before throwing tabs to it
+- Snapshots: set openerTabId to preserve tree if no sidebar open
+- Snapshots: adapt container on opening selected/clicked tabs  
+  Find existing container or create a new one.
+- Web-req: hide proxy badge only if needed
+- Update web request handlers right after container update  
+  This is needed for the correct opening of tab in this container right
+  after applying a new container config.
+- Snapshots: open tabs even if current panel is not for tabs  
+  Use `panelId: NOID`, the sidebar will find appropriate fallback
+- Tabs: open: use lastTabsPanelId as fallback
+- Snapshots: preserve customColor on opening individual/selected tabs
+- Sidebar: no top padding in BottomBar if there's no .new-tab-btns
+- Tab preview(in-page): decode url
+- Setup-page: update storage info after modifying snapshots  
+- Setup-page: recalculate storage info after importing favicons cache
+- Setup-page: Just imported favicons resets after visiting some site  
+  Reload favicons after import
+- Sidebar: Center popups
+- Bookmarks: incorrect recalculation of folder lengths on bookmark rm/move  
+  Calculate only 'bookmark' type
+- Bookmarks: unexpected place for created bookmark node from context menu  
+  Create bookmark node inside the target folder only if it's open.
+  Otherwise, create bookmark node after the target.
+- Bookmark: empty title of folder is not rendered
+- Bookmarks panel: incorrect saving of scroll position (at the top)
+- Snapshots viewer: active snapshot exported(JSON) with the viewer guts
+- Tab preview(in-page): preview is not closed on tab activation
+- Navbar: remove bottom border-radius of the last item in vertical navbar  
+  This will increase click area and allow interact with the button when
+  the mouse cursor at the bottom-(left/right) edge of the screen.
+- Drag and Drop: onDragEnter: incomplete handling of dragEnter from the outside
+- Drag and Drop: unexpected dstPanelId and dstParentId default values on reset
+- Tabs: move: check target index and normalize it if needed
+- Dnd/bookmarks sub-panel: wrong dst info for the bottom nav elements
+- Dnd: bookmarks sub-panel closing right after drop
+- Bookmarks: move/createFrom: set dst index to the end if < 0
+- Mouse: tabs preselect: a separate config for 'active tab first'  
+  separated from the keybindings sub-setting
+- Mouse: tabs preselect: don't pause preselection by default  
+  added `scrollThroughTabsPreselDelay` hidden pref for this
+- Tabs: restore custom title/color on tabs reopening
+- Tabs: inherit custom color from parent only if it's not set
+- Tabs: onTabUpdated: false reset of favicon  
+  Use cached favicon instead of complete reset, this will make the
+  favicon show faster for visited sites.
+- Don't use an active new tab in loading state when opening settings
+- Favicons: don't resize small enough SVGs  
+- Favicons: incorrect resizing of svgs
+- Group page: incorrect rendering of favicon
+- Dnd: simplify dragEnd event handling (resolves [#2168](https://github.com/mbnuqw/sidebery/issues/2168))  
+- Tabs: inactivate dedupe menu option if one or less tabs selected
+- Tabs dedupe: misleading labels
+- Selection: don't use Iterator.prototype.some() until 140ESR
+- Selection: correctly recalculate all selected elements after lock/unlock
+- Selection: allow selection of only pinned or only normal tabs
+- Sidebar: do not handle ctrl+v if target element is input
+- Snapshots: start range selection from the tab selected with long-click
+- Listen keydown events instead of keyup for in-sidebar shortcuts to align with other apps
+- History: search: do not select the first found item  
+  To avoid ignoring the first click.
+  First item will be selected on 'down' keypress.
+- Setup-page: no margin between text-input and label
+- Navbar: hidden-panels-popup not showing
+- Handle incompatible options tabLongLeftClick and activateOnMouseUp
+- Snapshots viewer: switch snapshots on mouse wheel only over title
+- Snapshots: normalize url with title (for url-placeholder page)
+- Tabs.updateBgTabsTreeData: check if sidebar tree exists before using
+- Snapshots: isParent flag calculation
+- Navbar: scoll overflowed vertical navbar
+- Snapshots: respect custom title in snapshot viewer display, export to md, open tab (by [@the-nelsonator](https://github.com/the-nelsonator): [#2061](https://github.com/mbnuqw/sidebery/issues/2061))  
+  Closes https://github.com/mbnuqw/sidebery/issues/2060
+- Tabs: undo close incorrectly restores descendants tree structure (resolves [#2055](https://github.com/mbnuqw/sidebery/issues/2055))  
+- Inpage tab preview: hide on closing sidebar
+- Inpage tab previews: cancel pending injection promise  
+  this will prevent infinite Opening state, which blocks new previews
+  from showing and tabs dnd
+- Tab: reset preview on dnd start  
+- Inpage tab preview: wrong preview scale in zoomed page
+- Inpage tab preview: wrong position in zoomed page
+- Inpage tab preview: faster transitions between previews
+- Nav-bar: hidden-panels-popup styles  
+  - don't darken the background
+  - use var(--ctx-menu-shadow) shadow
+- Snapshot viewer: opening a group tab with click
 - Containers: handle regex flags for include/exclude rules (resolves [#1821](https://github.com/mbnuqw/sidebery/issues/1821))  
 - Dnd: update drop status request timeout to 10000ms (by [@the-nelsonator](https://github.com/the-nelsonator): [#2039](https://github.com/mbnuqw/sidebery/issues/2039))  
   Fixes https://github.com/mbnuqw/sidebery/issues/2038
 - Use system-ui instead of sans-serif (resolves [#2031](https://github.com/mbnuqw/sidebery/issues/2031))
+
+### Localization
+
+- Remove outdated mentioning of horizontal tabs as the native tabs
+- Update zh_CN translation for closing duplicate tabs (by [@ASC8384](https://github.com/ASC8384): [#2261](https://github.com/mbnuqw/sidebery/issues/2261))
+- Updated translation (by [@llc0930](https://github.com/llc0930): [#2260](https://github.com/mbnuqw/sidebery/issues/2260))
+- Updated translation (by [@llc0930](https://github.com/llc0930): [#2256](https://github.com/mbnuqw/sidebery/issues/2256))
+- Don’t concatenate translation strings, use more source strings (by [@ariasuni](https://github.com/ariasuni): [#2250](https://github.com/mbnuqw/sidebery/issues/2250))
+- Updated translation (by [@llc0930](https://github.com/llc0930): [#2245](https://github.com/mbnuqw/sidebery/issues/2245))  
+- Remove unused dict keys
+- Various translations fixes (by [@ariasuni](https://github.com/ariasuni): [#2223](https://github.com/mbnuqw/sidebery/issues/2223))  
+- Add ability to translate some strings with missing translation (by [@hannaeko](https://github.com/hannaeko): [#2172](https://github.com/mbnuqw/sidebery/issues/2172))  
+- Updated translation (by [@llc0930](https://github.com/llc0930): [#2171](https://github.com/mbnuqw/sidebery/issues/2171))  
+- Translation fr (by [@ariasuni](https://github.com/ariasuni): [#2160](https://github.com/mbnuqw/sidebery/issues/2160))  
+- Add possibility to translate all headers in Styles editor (by [@ariasuni](https://github.com/ariasuni): [#2167](https://github.com/mbnuqw/sidebery/issues/2167))
+- Zh, jp: updated translation (by [@llc0930](https://github.com/llc0930): [#2156](https://github.com/mbnuqw/sidebery/issues/2156))
+- zh: correction terminology (by [@llc0930](https://github.com/llc0930): [#2066](https://github.com/mbnuqw/sidebery/issues/2066))
+
+### Performance Improvements
+
+- Rendering tabs and stuff (resolves [#2100](https://github.com/mbnuqw/sidebery/issues/2100))  
+  - using 'contain' CSS property to decrease recalculating/reflowing layout on changing DOM
+  - bufferizing/debouncing tab changes (default: 150ms, hidden pref: `tabUpdDelay`)
+  - manualy updating tab's title and favicon
+- Handling of tab's title change; updating tab's tooltip ([#2100](https://github.com/mbnuqw/sidebery/issues/2100))  
+  - do not set 'update' flag if it's already set
+  - do not calc tab's tooltip on title/url change, do it on mouse hover
+  (delay is configurable under `updTooltipDelay` setting prop)
 
 
 ## 5.3.3 - 2025.02.22

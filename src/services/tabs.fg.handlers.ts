@@ -1137,6 +1137,11 @@ function onTabRemoved(tabId: ID, info: browser.tabs.RemoveInfo, detached?: boole
     Tabs.rememberRemoved([tab])
   }
 
+  // Cancel confirmation for previous close event
+  if (Popups.reactive.confirm) {
+    Popups.finishConfirmation(false)
+  }
+
   const autoGroup =
     !tab.isGroup &&
     !tab.folded &&

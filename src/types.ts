@@ -21,9 +21,15 @@ export * from './types/bookmarks'
 export * from './types/history'
 
 export interface ConfirmDialog {
+  type: ConfirmationType
   msg: string
   ok: () => void
   cancel: () => void
+}
+
+export const enum ConfirmationType {
+  Unknown = 1,
+  RmTab = 2,
 }
 
 export interface BookmarksFolderSelection {

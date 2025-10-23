@@ -1,5 +1,6 @@
 import { ConfirmDialog, Container, Dialog, DialogConfig, GroupConfig, PanelConfig } from 'src/types'
 import { TabToPanelMoveRuleConfig, PanelType, TabsPanelConfig, Tab } from 'src/types'
+import { ConfirmationType } from 'src/types'
 import { GroupConfigResult, Sidebar } from './sidebar'
 import { Containers } from './containers'
 import * as Utils from 'src/utils'
@@ -79,9 +80,10 @@ export function initPopups(reactivate?: (rObj: object) => object) {
   PopupsRState = reactive = reactFn(reactive)
 }
 
-export function confirm(msg: string): Promise<boolean> {
+export function confirm(msg: string, type?: ConfirmationType): Promise<boolean> {
   return new Promise(res => {
     reactive.confirm = {
+      type: type ?? ConfirmationType.Unknown,
       msg,
       ok: () => {
         reactive.confirm = null

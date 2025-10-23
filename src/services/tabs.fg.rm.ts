@@ -1,4 +1,4 @@
-import { ItemInfo, RecentlyClosedTabInfo, Tab } from 'src/types'
+import { ConfirmationType, ItemInfo, RecentlyClosedTabInfo, Tab } from 'src/types'
 import { NOID } from 'src/defaults'
 import { translate } from 'src/dict'
 import { Sidebar } from 'src/services/sidebar'
@@ -241,15 +241,38 @@ export async function removeTabs(
     Settings.state.warnOnMultiTabClose === 'any' ||
     (hasInvisibleTab && Settings.state.warnOnMultiTabClose === 'collapsed')
   if (!silent && warn && count > 1) {
-    const ok = await Popups.confirm(translate('confirm.tabs_close', count))
+    const ok = await Popups.confirm(translate('confirm.tabs_close', count), ConfirmationType.RmTab)
+    // Cancel
     if (!ok) {
+      // Parent tab was closed which is the cause of removing its children
+      if (removedParent !== undefined) {
+        // Outdent child tabs
+        for (const tab of tabs) {
+          if (tab.parentId === removedParent.id) {
+            tab.parentId = removedParent.parentId
+          }
+        }
+
+        // Try to restore closed parent
+        browser.sessions.getRecentlyClosed({ maxResults: 1 }).then(sessions => {
+          const maybeRemovedTab = sessions[0]
+          if (!maybeRemovedTab || !maybeRemovedTab.tab?.sessionId) return
+          if (maybeRemovedTab.tab.url !== removedParent.url) return
+          if (maybeRemovedTab.tab.index !== removedParent.index) return
+
+          browser.sessions.restore(maybeRemovedTab.tab.sessionId)
+        })
+      }
+
+      // Show previously folded child tabs
       let visTabsRecalcNeeded = false
       tabs.forEach(t => {
-        if (t.invisible && !Tabs.byId[t.parentId]) {
+        if (t.invisible && !Tabs.byId[t.parentId]?.folded) {
           if (!visTabsRecalcNeeded) visTabsRecalcNeeded = true
           t.invisible = false
         }
       })
+
       Tabs.updateTabsTree(panel.startTabIndex, panel.nextTabIndex)
       if (visTabsRecalcNeeded) Sidebar.recalcVisibleTabs(panelId)
       return

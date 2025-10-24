@@ -582,11 +582,13 @@ function onTabCreated(nativeTab: NativeTab, attached?: boolean): void {
   Tabs.updateSuccessionDebounced(100)
 
   if (createGroup && !tab.pinned && initialOpener) {
-    Tabs.groupTabs([tab.id], {
-      active: false,
-      title: initialOpener.title,
-      pin: initialOpenerSpec,
-      pinnedTab: initialOpener,
+    waitForNewTabMove().then(() => {
+      Tabs.groupTabs([tab.id], {
+        active: false,
+        title: initialOpener.title,
+        pin: initialOpenerSpec,
+        pinnedTab: initialOpener,
+      })
     })
   }
 
@@ -636,6 +638,7 @@ const NEW_TAB_MOVE_DELAY = 200
 
 let handleNewTabMoveTimeout: number | undefined
 let newTabToMove: Tab | undefined
+let waitingNewTabMove: (() => void)[] = []
 
 function handleNewTabMove(newTab?: Tab) {
   // Change the target tab only if the newTab is set.
@@ -658,7 +661,13 @@ function handleNewTabMove(newTab?: Tab) {
     handleNewTabMoveTimeout = undefined
 
     // There is still tabs data querying, canceling moving...
-    if (maybeRestoredTabsDataQuerying) return
+    if (maybeRestoredTabsDataQuerying) {
+      if (waitingNewTabMove.length) {
+        waitingNewTabMove.forEach(cb => cb())
+        waitingNewTabMove = []
+      }
+      return
+    }
 
     const tab = newTabToMove
     newTabToMove = undefined
@@ -673,6 +682,11 @@ function handleNewTabMove(newTab?: Tab) {
         })
         .finally(() => {
           tab.moving = undefined
+
+          if (waitingNewTabMove.length) {
+            waitingNewTabMove.forEach(cb => cb())
+            waitingNewTabMove = []
+          }
         })
     }
   }, NEW_TAB_MOVE_DELAY)
@@ -682,6 +696,19 @@ function cancelDeferredMovingOfNewTabs() {
   clearTimeout(handleNewTabMoveTimeout)
   handleNewTabMoveTimeout = undefined
   newTabToMove = undefined
+
+  if (waitingNewTabMove.length) {
+    waitingNewTabMove.forEach(cb => cb())
+    waitingNewTabMove = []
+  }
+}
+
+async function waitForNewTabMove() {
+  if (handleNewTabMoveTimeout === undefined) return
+
+  return new Promise<void>(ok => {
+    waitingNewTabMove.push(ok)
+  })
 }
 
 /**

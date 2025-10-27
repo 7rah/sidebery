@@ -262,7 +262,7 @@ function onTabCreated(nativeTab: NativeTab, attached?: boolean): void {
   ) {
     initialOpenerSpec = encodeURIComponent(initialOpener.cookieStoreId + '::' + initialOpener.url)
     autoGroupTab = Tabs.list.find(t => {
-      return t.url.startsWith(GROUP_URL) && t.url.lastIndexOf('pin=' + initialOpenerSpec) > -1
+      return t.isGroup && t.url.lastIndexOf('pin=' + initialOpenerSpec) > -1
     })
     if (autoGroupTab) {
       tab.openerTabId = autoGroupTab.id

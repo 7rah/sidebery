@@ -952,6 +952,38 @@ export async function retry(conf: RetryConfig): Promise<void> {
   })
 }
 
+interface PendingConfig<R> {
+  action: () => Promise<R>
+  check: (result: R) => boolean
+  interval: number
+  tryCount: number
+}
+
+export async function pending<R>(conf: PendingConfig<R>): Promise<R> {
+  return new Promise<R>(async (ok, meh) => {
+    let i = 0
+
+    while (true) {
+      let result
+      try {
+        result = await conf.action()
+      } catch (err) {
+        return meh(err)
+      }
+
+      if (conf.check(result)) {
+        return ok(result)
+      }
+
+      if (++i >= conf.tryCount) {
+        return ok(result)
+      }
+
+      await sleep(conf.interval)
+    }
+  })
+}
+
 /**
  * Search back then forth
  */

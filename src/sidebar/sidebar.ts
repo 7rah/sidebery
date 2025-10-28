@@ -113,12 +113,12 @@ async function main(): Promise<void> {
   Permissions.setupListeners()
   Windows.setupWindowsListeners()
   Containers.setupContainersListeners()
-  Sidebar.setupListeners()
 
   Styles.loadCustomSidebarCSS()
   Styles.initColorScheme()
 
   await Sidebar.loadPanels()
+  Sidebar.setupListeners()
 
   const actPanel = Sidebar.panelsById[Sidebar.activePanelId]
   const initBookmarks = !Settings.state.loadBookmarksOnDemand || Utils.isBookmarksPanel(actPanel)

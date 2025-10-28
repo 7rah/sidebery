@@ -64,25 +64,30 @@ export function registerHorizontalNavBarEl(el: HTMLElement): void {
   horizontalNavBarEl = el
 }
 
+async function loadSidebarConfig() {
+  return browser.storage.managed
+    .get<Stored>('sidebar')
+    .catch(() => undefined)
+    .then(storage => (!storage?.sidebar ? browser.storage.local.get<Stored>('sidebar') : storage))
+}
+
 export async function loadPanels(): Promise<void> {
   const ts = performance.now()
   Logs.info('Sidebar.loadPanels')
 
-  const gettingActiveId = browser.sessions.getWindowValue<ID>(Windows.id, 'activePanelId')
-  const gettingHiddenPanels = browser.sessions.getWindowValue<ID[]>(Windows.id, 'hiddenPanels')
-  const gettingStorage = browser.storage.managed
-    .get<Stored>('sidebar')
-    .catch(() => {})
-    .then(storage => (!storage?.sidebar ? browser.storage.local.get<Stored>('sidebar') : storage))
-
-  const [activeId, storage, hiddenPanels] = await Promise.all([
-    gettingActiveId,
-    gettingStorage,
-    gettingHiddenPanels,
+  const [storage, activeId, hiddenPanels] = await Promise.all([
+    Utils.pending({
+      action: loadSidebarConfig,
+      check: storage => !!storage.sidebar?.nav?.length,
+      interval: 250,
+      tryCount: 20,
+    }),
+    browser.sessions.getWindowValue<ID>(Windows.id, 'activePanelId').catch(() => undefined),
+    browser.sessions.getWindowValue<ID[]>(Windows.id, 'hiddenPanels').catch(() => undefined),
   ])
 
   if (!storage.sidebar?.nav?.length) {
-    Logs.warn('Sidebar.loadPanels: Creating default sidebar config')
+    Logs.warn('Sidebar.loadPanels: No sidebar config: Creating default sidebar config')
     storage.sidebar = createDefaultSidebarConfig()
   }
 

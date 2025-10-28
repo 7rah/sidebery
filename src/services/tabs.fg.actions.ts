@@ -425,7 +425,7 @@ async function restoreTabPanelsContent(tabs: Tab[]) {
   }
 
   if (tabsAreUnsorted) {
-    Logs.warn('Tabs.restoreTabPanelsContent: Tabs are unsorted!')
+    Logs.warn('Tabs.restoreTabPanelsContent: Tabs are unsorted; unmatchIndex:', unmatchIndex)
 
     // Sort tabs
     Tabs.ignoreMoveEvents(true, 'initsort')

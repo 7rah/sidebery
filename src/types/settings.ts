@@ -100,6 +100,7 @@ export interface SettingsState {
   // New tab position
   moveNewTabPin: (typeof SETTINGS_OPTIONS.moveNewTabPin)[number]
   moveNewTabParent: (typeof SETTINGS_OPTIONS.moveNewTabParent)[number]
+  moveNewTabParentIndent: boolean
   moveNewTabParentActPanel: boolean
   moveNewTabButton: (typeof SETTINGS_OPTIONS.moveNewTab)[number]
   moveNewTabButtonActivePin: (typeof SETTINGS_OPTIONS.moveNewTabActivePin)[number]
@@ -116,6 +117,7 @@ export interface SettingsState {
 
   // Tabs tree
   tabsTree: boolean
+  groupOnOpen?: boolean // DEPR
   tabsTreeLimit: (typeof SETTINGS_OPTIONS.tabsTreeLimit)[number]
   autoFoldTabs: boolean
   autoFoldTabsExcept: (typeof SETTINGS_OPTIONS.autoFoldTabsExcept)[number]

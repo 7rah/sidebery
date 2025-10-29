@@ -158,6 +158,16 @@ section(ref="el")
       @update:value="Settings.saveDebounced(150)")
     .sub-fields
       ToggleField(
+        v-if="Settings.state.moveNewTabParent === 'default' && Settings.state.tabsTree"
+        label="settings.move_new_tab_parent_indent"
+        v-model:value="Settings.state.moveNewTabParentIndent"
+        @update:value="Settings.saveDebounced(150)")
+      ToggleField(
+        v-else
+        label="settings.move_new_tab_parent_indent"
+        :inactive="true"
+        v-bind:value="Settings.state.tabsTree && (Settings.state.moveNewTabParent === 'first_child' || Settings.state.moveNewTabParent === 'last_child')")
+      ToggleField(
         label="settings.move_new_tab_parent_act_panel"
         :inactive="Settings.state.moveNewTabParent === 'none'"
         v-model:value="Settings.state.moveNewTabParentActPanel"

@@ -39,12 +39,19 @@ export async function loadSettings(): Promise<void> {
   }
 
   Utils.normalizeObject(storedManaged.settings, storedLocal.settings)
+  const groupOnOpen = storedManaged.settings.groupOnOpen
   Utils.normalizeObject(storedManaged.settings, DEFAULT_SETTINGS)
   Utils.updateObject(Settings.state, storedManaged.settings, Settings.state)
 
   if (Settings.state.hideInact) {
     Settings.state.activateLastTabOnPanelSwitching = true
     Settings.state.tabsPanelSwitchActMove = true
+  }
+
+  // TMP
+  // Try to keep previous behavior with moveNewTabParent === 'default' and groupOnOpen
+  if (groupOnOpen && Settings.state.moveNewTabParent === 'default') {
+    Settings.state.moveNewTabParentIndent = true
   }
 
   parsePrefaceTemplate()

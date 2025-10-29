@@ -647,9 +647,18 @@ export function getPanelForNewTab(tab: Tab): TabsPanel | undefined {
 
   // Find panel for tab opened from another tab
   if (parentTab && !parentTab.pinned) {
-    const panelOfParent = Sidebar.panelsById[parentTab.panelId] as TabsPanel
-    if (!Settings.state.moveNewTabParentActPanel || panelOfParent === activePanel) {
-      return panelOfParent
+    // For the 'default' opt (do not move it / keep original position)
+    // find the panel by tab index (e.g. if `browser.tabs.insertRelatedAfterCurrent` is false
+    // Firefox will open new child tabs at the end of list)
+    if (Settings.state.moveNewTabParent === 'default') {
+      return findTabsPanelNearToTabIndex(tab.index)
+    }
+    // For the other cases (except 'none') use the panel of the parent tab
+    else if (Settings.state.moveNewTabParent !== 'none') {
+      const panelOfParent = Sidebar.panelsById[parentTab.panelId] as TabsPanel
+      if (!Settings.state.moveNewTabParentActPanel || panelOfParent === activePanel) {
+        return panelOfParent
+      }
     }
   }
 
@@ -804,6 +813,7 @@ export function getIndexForNewTab(panel: TabsPanel, conf?: IndexForNewTabConf): 
 }
 
 interface ParentForNewTabConf {
+  index?: number
   openerTabId?: ID
   fromNewTabButton?: boolean
 }
@@ -812,8 +822,6 @@ interface ParentForNewTabConf {
  * Find and return parent id
  */
 export function getParentForNewTab(panel: Panel, conf?: ParentForNewTabConf): ID | undefined {
-  const activeTab = Tabs.byId[Tabs.activeId]
-
   const openerTabId = conf?.openerTabId
   const fromNewTabButton = conf?.fromNewTabButton ?? false
 
@@ -831,7 +839,33 @@ export function getParentForNewTab(panel: Panel, conf?: ParentForNewTabConf): ID
     if (Settings.state.moveNewTabParent === 'last_child') return openerTabId
     if (Settings.state.moveNewTabParent === 'start') return
     if (Settings.state.moveNewTabParent === 'end') return
-    if (Settings.state.moveNewTabParent === 'default') return parent.parentId
+    // Find appropriate parent for the unknown (not controlled by Sidebery) index
+    if (Settings.state.moveNewTabParent === 'default') {
+      const prevTab = conf?.index ? Tabs.list[conf.index - 1] : undefined
+      const prevIsSiblingToParent = prevTab !== parent && prevTab?.parentId === parent.parentId
+      const nextTab = conf?.index ? Tabs.list[conf.index] : undefined
+      Logs.info('next tab:', nextTab?.url)
+
+      // If the prev tab is the parent, the sibling of the parent or is inside the parent branch
+      // and if the next tab is not in the branch
+      if (
+        // prettier-ignore
+        (prevTab &&
+          (prevTab === parent ||
+          prevIsSiblingToParent ||
+          Tabs.findAncestor(prevTab, t => t === parent))
+        ) &&
+        (!nextTab || (nextTab && !Tabs.findAncestor(nextTab, t => t === parent)))
+      ) {
+        // Create branch or keep it flat
+        if (Settings.state.moveNewTabParentIndent && !prevIsSiblingToParent) return parent.id
+        else return parent.parentId
+      }
+      // or integrate the new tab inside existed tree/list
+      else {
+        return nextTab?.parentId
+      }
+    }
   }
 
   // Place new tab (for the other cases)
@@ -841,6 +875,8 @@ export function getParentForNewTab(panel: Panel, conf?: ParentForNewTabConf): ID
 
   if (moveNewTabSetting === 'start') return
   if (moveNewTabSetting === 'end') return
+
+  const activeTab = Tabs.byId[Tabs.activeId]
   if (activeTab && activeTab.panelId === panel.id && !activeTab.pinned) {
     if (moveNewTabSetting === 'before') return activeTab.parentId
     else if (moveNewTabSetting === 'after') return activeTab.parentId

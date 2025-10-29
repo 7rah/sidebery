@@ -1021,6 +1021,7 @@ export async function onDrop(e: DragEvent): Promise<void> {
 
   // Stop if dst parent is included in dragged items
   if (dst.parentId !== -1 && items.some(i => i.id === dst.parentId)) {
+    resetDragInfo()
     resetDragPointer()
     DnD.resetOther()
     DnD.reset()
@@ -1217,6 +1218,7 @@ export async function onDrop(e: DragEvent): Promise<void> {
     Bookmarks.createFromDragEvent(e, dst)
   }
 
+  resetDragInfo()
   resetDragPointer()
   DnD.resetOther()
   DnD.reset()

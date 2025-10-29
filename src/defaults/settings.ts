@@ -230,7 +230,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   tabsSecondClickActPrevNoUnload: true,
   shiftSelAct: true,
   ctrlSelAct: true,
-  activateOnMouseUp: false,
+  activateOnMouseUp: true,
   tabCloseOnMouseUp: true,
   tabLongLeftClick: 'none',
   tabLongRightClick: 'none',

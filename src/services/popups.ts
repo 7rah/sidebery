@@ -14,7 +14,7 @@ export interface PopupsReactiveState {
   siteConfigPopup: SiteConfigPopup | null
   tabMoveRulesPopup: TabMoveRulesPopup | null
   tabReopenRulesPopup: TabReopenRulesPopup | null
-  sessionRestorePopup: SessionRestorePopup | null
+  processingTabsPopup: ProcessingTabsPopup | null
   confirm: ConfirmDialog | null
   dialog: Dialog | null
 }
@@ -57,7 +57,7 @@ export interface SiteConfigPopup {
   url: string
 }
 
-export interface SessionRestorePopup {}
+export interface ProcessingTabsPopup {}
 
 export let reactive: PopupsReactiveState = {
   panelConfigPopup: null,
@@ -67,7 +67,7 @@ export let reactive: PopupsReactiveState = {
   siteConfigPopup: null,
   tabMoveRulesPopup: null,
   tabReopenRulesPopup: null,
-  sessionRestorePopup: null,
+  processingTabsPopup: null,
   confirm: null,
   dialog: null,
 }
@@ -225,11 +225,11 @@ export function closeTabReopenRulesPopup(): void {
   reactive.tabReopenRulesPopup = null
 }
 
-export function openSessionRestorePopup() {
-  reactive.sessionRestorePopup = {}
+export function openProcessingTabsPopup() {
+  reactive.processingTabsPopup = {}
 }
 
-export function closeSessionRestorePopup() {
-  if (!reactive.sessionRestorePopup) return
-  reactive.sessionRestorePopup = null
+export function closeProcessingTabsPopup() {
+  if (!reactive.processingTabsPopup) return
+  reactive.processingTabsPopup = null
 }

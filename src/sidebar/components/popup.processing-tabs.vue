@@ -1,9 +1,8 @@
 <template lang="pug">
-.SessionRestore.popup-container
+.ProcessingTabs.popup-container
   .popup(@click.stop)
-    h2 {{translate('popup.ses_res.title')}}
+    h2 {{translate('popup.proc_tabs.title')}}
     LoadingDots.loading-dots
-    .msg {{translate('popup.ses_res.desc')}}
 </template>
 
 <script lang="ts" setup>

@@ -122,11 +122,7 @@ function checkIfSessionIsRestoring(newTab: Tab) {
     maybeRestoredTabs &&
     maybeRestoredTabs.length >= SESSION_RESTORE_MIN_TABS_COUNT
   ) {
-    // TODO: well, at this moment sidebery doesn't know yet if
-    // this is a session restore or just multiple new tabs (low probability though)
-    // so maybe I should show popup with the title like "Processing new tabs..."
-    // instead?
-    Popups.openSessionRestorePopup()
+    Popups.openProcessingTabsPopup()
 
     cancelDeferredMovingOfNewTabs()
 
@@ -146,6 +142,13 @@ function checkIfSessionIsRestoring(newTab: Tab) {
     maybeRestoredTabsDataQuerying.push(dataQuerying.catch(() => undefined))
   }
 
+  // Set the promise for awaiting a session restore detection
+  if (maybeRestoredTabsDataQuerying) {
+    newTab.checkingSessionRestore = new Promise(ok => {
+      newTab.resolveSessionRestoreDetection = ok
+    })
+  }
+
   clearTimeout(checkingIfSessionRestoringTimeout)
   checkingIfSessionRestoringTimeout = setTimeout(async () => {
     if (
@@ -163,13 +166,8 @@ function checkIfSessionIsRestoring(newTab: Tab) {
 
       tryToRestoreTabsStateFromSessionData(maybeRestoredTabs, tabsSessionData)
     } else {
-      cancelDeferredMovingOfNewTabs()
-
-      // Reinit tabs
-      Tabs.unload()
-      Tabs.load(LoadSrc.SessionOnly)
-
-      Popups.closeSessionRestorePopup()
+      // It's not a session restore, resolve the promises
+      maybeRestoredTabs?.forEach(t => t.resolveSessionRestoreDetection?.(false))
     }
 
     maybeRestoredTabs = null
@@ -189,18 +187,23 @@ async function tryToRestoreTabsStateFromSessionData(
   if (tabsWithSessionDataLen < SESSION_RESTORE_MIN_TABS_COUNT) {
     Logs.warn('Tabs.tryToRestoreTabsStateFromSessionData: Not enough session data')
 
-    cancelDeferredMovingOfNewTabs()
+    // Restart deferred tabs moving to sort all new tabs, not just
+    // the last one in case of two opened tabs b/c the first deferred
+    // moving was canceled in checkIfSessionIsRestoring fn.
+    handleNewTabMove()
 
-    // Reinit tabs
-    Tabs.unload()
-    Tabs.load(LoadSrc.SessionOnly)
+    // It's not a session restore, resolve the promises
+    tabs?.forEach(t => t.resolveSessionRestoreDetection?.(false))
 
-    Popups.closeSessionRestorePopup()
+    Popups.closeProcessingTabsPopup()
     return
   }
 
+  // It's a session restore, resolve the session restore detection promises
+  tabs.forEach(t => t.resolveSessionRestoreDetection?.(true))
+
   // Show popup about restoring the tabs
-  Popups.openSessionRestorePopup()
+  Popups.openProcessingTabsPopup()
 
   // Unload tabs
   Tabs.unload()
@@ -226,10 +229,10 @@ async function tryToRestoreTabsStateFromSessionData(
   await Utils.sleep(100)
 
   // Close popup
-  Popups.closeSessionRestorePopup()
+  Popups.closeProcessingTabsPopup()
 }
 
-function onTabCreated(nativeTab: NativeTab, attached?: boolean): void {
+async function onTabCreated(nativeTab: NativeTab, attached?: boolean) {
   if (nativeTab.windowId !== Windows.id) return
   if (!Tabs.ready || Tabs.sorting) {
     Tabs.deferredEventHandling.push(() => onTabCreated(nativeTab))
@@ -248,9 +251,16 @@ function onTabCreated(nativeTab: NativeTab, attached?: boolean): void {
   const tab = Tabs.mutateNativeTabToSideberyTab(nativeTab)
 
   // Stop if multiple tabs were open and data querying is started
+  let notSessionRestore
   if (maybeRestoredTabsDataQuerying) {
     checkIfSessionIsRestoring(tab)
-    return
+    if (tab.checkingSessionRestore) {
+      const sessionRestoreIsDetected = await tab.checkingSessionRestore
+      delete tab.checkingSessionRestore
+      delete tab.resolveSessionRestoreDetection
+      if (sessionRestoreIsDetected) return
+      notSessionRestore = true
+    }
   }
 
   // Check if opener tab is pinned
@@ -381,11 +391,9 @@ function onTabCreated(nativeTab: NativeTab, attached?: boolean): void {
 
   // Find appropriate position using the current settings
   else {
-    panel = Tabs.getPanelForNewTab(tab)
-    if (!panel) return Logs.err('Cannot handle new tab: Cannot find target panel')
-
     // Check if this is event is part of session restore
     if (
+      !notSessionRestore &&
       !attached &&
       // Tab is unloaded and has set url
       ((tab.discarded && tab.url !== 'about:blank') ||
@@ -395,17 +403,28 @@ function onTabCreated(nativeTab: NativeTab, attached?: boolean): void {
         tab.pinned)
     ) {
       checkIfSessionIsRestoring(tab)
-      if (maybeRestoredTabsDataQuerying) return
+      if (maybeRestoredTabsDataQuerying && tab.checkingSessionRestore) {
+        const sessionRestoreIsDetected = await tab.checkingSessionRestore
+        delete tab.checkingSessionRestore
+        delete tab.resolveSessionRestoreDetection
+        if (sessionRestoreIsDetected) return
+      }
     }
 
-    // Get parent tab
+    // Get panel
+    panel = Tabs.getPanelForNewTab(tab)
+    if (!panel) return Logs.err('Cannot handle new tab: Cannot find target panel')
+
+    // Outdent if opener tab is folded (if configured)
     const parent = Tabs.byId[tab.openerTabId ?? NOID]
     if (!attached && parent?.folded && Settings.state.ignoreFoldedParent) {
       tab.openerTabId = parent.parentId
     }
 
-    // Get index
+    // Get target index
     index = Tabs.getIndexForNewTab(panel, tab)
+
+    // Update opener
     if (!autoGroupTab) {
       tab.openerTabId = Tabs.getParentForNewTab(panel, tab)
     }

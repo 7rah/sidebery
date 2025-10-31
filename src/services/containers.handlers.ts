@@ -13,6 +13,9 @@ export function setupContainersListeners(): void {
     browser.contextualIdentities.onUpdated.addListener(onContainerUpdated)
     Store.onKeyChange('containers', Containers.updateContainers)
   } else {
+    if (Info.isSidebar) {
+      browser.contextualIdentities.onCreated.addListener(onContainerCreated)
+    }
     browser.contextualIdentities.onRemoved.addListener(onContainerRemovedFg)
     Store.onKeyChange('containers', Containers.updateContainers)
   }
@@ -21,13 +24,14 @@ export function setupContainersListeners(): void {
 function onContainerCreated(info: browser.contextualIdentities.ChangeInfo): void {
   const ffContainer = info.contextualIdentity
   const id = ffContainer.cookieStoreId
-  const container = Containers.reactive.byId[id] ?? Utils.cloneObject(DEFAULT_CONTAINER)
+  const existedContainer = Containers.reactive.byId[id]
+  const container = existedContainer ?? Utils.cloneObject(DEFAULT_CONTAINER)
   container.cookieStoreId = id
   container.id = id
   container.name = ffContainer.name
   container.icon = ffContainer.icon
   container.color = ffContainer.color
-  if (!Containers.reactive.byId[id]) Containers.reactive.byId[id] = container
+  if (!existedContainer) Containers.reactive.byId[id] = container
 
   if (Info.isBg) Containers.saveContainers(300)
 }

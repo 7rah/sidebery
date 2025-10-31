@@ -79,6 +79,7 @@ export function updateContainers(newContainers?: Record<ID, Container> | null): 
   clearTimeout(saveContainersTimeout)
 
   if (!newContainers) return
+  const oldContainers = Containers.reactive.byId
   Containers.reactive.byId = newContainers
 
   if (Info.isBg) WebReq.updateReqHandlersDebounced(0)
@@ -87,11 +88,19 @@ export function updateContainers(newContainers?: Record<ID, Container> | null): 
     Menu.parseContainersRules()
   }
 
-  // Update colors in reactive tabs
+  // Update colors in tabs
   if (Info.isSidebar) {
+    const tabColor = Settings.state.colorizeTabsSrc === 'container'
+
     for (const tab of Tabs.list) {
+      const oldContainer = oldContainers[tab.cookieStoreId]
       const container = newContainers[tab.cookieStoreId]
-      if (container) tab.reactive.containerColor = container.color
+
+      // Update color
+      if (container && (!oldContainer || oldContainer.color !== container.color)) {
+        tab.reactive.containerColor = container.color
+        if (tabColor) Tabs.colorizeTab(tab.id)
+      }
     }
   }
 }

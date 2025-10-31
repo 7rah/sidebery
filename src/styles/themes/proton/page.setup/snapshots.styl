@@ -136,7 +136,7 @@
 // -
 .Snapshots .snapshot-list-section
   height: 100%
-  max-width: 250px
+  max-width: 260px
   flex: 1 0 auto
   z-index: 1
   overflow: hidden
@@ -170,7 +170,6 @@
 .Snapshots .snapshot
   position: relative
   display: flex
-  min-width: max-content
   align-items: center
   padding: 8px 0 8px 8px
   cursor: default
@@ -245,12 +244,19 @@
 
 .Snapshots .snapshot .info
   position: relative
+  overflow: hidden
   font-size: rem(12)
   color: var(--toolbar-fg)
 
 .Snapshots .snapshot[data-type="layer"] .info
   font-size: rem(12)
   color: var(--toolbar-fg)
+
+.Snapshots .snapshot .date-time
+.Snapshots .snapshot .content-info
+  overflow: hidden
+  text-overflow: ellipsis
+  white-space: nowrap
 
 .Snapshots .snapshot .window
   position: relative

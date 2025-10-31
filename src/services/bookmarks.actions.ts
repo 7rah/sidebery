@@ -1,7 +1,7 @@
 import * as Utils from 'src/utils'
 import { translate } from 'src/dict'
 import { Bookmark, Panel, Notification, DialogConfig, DragInfo, SubPanelType } from 'src/types'
-import { Stored, BookmarksSortType, DstPlaceInfo, ItemInfo, TabsPanel } from 'src/types'
+import { Stored, BookmarksSortType, DstPlaceInfo, ItemInfo, TabsPanel, DragItem } from 'src/types'
 import { CopyTemplate } from 'src/types'
 import { CONTAINER_ID, NOID, BKM_OTHER_ID, BKM_ROOT_ID, PRE_SCROLL, GROUP_RE } from 'src/defaults'
 import { FOLDER_NAME_DATA_RE, GROUP_URL, PIN_MARK } from 'src/defaults'
@@ -1678,4 +1678,27 @@ export function triggerFlashAnimation(panelId: ID, bookmarkId: ID) {
       flashAnimationTimeouts.delete(bookmarkId)
     }, 300)
   )
+}
+
+export function convertTreeToDragItems(rootId: ID): DragItem[] {
+  const targetIds = [rootId]
+  const dragItems: DragItem[] = []
+  const walker = (nodes: Bookmark[]) => {
+    for (const node of nodes) {
+      const incl = node.parentId && targetIds.includes(node.parentId)
+      if (incl || Selection.includes(node.id)) {
+        targetIds.push(node.id)
+        dragItems.push({
+          id: node.id,
+          url: node.url,
+          title: node.title,
+          parentId: node.parentId,
+        })
+      }
+      if (node.children) walker(node.children)
+    }
+  }
+  walker(Bookmarks.reactive.tree)
+
+  return dragItems
 }

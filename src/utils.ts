@@ -453,11 +453,12 @@ export function commonSubStr(strings: string[]): string {
   return out
 }
 
-async function _getStringFromDragItem(item: DataTransferItem): Promise<string> {
+export async function getStringFromDragItem(item: DataTransferItem): Promise<string> {
   return new Promise(res => item.getAsString(s => res(s)))
 }
 
 interface DragEventParseResult {
+  items?: ItemInfo[]
   url?: string
   text?: string
   file?: File | null
@@ -485,8 +486,21 @@ export async function parseDragEvent(
     else if (types.includes('text/plain')) textType = 'text/plain'
 
     for (const item of event.dataTransfer.items) {
+      // List of URL\nTitle
+      if (item.type === 'text/x-moz-url') {
+        const value = await getStringFromDragItem(item)
+        const list = value.split('\n')
+        const items = []
+        for (let i = 0; i < list.length; i += 2) {
+          const url = list[i]
+          const title = list[i + 1]
+          items.push({ id: i, url, title })
+        }
+        if (items.length) result.items = items
+      }
+
       if (!result.url && item.type === urlType) {
-        const value = await _getStringFromDragItem(item)
+        const value = await getStringFromDragItem(item)
         if (value && urlType === 'text/x-moz-url') {
           const urlAndTitle = value.split('\n')
           result.url = urlAndTitle[0]
@@ -500,7 +514,7 @@ export async function parseDragEvent(
           result.url = value
         }
       }
-      if (!result.text && item.type === textType) result.text = await _getStringFromDragItem(item)
+      if (!result.text && item.type === textType) result.text = await getStringFromDragItem(item)
       if (!result.file && item.kind === 'file') result.file = item.getAsFile()
     }
 

@@ -15,6 +15,7 @@ import { Tabs } from 'src/services/tabs.fg'
 import * as Logs from './logs'
 import * as IPC from './ipc'
 import { TabsSync } from './_services.fg'
+import { Permissions } from './permissions'
 
 let lastDragStartTime = 0
 
@@ -984,13 +985,13 @@ export async function onDrop(e: DragEvent): Promise<void> {
     }
   }
 
-  const srcType = DnD.srcType
+  let srcType = DnD.srcType
   let dstType = DnD.reactive.dstType
   const fromTabs = srcType === DragType.Tabs
   let toTabs = dstType === DropType.Tabs
   const fromTabsPanel = srcType === DragType.TabsPanel
   let toTabsPanel = dstType === DropType.TabsPanel
-  const fromBookmarks = srcType === DragType.Bookmarks
+  let fromBookmarks = srcType === DragType.Bookmarks
   const toBookmarks = dstType === DropType.Bookmarks
   const fromBookmarksPanel = srcType === DragType.BookmarksPanel
   let toBookmarksPanel =
@@ -1017,6 +1018,12 @@ export async function onDrop(e: DragEvent): Promise<void> {
       dst.panelId = Sidebar.activePanelId
     }
     applyLvlOffset(DnD.reactive.pointerLvl, dst)
+  }
+
+  // Check if it's a native bookmark
+  if (srcType === DragType.Native) {
+    fromBookmarks = await extractBookmarksFromNativeEvent(e, items)
+    if (fromBookmarks) srcType = DragType.Bookmarks
   }
 
   // Stop if dst parent is included in dragged items
@@ -1225,6 +1232,47 @@ export async function onDrop(e: DragEvent): Promise<void> {
   Selection.resetSelection()
 
   if (tabsPanelsSaveNeeded) Sidebar.saveSidebar()
+}
+
+async function extractBookmarksFromNativeEvent(e: DragEvent, items: ItemInfo[]): Promise<boolean> {
+  if (!e.dataTransfer?.items) return false
+  if (items.length) return false
+
+  let xMozPlaceItem
+  for (const item of e.dataTransfer.items) {
+    if (item.type === 'text/x-moz-place') xMozPlaceItem = item
+  }
+
+  if (xMozPlaceItem) {
+    if (!Permissions.bookmarks) return false
+
+    const value = await Utils.getStringFromDragItem(xMozPlaceItem)
+    let placeInfo
+    try {
+      placeInfo = JSON.parse(value)
+    } catch {
+      return false
+    }
+
+    if (!Bookmarks.reactive.tree.length) await Bookmarks.load()
+
+    if (placeInfo.type === 'text/x-moz-place-container') {
+      const folder = Bookmarks.reactive.byId[placeInfo.itemGuid]
+      if (!folder) return false
+
+      items.push(...Bookmarks.convertTreeToDragItems(folder.id))
+      return true
+    } else if (placeInfo.type === 'text/x-moz-place') {
+      items.push({
+        id: placeInfo.itemGuid,
+        url: placeInfo.url,
+        title: placeInfo.title,
+      })
+      return true
+    }
+  }
+
+  return false
 }
 
 async function setFolderForTabsPanel(panel: Panel, dst: DstPlaceInfo) {

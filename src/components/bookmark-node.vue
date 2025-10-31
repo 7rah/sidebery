@@ -326,25 +326,7 @@ function onDragStart(e: DragEvent): void {
   Sidebar.updateBounds()
 
   // Check what to drag
-  const toDrag = [props.node.id]
-  const dragItems: DragItem[] = []
-  const walker = (nodes: Bookmark[]) => {
-    for (let node of nodes) {
-      const incl = node.parentId && toDrag.includes(node.parentId)
-      if (incl || Selection.includes(node.id)) {
-        toDrag.push(node.id)
-        dragItems.push({
-          id: node.id,
-          url: node.url,
-          title: node.title,
-          parentId: node.parentId,
-        })
-      }
-      if (node.children) walker(node.children)
-    }
-  }
-  walker(Bookmarks.reactive.tree)
-
+  const dragItems = Bookmarks.convertTreeToDragItems(props.node.id)
   const dragInfo: DragInfo = {
     type: DragType.Bookmarks,
     items: dragItems,

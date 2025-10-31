@@ -205,6 +205,11 @@ export async function createFromDragEvent(e: DragEvent, dst: DstPlaceInfo): Prom
   const panel = Sidebar.panelsById[dst.panelId ?? NOID]
   if (!Utils.isTabsPanel(panel)) return
 
+  if (result?.items) {
+    await Tabs.open(result.items, dst)
+    return
+  }
+
   const container = Containers.reactive.byId[panel.newTabCtx]
   const inside = dst.index === -1
   if (dst.parentId === undefined) dst.parentId = NOID

@@ -456,12 +456,15 @@ export async function open(
   const tabInfo: ItemInfo = { id: 0, url: visit.url, title: visit.title, active: activateFirstTab }
   const dstInfo: DstPlaceInfo = { windowId: Windows.id, discarded: false, panelId: dst.panelId }
   const panel = Sidebar.panelsById[dstInfo.panelId ?? NOID]
-  if (!Utils.isTabsPanel(panel)) return
 
-  dstInfo.panelId = panel.id
+  if (panel) dstInfo.panelId = panel.id
   dstInfo.containerId = Containers.getContainerFor(visit.url)
 
-  if (!dstInfo.containerId && Containers.reactive.byId[panel.newTabCtx]) {
+  if (
+    !dstInfo.containerId &&
+    Utils.isTabsPanel(panel) &&
+    Containers.reactive.byId[panel.newTabCtx]
+  ) {
     dstInfo.containerId = panel.newTabCtx
   }
 

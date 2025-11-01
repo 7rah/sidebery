@@ -1260,6 +1260,7 @@ async function extractBookmarksFromNativeEvent(e: DragEvent, items: ItemInfo[]):
       const folder = Bookmarks.reactive.byId[placeInfo.itemGuid]
       if (!folder) return false
 
+      items.push({ id: folder.id, title: folder.title, parentId: folder.parentId })
       items.push(...Bookmarks.convertTreeToDragItems(folder.id))
       return true
     } else if (placeInfo.type === 'text/x-moz-place') {

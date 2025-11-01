@@ -468,6 +468,8 @@ export const tabsMenuOptions: Record<string, () => MenuOption | MenuOption[] | u
     const selected = Selection.ids()
 
     for (const t of Settings.copyTemplates) {
+      if (!t.name) continue
+
       opts.push({
         label: translate('menu.copy_by_template', t.name),
         icon: 'icon_code',

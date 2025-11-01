@@ -495,9 +495,9 @@ function restoreTab(
     if (!props && parentTab && parentTab.index < tab.index) {
       // Append unknown (new) tabs to the panel of parent tab
       tab.panelId = parentTab.panelId
-    } else if (!props && Utils.isTabsPanel(Sidebar.panelsById[Sidebar.lastActivePanelId])) {
+    } else if (!props && Utils.isTabsPanel(Sidebar.panelsById[Sidebar.prevActivePanelId])) {
       // Append unknown (new) tabs to the last active tabs panel
-      tab.panelId = Sidebar.lastActivePanelId
+      tab.panelId = Sidebar.prevActivePanelId
     } else {
       // Or just set the fallback
       tab.panelId = fallbackPanelId
@@ -2241,9 +2241,9 @@ export function findSuccessorTab(tab: Tab, exclude?: readonly ID[]): Tab | undef
     }
     // Check the last active tab of the previous active tabs panel
     if (!target) {
-      const prevTabsPanelHistory = Tabs.getActiveTabsHistory(Sidebar.lastTabsPanelId)
+      const prevTabsPanelHistory = Tabs.getActiveTabsHistory(Sidebar.prevTabsPanelId)
       if (prevTabsPanelHistory?.actTabs.length) {
-        const panelId = Sidebar.lastTabsPanelId
+        const panelId = Sidebar.prevTabsPanelId
         const actTabs = prevTabsPanelHistory.actTabs
         const prevActTab = Tabs.byId[actTabs[actTabs.length - 1]]
         if (prevActTab && prevActTab.panelId === panelId && !prevActTab.discarded) {
@@ -2343,10 +2343,10 @@ export function findSuccessorTab(tab: Tab, exclude?: readonly ID[]): Tab | undef
           }
 
           // Check the last active tab of the previous active tabs panel
-          if (tab.panelId !== Sidebar.lastTabsPanelId) {
-            const prevTabsPanelHistory = Tabs.getActiveTabsHistory(Sidebar.lastTabsPanelId)
+          if (tab.panelId !== Sidebar.prevTabsPanelId) {
+            const prevTabsPanelHistory = Tabs.getActiveTabsHistory(Sidebar.prevTabsPanelId)
             if (prevTabsPanelHistory?.actTabs.length) {
-              const panelId = Sidebar.lastTabsPanelId
+              const panelId = Sidebar.prevTabsPanelId
               const actTabs = prevTabsPanelHistory.actTabs
               const prevActTabId = actTabs.findLast(id => {
                 const tab = Tabs.byId[id]

@@ -128,12 +128,12 @@ export async function loadPanels(): Promise<void> {
     if (!actPanel) actPanel = Sidebar.panels.find(p => p.type === PanelType.tabs)
     if (actPanel) Sidebar.reactive.activePanelId = Sidebar.activePanelId = actPanel.id
     else Sidebar.reactive.activePanelId = Sidebar.activePanelId = Sidebar.panels[0]?.id ?? NOID
-    Sidebar.lastActivePanelId = Sidebar.reactive.activePanelId
+    Sidebar.prevActivePanelId = Sidebar.reactive.activePanelId
   } else {
     const tabsPanel = Sidebar.panels.find(p => p.type === PanelType.tabs)
     if (tabsPanel) Sidebar.reactive.activePanelId = Sidebar.activePanelId = tabsPanel.id
     else Sidebar.reactive.activePanelId = Sidebar.activePanelId = Sidebar.panels[0]?.id ?? NOID
-    Sidebar.lastActivePanelId = Sidebar.reactive.activePanelId
+    Sidebar.prevActivePanelId = Sidebar.reactive.activePanelId
   }
 
   Sidebar.ready = true
@@ -1127,7 +1127,7 @@ export function activatePanel(panelId: ID, loadPanels = true, keepSearching?: bo
     else if (panel.type === PanelType.sync) loading = Sync.load()
   }
 
-  if (prevPanel) Sidebar.lastActivePanelId = Sidebar.activePanelId
+  if (prevPanel) Sidebar.prevActivePanelId = Sidebar.activePanelId
   Sidebar.reactive.activePanelId = Sidebar.activePanelId = panelId
 
   if (Search.rawValue && prevPanel) {
@@ -1144,7 +1144,7 @@ export function activatePanel(panelId: ID, loadPanels = true, keepSearching?: bo
     }
   }
 
-  if (isPrevTabsPanel) Sidebar.lastTabsPanelId = prevPanel.id
+  if (isPrevTabsPanel) Sidebar.prevTabsPanelId = prevPanel.id
   else if (Utils.isHistoryPanel(prevPanel)) History.unloadAfter(30_000)
   else if (Utils.isSyncPanel(prevPanel)) Sync.unloadAfter(5_000)
 
@@ -1305,7 +1305,7 @@ export function switchPanel(
   // If current active panel is not exist
   let activePanel = Sidebar.panelsById[activePanelId]
   if (!activePanel) {
-    activePanel = Sidebar.panelsById[Sidebar.lastActivePanelId]
+    activePanel = Sidebar.panelsById[Sidebar.prevActivePanelId]
     if (!activePanel) activePanel = Sidebar.panels[0]
     if (activePanel) {
       Sidebar.reactive.activePanelId = Sidebar.activePanelId = activePanel.id
@@ -1660,8 +1660,8 @@ export async function removePanel(panelId: ID, conf?: RemovingPanelConf): Promis
     let nextActivePanelId
     if (newPanelIdForTabs && Sidebar.panelsById[newPanelIdForTabs]) {
       nextActivePanelId = newPanelIdForTabs
-    } else if (Sidebar.lastActivePanelId !== panel.id) {
-      nextActivePanelId = Sidebar.lastActivePanelId
+    } else if (Sidebar.prevActivePanelId !== panel.id) {
+      nextActivePanelId = Sidebar.prevActivePanelId
     } else {
       nextActivePanelId = Utils.findNear(
         Sidebar.reactive.nav,
@@ -1799,7 +1799,7 @@ export function addPanel<T extends Panel>(index: number, panel: T, replace?: boo
     if (replaceableId !== undefined) {
       if (Sidebar.activePanelId === replaceableId) {
         Sidebar.reactive.activePanelId = Sidebar.activePanelId = panel.id
-        Sidebar.lastActivePanelId = panel.id
+        Sidebar.prevActivePanelId = panel.id
 
         if (Settings.updateWinPrefaceOnPanelSwitch) Windows.updWindowPreface()
       }
@@ -2510,7 +2510,7 @@ export function switchPanelBackResetTimeout(): void {
 export function switchPanelBack(delay: number): void {
   clearTimeout(switchPanelBackTimeout)
   switchPanelBackTimeout = setTimeout(() => {
-    const prevPanel = Sidebar.panelsById[Sidebar.lastTabsPanelId]
+    const prevPanel = Sidebar.panelsById[Sidebar.prevTabsPanelId]
     if (prevPanel) Sidebar.switchToPanel(prevPanel.id)
   }, delay)
 }
@@ -2690,7 +2690,7 @@ export function getRecentTabsPanelId(): ID {
   let panelId = Sidebar.activePanelId
   let panel: Panel | undefined = Sidebar.panelsById[panelId]
   if (!Utils.isTabsPanel(panel)) {
-    panelId = Sidebar.lastTabsPanelId
+    panelId = Sidebar.prevTabsPanelId
     panel = Sidebar.panelsById[panelId]
   }
   if (!Utils.isTabsPanel(panel)) {

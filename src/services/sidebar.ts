@@ -53,7 +53,8 @@ export const Sidebar = {
   } as SidebarReactiveState,
 
   activePanelId: NOID,
-  lastActivePanelId: NOID,
+  prevActivePanelId: NOID,
+  prevTabsPanelId: NOID,
   panelsById: {} as Record<ID, Panel>,
   panels: [] as Panel[],
   nav: [] as ID[],
@@ -62,7 +63,6 @@ export const Sidebar = {
   hasBookmarks: false,
   hasHistory: false,
   hasSync: false,
-  lastTabsPanelId: NOID,
   scrollPositions: {} as Record<ID, number>,
   convertingPanelLock: false,
 

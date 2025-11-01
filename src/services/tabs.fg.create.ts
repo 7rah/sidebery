@@ -395,7 +395,7 @@ export async function open(
     const parent = Tabs.byId[dst.parentId]
     if (parent) dstPanel = Sidebar.panelsById[parent.panelId]
   }
-  if (!Utils.isTabsPanel(dstPanel)) dstPanel = Sidebar.panelsById[Sidebar.lastTabsPanelId]
+  if (!Utils.isTabsPanel(dstPanel)) dstPanel = Sidebar.panelsById[Sidebar.prevTabsPanelId]
   if (!Utils.isTabsPanel(dstPanel)) {
     dstPanel = Sidebar.panels.find(p => p.type === PanelType.tabs)
   }
@@ -629,7 +629,7 @@ export function getPanelForNewTab(tab: Tab): TabsPanel | undefined {
   const parentTab = Tabs.byId[tab.openerTabId ?? NOID]
   let activePanel: Panel | undefined = Sidebar.panelsById[Sidebar.activePanelId]
   if (!Utils.isTabsPanel(activePanel)) {
-    activePanel = Sidebar.panelsById[Sidebar.lastTabsPanelId]
+    activePanel = Sidebar.panelsById[Sidebar.prevTabsPanelId]
   }
   if (!Utils.isTabsPanel(activePanel)) activePanel = undefined
 

@@ -159,7 +159,7 @@ export async function open(section?: string): Promise<void> {
   const activeTab = Tabs.byId[Tabs.activeId]
   let activePanel = Sidebar.panelsById[Sidebar.activePanelId]
   if (!Utils.isTabsPanel(activePanel)) {
-    activePanel = Sidebar.panelsById[Sidebar.lastTabsPanelId]
+    activePanel = Sidebar.panelsById[Sidebar.prevTabsPanelId]
   }
   if (!Utils.isTabsPanel(activePanel) && activeTab && !activeTab.pinned) {
     activePanel = Sidebar.panelsById[activeTab.panelId]

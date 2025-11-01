@@ -292,11 +292,11 @@ function onKeyOpenBookmarksSubPanel() {
 }
 
 function onKeySwitchToPrevPanel() {
-  if (Sidebar.lastActivePanelId === Sidebar.activePanelId) return
-  const prevPanel = Sidebar.panelsById[Sidebar.lastActivePanelId]
+  if (Sidebar.prevActivePanelId === Sidebar.activePanelId) return
+  const prevPanel = Sidebar.panelsById[Sidebar.prevActivePanelId]
   if (!prevPanel) return
 
-  Sidebar.activatePanel(Sidebar.lastActivePanelId)
+  Sidebar.activatePanel(Sidebar.prevActivePanelId)
 }
 
 function onKeyCopyUrl() {
@@ -538,7 +538,7 @@ function onKeyActivate(): void {
  */
 function onKeyNewTabInPanel(): void {
   let panel = Sidebar.panelsById[Sidebar.activePanelId]
-  if (!Utils.isTabsPanel(panel)) panel = Sidebar.panelsById[Sidebar.lastTabsPanelId]
+  if (!Utils.isTabsPanel(panel)) panel = Sidebar.panelsById[Sidebar.prevTabsPanelId]
   if (!Utils.isTabsPanel(panel)) return
   Tabs.createTabInPanel(panel)
 }

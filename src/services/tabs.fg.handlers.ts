@@ -973,7 +973,7 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
       panel = Sidebar.panelsById[tab.panelId]
     } else {
       panel = Sidebar.panelsById[Sidebar.activePanelId]
-      if (!Utils.isTabsPanel(panel)) panel = Sidebar.panelsById[Sidebar.lastTabsPanelId]
+      if (!Utils.isTabsPanel(panel)) panel = Sidebar.panelsById[Sidebar.prevTabsPanelId]
     }
     if (!Utils.isTabsPanel(panel)) panel = Sidebar.panels.find(Utils.isTabsPanel)
 

@@ -1,7 +1,7 @@
 import * as Utils from 'src/utils'
 import { NOID } from 'src/defaults'
-import { Command, CommandUpdateDetails, ItemBounds, Tab, MenuType, SubPanelType } from 'src/types'
-import { InstanceType, SelectionType, ItemBoundsType, TabsPanel } from 'src/types'
+import { Command, CommandUpdateDetails, MenuType, SubPanelType, BookmarksPanel } from 'src/types'
+import { InstanceType, SelectionType, ItemBoundsType, Tab, TabsPanel } from 'src/types'
 import { DstPlaceInfo, SrcPlaceInfo } from 'src/types'
 import { Keybindings } from 'src/services/keybindings'
 import { Settings } from 'src/services/settings'
@@ -770,18 +770,34 @@ function onKeySelectExpand(dir: number): void {
 }
 
 /**
- * Select all items on current panel
+ * Select all items on current panel (tabs/bookmarks)
  */
 function onKeySelectAll(): void {
   Sidebar.updateBounds()
   const activePanel = Sidebar.panelsById[Sidebar.activePanelId]
   if (!activePanel) return
-  if (!activePanel.bounds || !activePanel.bounds.length) return
 
   Selection.resetSelection(false, true)
-  for (const s of activePanel.bounds) {
-    Selection.select(s.id)
+  if (Utils.isTabsPanel(activePanel)) {
+    if (
+      Sidebar.subPanelActive &&
+      Sidebar.subPanelType === SubPanelType.Bookmarks &&
+      Sidebar.subPanels.bookmarks
+    ) {
+      selectAllBookmarks(Sidebar.subPanels.bookmarks)
+    } else {
+      const ids = [...activePanel.reactive.pinnedTabIds, ...activePanel.tabs.map(t => t.id)]
+      Selection.selectTabs(ids)
+    }
+  } else if (Utils.isBookmarksPanel(activePanel)) {
+    selectAllBookmarks(activePanel)
   }
+}
+function selectAllBookmarks(activePanel: BookmarksPanel) {
+  if (!Bookmarks.reactive.tree.length) return
+  const rootFolder = Bookmarks.reactive.byId[activePanel.rootId]
+  const nodes = rootFolder?.children ? rootFolder.children : undefined
+  Selection.selectBookmarks(Array.from(Bookmarks.listBookmarks(nodes)).map(b => b.id))
 }
 
 function onKeyLockSelection() {

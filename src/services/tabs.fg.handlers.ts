@@ -458,8 +458,11 @@ async function onTabCreated(nativeTab: NativeTab, attached?: boolean) {
     tab.favIconUrl = Favicons.getFavicon(tab.url)
     Tabs.renderFavicon(tab)
   }
-  if (!attached && !Settings.state.autoExpandTabsOnNew && Tabs.byId[tab.parentId]?.folded) {
-    tab.invisible = true
+  if (!attached && !Settings.state.autoExpandTabsOnNew) {
+    const parent = Tabs.byId[tab.parentId]
+    if (parent && (parent.folded || Tabs.findAncestor(parent, t => t.folded))) {
+      tab.invisible = true
+    }
   }
   if (reopenedTabInfo?.customTitle) tab.customTitle = reopenedTabInfo.customTitle
   if (reopenedTabInfo?.customColor) {

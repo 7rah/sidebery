@@ -687,15 +687,15 @@
     "ja": "非アクティブなブランチを折りたたむ"
   },
   "KbActPrevActTabC": {
-    "en": "Activate previously active tab when clicking on the active tab (Tab flip)",
-    "de": "Beim Klicken auf aktiven Tab Aktivierung umkehren",
-    "fr": "Cliquer sur l’onglet actif active l’onglet précédemment actif (Onglet revers)",
-    "hu": "Az aktív lapra kattintás aktiválja az előzőleg aktív lapot (lapváltogatás)",
-    "pl": "Aktywuj wcześniej aktywną kartę po wciśnięciu na aktywną kartę (Zamiana kart)",
-    "ru": "Активировать ранее активную вкладку при нажатии на активную вкладку",
-    "zh_CN": "在活动标签页和先前活动的标签页间交替",
-    "zh_TW": "在當前分頁和先前分頁間交替",
-    "ja": "アクティブなタブをクリックしたときに以前のアクティブなタブをアクティブ化する（タブの切り替え）"
+    "en": "Activate previously active tab (Tab flip)",
+    "de": "Zuvor aktive Tab aktivieren (Tabwechsel)",
+    "fr": "Activer l'onglet précédemment actif (Onglet revers)",
+    "hu": "Korábban aktív lap aktiválása (lapváltogatás)",
+    "pl": "Aktywuj poprzednio aktywną kartę (Zamiana kart)",
+    "ru": "Активировать ранее активную вкладку",
+    "zh_CN": "激活先前活动的标签页（标签页切换）",
+    "zh_TW": "重新啟用先前活躍的標籤頁（標籤頁切換）",
+    "ja": "以前にアクティブだったタブをアクティブにする（タブ切り替え）"
   },
   "KbActPrevActTab": {
     "en": "Active tabs history: Back",

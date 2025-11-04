@@ -837,9 +837,9 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
     if (tab.pinned && tab.relGroupId !== undefined) {
       const groupTab = Tabs.byId[tab.relGroupId]
       if (groupTab) {
-        const oldUrl = encodeURIComponent(tab.url)
-        const newUrl = encodeURIComponent(change.url)
-        const groupUrl = groupTab.url.replace(oldUrl, newUrl)
+        const pinProp = encodeURIComponent(tab.cookieStoreId + '::' + change.url)
+        const groupUrl = Utils.createGroupUrl(tab.title, { pin: pinProp })
+
         browser.tabs.update(groupTab.id, { url: groupUrl }).catch(err => {
           Logs.err('Tabs.onTabUpdated: Cannot reload related group page:', err)
         })

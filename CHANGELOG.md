@@ -218,6 +218,7 @@
 
 ### Localization
 
+- Zh: updated translation (by [@llc0930](https://github.com/llc0930): [#2284](https://github.com/mbnuqw/sidebery/issues/2284))
 - Keybindings: update Tab flip label: remove the part about click  
   b/c this text was copied from the mouse settings
 - Zh: updated translation (by [@llc0930](https://github.com/llc0930): [#2282](https://github.com/mbnuqw/sidebery/issues/2282))

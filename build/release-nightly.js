@@ -39,7 +39,7 @@ async function main() {
   console.log('Last commit of "updates.json":', updatesLastCommit)
   const gitlogResult = execSync(`git log ${gitLogFlags}`, { encoding: 'utf-8' })
   const noChanges = !hasUsefullCommitsSinceLastUpdate(gitlogResult, updatesLastCommit)
-  if (noChanges) throw 'No changes'
+  if (noChanges) throw 'No considerable changes in git logs'
 
   // Build and sign
   console.log('Building and signing...')

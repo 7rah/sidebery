@@ -250,7 +250,7 @@ Result:
   </details>  
   <br/>
 
-  That's basically all custom styles I use myself. I'll try to keep this `userChrome` snipped updated (relative to the beta version of Firefox).
+  That's basically all custom styles I use myself. I'll try to keep this `userChrome` snippet updated (relative to the beta version of Firefox).
 
   For more features and other styling options/themes check out these resources:
 

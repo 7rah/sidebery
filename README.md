@@ -295,14 +295,6 @@ To purchase cryptocurrency you can use any exchange services, e.g.: [buy.coingat
 
 Thank you.
 
-<details><summary><b> Payeer </b></summary>
-
-```
-P1128042154
-```
-
-</details>
-
 <details><summary><b> Bitcoin (BTC) </b></summary>
 
 ```

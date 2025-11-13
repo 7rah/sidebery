@@ -2085,31 +2085,31 @@ export async function restoreFromBookmarks(panel: TabsPanel, silent?: boolean): 
       lvl++
     }
 
+    Bookmarks.extractTabInfoFromTitle(info)
+
     // Set url for parent
     if (!node.url && node.children) {
       // Use first child for parent tab
       const firstChild = node.children[0]
       if (Bookmarks.isFolderWithURL(node)) {
         rawUrl = firstChild.url
-        info.url = Utils.normalizeUrl(firstChild.url, node.title)
-        info.title = firstChild.title
+        info.url = Utils.normalizeUrl(firstChild.url, info.title)
         usedAsParent[firstChild.id] = true
       }
 
       // Create group
       else {
         const titleExec = FOLDER_NAME_DATA_RE.exec(node.title)
-        info.url = Utils.createGroupUrl(titleExec ? titleExec[1] : node.title)
+        info.url = Utils.createGroupUrl(titleExec ? titleExec[1] : info.title)
         rawUrl = info.url
       }
     }
 
     // Set url for bookmark node
     else {
-      info.url = Utils.normalizeUrl(node.url, node.title)
+      info.url = Utils.normalizeUrl(node.url, info.title)
     }
 
-    Bookmarks.extractTabInfoFromTitle(info)
     const isPinned = info.pinned
 
     // Find existed tab

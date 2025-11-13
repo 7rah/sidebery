@@ -401,11 +401,7 @@ export async function open(
         const info: ItemInfo = { id: node.id, title: node.title }
         if (node.url) info.url = node.url
         if (isIndirectTarget) info.parentId = node.parentId
-        if (!info.url && info.title && info.title.length > 20) {
-          Bookmarks.extractTabInfoFromTitle(info, true)
-        } else {
-          Bookmarks.extractTabInfoFromTitle(info)
-        }
+        Bookmarks.extractTabInfoFromTitle(info)
 
         // Set url for parent node
         const prev = toOpen[toOpen.length - 1]

@@ -66,6 +66,7 @@ async function loadInFg(): Promise<void> {
       Bookmarks.reactive.byId[n.id] = n
       n.sel = false
       n.isOpen = false
+      parseTitle(n)
       if (n.type === 'separator') n.url = undefined
       else if (n.url) {
         count++
@@ -1006,6 +1007,39 @@ export function attachTabInfoToTitle(item: ItemInfo) {
   if (item.customTitle) {
     item.title += ' [*]'
   }
+}
+
+export function parseTitle(node: Bookmark) {
+  if (!node.title) return
+
+  let parsedTitle = node.title
+
+  const pinIndex = parsedTitle.indexOf(' ' + PIN_MARK)
+  if (pinIndex !== -1) {
+    parsedTitle = parsedTitle.slice(0, pinIndex) + parsedTitle.slice(pinIndex + 1 + PIN_MARK.length)
+  }
+
+  delete node.containerColor
+  parsedTitle = parsedTitle.replace(CONTAINER_IN_BOOKMARK_RE, (match, cuid) => {
+    if (typeof cuid !== 'string') return match
+    const info = Containers.parseCUID(cuid)
+    const container = Containers.findUnique(info)
+    if (!container) return match
+    node.containerColor = container.color
+    return ''
+  })
+
+  delete node.customColor
+  parsedTitle = parsedTitle.replace(COLOR_IN_BOOKMARK_RE, (match, colorId) => {
+    const color = BOOKMARK_TAB_COLOR[colorId as string]
+    if (!color) return match
+    node.customColor = color
+    return ''
+  })
+
+  parsedTitle = parsedTitle.replace(TITLE_IN_BOOKMARK_RE, '')
+
+  node.parsedTitle = parsedTitle
 }
 
 export function extractTabInfoFromTitle(item: ItemInfo, updateTitleOnly?: boolean) {

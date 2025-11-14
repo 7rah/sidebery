@@ -10,10 +10,12 @@
   :data-open="node.isOpen")
   .body(
     :title="tooltip"
+    :data-color="node.containerColor"
     @mousedown.stop="onMouseDown"
     @mouseup.stop="onMouseUp"
     @contextmenu.stop="onCtxMenu")
     .dnd-layer(draggable="true" data-dnd-type="bookmark" :data-dnd-id="node.id" @dragstart="onDragStart")
+    .color-layer(v-if="node.customColor" :style="{ '--bkm-color': RGB_COLORS[node.customColor as browser.ColorName] }")
     .fav(v-if="node.url")
       svg(v-if="!favicon")
         use(href="#icon_ff")
@@ -23,8 +25,10 @@
         use(href="#icon_folder_open")
       svg(v-else)
         use(href="#icon_folder")
-    .title(v-if="node.children || node.url") {{node.title || node.url}}
+    .title(v-if="node.children || node.url") {{node.parsedTitle || node.title || node.url}}
     .len(v-if="Settings.state.showBookmarkLen && node.len") {{node.len}}
+    .container-mark(v-if="node.containerColor")
+  
   .children(v-if="(expanded) && children?.length" :title="node.title")
     BookmarkNode(v-for="node in children" :key="node.id" :node="node" :filter="props.filter" :panelId="panelId")
 </template>
@@ -46,7 +50,7 @@ import { Tabs } from 'src/services/tabs.fg'
 import { Mouse } from 'src/services/mouse'
 import { DnD } from 'src/services/drag-and-drop'
 import { Search } from 'src/services/search'
-import { NOID } from 'src/defaults'
+import { NOID, RGB_COLORS } from 'src/defaults'
 import * as Favicons from 'src/services/favicons.fg'
 import * as Utils from 'src/utils'
 import * as Logs from 'src/services/logs'
@@ -64,9 +68,10 @@ const favicon = computed((): string => {
   return Favicons.getFavicon(props.node.url)
 })
 const tooltip = computed((): string => {
-  if (props.node.title && props.node.url) return `${props.node.title}\n---\n${props.node.url}`
+  const title = props.node.parsedTitle || props.node.title
+  if (title && props.node.url) return `${title}\n---\n${props.node.url}`
   else if (props.node.url) return props.node.url
-  else if (props.node.title) return props.node.title
+  else if (title) return title
   else return ''
 })
 const children = computed<Bookmark[] | undefined>(() => {

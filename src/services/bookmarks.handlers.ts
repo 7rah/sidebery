@@ -31,6 +31,7 @@ function onBookmarkCreatedFg(id: ID, bookmark: Bookmark): void {
 
   bookmark.sel = false
   bookmark.isOpen = false
+  Bookmarks.parseTitle(bookmark)
   if (bookmark.type === 'separator') bookmark.url = undefined
   if (bookmark.type === 'folder') {
     bookmark.len = 0
@@ -83,6 +84,7 @@ function onBookmarkChangedFg(id: ID, info: browser.bookmarks.UpdateChanges): voi
 
   if (info.title !== undefined && bookmark.title !== info.title) {
     bookmark.title = info.title
+    Bookmarks.parseTitle(bookmark)
   }
 
   if (info.url !== undefined && oldUrl !== info.url) {

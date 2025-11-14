@@ -1101,6 +1101,8 @@ export async function createFrom(
       const parentId = idsMap[item.parentId ?? NOID] ?? dst.parentId
       const index = !parent ? dstIndex++ : undefined
 
+      attachTabInfoToTitle(item)
+
       // Create folder
       if (children.length) {
         const folderConf = { title: item.title, parentId, index }
@@ -1111,7 +1113,6 @@ export async function createFrom(
 
         // Create bookmark of parent item
         if (item.url && !GROUP_RE.test(item.url)) {
-          attachTabInfoToTitle(item)
           const url = Utils.denormalizeUrl(item.url)
           await browser.bookmarks.create({ title: item.title, url, parentId: folder.id })
         }
@@ -1119,7 +1120,6 @@ export async function createFrom(
         continue
       }
 
-      attachTabInfoToTitle(item)
       const url = Utils.denormalizeUrl(item.url)
       await browser.bookmarks.create({ title: item.title, url, parentId, index })
 

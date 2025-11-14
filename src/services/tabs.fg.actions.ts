@@ -1484,7 +1484,13 @@ export async function bookmarkTabs(tabIds: ID[]): Promise<void> {
       parentId = result.location ?? BKM_OTHER_ID
       if (parentId === NOID) parentId = BKM_OTHER_ID
 
-      const info = { id: tab.id, title: result.name, container: tab.cookieStoreId }
+      const info = {
+        id: tab.id,
+        title: result.name,
+        container: tab.cookieStoreId,
+        customColor: tab.customColor,
+        customTitle: tab.customTitle,
+      }
       Bookmarks.attachTabInfoToTitle(info)
 
       await browser.bookmarks.create({
@@ -1515,6 +1521,9 @@ export async function bookmarkTabs(tabIds: ID[]): Promise<void> {
       parentId: t.parentId,
       url: t.url,
       title: t.customTitle ?? t.title,
+      container: t.cookieStoreId,
+      customColor: t.customColor,
+      customTitle: t.customTitle,
     }))
     await Bookmarks.createFrom(items, { parentId })
   }

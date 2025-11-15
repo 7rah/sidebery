@@ -35,19 +35,16 @@ export async function createSnapshot(auto = false): Promise<Snapshot | undefined
   if (!Info.isBg) return await IPC.bg('createSnapshot')
 
   // Get snapshot src data and current snapshots list
-  let waiting
-  try {
-    waiting = await Promise.allSettled([
-      browser.storage.local.get<Stored>(['sidebar', 'containers', 'snapshots']),
-      Tabs.updateBgTabsTreeData(),
-    ])
-  } catch (err) {
-    Logs.err('createSnapshot: Cannot get source data', err)
+  const [stored] = await Promise.all([
+    browser.storage.local
+      .get<Stored>(['sidebar', 'containers', 'snapshots'])
+      .catch(() => undefined),
+    Tabs.updateBgTabsTreeData().catch(() => {}),
+  ])
+  if (!stored) {
+    Logs.err('createSnapshot: Cannot get source data')
     return
   }
-  const storedResult = waiting[0]
-  const stored = storedResult?.status === 'fulfilled' ? storedResult.value : undefined
-  if (!stored) return
 
   if (!stored.containers) stored.containers = {}
   if (!stored.sidebar) stored.sidebar = createDefaultSidebarConfig()
@@ -759,6 +756,13 @@ export function parseSnapshot(
   const snapshot = getNormalizedSnapshot(snapshots, index)
   if (!snapshot) return
 
+  // Get ordered list of tab panel ids
+  const tabPanelIds: ID[] = []
+  for (const id of snapshot.sidebar.nav ?? []) {
+    const panel = snapshot.sidebar.panels[id]
+    if (Utils.isTabsPanel(panel)) tabPanelIds.push(id)
+  }
+
   const windows: SnapWindowState[] = []
   const winCount = snapshot.tabs.length
   let tabsCount = 0
@@ -767,6 +771,7 @@ export function parseSnapshot(
   for (const win of snapshot.tabs) {
     if (!win.length) continue
 
+    // const winTabPanelIds = [...tabPanelIds]
     const panelsById: Record<ID, SnapPanelState> = {}
     const winState: SnapWindowState = {
       id: tabsCount,
@@ -803,6 +808,7 @@ export function parseSnapshot(
             } else {
               Logs.warn('Snapshots.parseSnapshot: No panel config for', tab.panelId)
               panelConfig.id = NOID
+              panelConfig.name = translate('panel.tabs.title')
               tab.panelId = NOID
             }
           }
@@ -842,10 +848,11 @@ export function parseSnapshot(
     }
 
     if (panelsById[GLOB_PINNED_ID]) winState.panels.push(panelsById[GLOB_PINNED_ID])
-    for (const id of snapshot.sidebar.nav ?? []) {
+    for (const id of tabPanelIds) {
       const panelState = panelsById[id]
       if (panelState?.tabs.length) winState.panels.push(panelState)
     }
+    if (panelsById[NOID]) winState.panels.push(panelsById[NOID])
   }
 
   // Fold branches and count the descendants

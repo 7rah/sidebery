@@ -51,7 +51,7 @@
               .btn(v-else @click="openWindow(state.activeSnapshot, i, !win.private)").
                 {{translate('snapshot.btn_open_as_private_win')}}
             .panels(v-show="!win.folded")
-              .panel(v-for="panel in win.panels" :key="panel.id" :data-void="panel.id === -1")
+              .panel(v-for="panel in win.panels" :key="panel.id")
                 .panel-bar(:data-color="panel.color" :data-folded="panel.folded")
                   .drop-down-btn(@click="panel.folded = !panel.folded")
                     svg.exp-icon: use(href="#icon_expand")

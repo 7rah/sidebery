@@ -254,7 +254,7 @@ Result:
 
   For more features and other styling options/themes check out these resources:
 
-  - https://github.com/search?q=sidebery+language%3ACSS&type=repositories
+  - https://github.com/search?q=sidebery+language%3ACSS&type=repositories&s=stars&o=desc
   - https://www.reddit.com/r/FirefoxCSS/search?q=sidebery&restrict_sr=on&sort=relevance&t=all
   - https://trickypr.github.io/FirefoxCSS-Store.github.io/index.html
 

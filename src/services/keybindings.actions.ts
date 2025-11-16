@@ -1144,11 +1144,14 @@ async function onKeyMoveTabs(dir: 1 | -1) {
   toMove.sort((a, b) => a.index - b.index)
   const toMoveIds = toMove.map(t => t.id)
 
-  // Update selection
-  Selection.resetSelection(true)
-  Selection.selectTabs(toMoveIds)
-  Selection.preserveSelection()
-  Selection.allowSelectionReset(300)
+  // Update selection and lock it for the next 300ms
+  // except there's no selection and it's only one active tab to move
+  if (Selection.isSet() || toMoveIds.length > 1) {
+    Selection.resetSelection(true)
+    Selection.selectTabs(toMoveIds)
+    Selection.preserveSelection()
+    Selection.allowSelectionReset(300)
+  }
 
   const firstTab = toMove[0]
   if (!firstTab) return

@@ -321,7 +321,7 @@ export async function move(
   // ---
   // Unpin tab
   if (toUnpin?.length) {
-    for (const tab of toUnpin) {
+    for (const tab of [...toUnpin].reverse()) {
       tab.unpinning = true
       await browser.tabs.update(tab.id, { pinned: false }).catch(err => {
         Logs.err('Tabs.move: Cannot unpin tab', err)

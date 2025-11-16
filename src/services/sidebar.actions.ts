@@ -1412,6 +1412,10 @@ export function switchPanel(
   if (!panel) return
 
   switchToPanel(panel.id, false, withoutTabCreation)
+
+  if (newActIsHidden && Sidebar.scrollHiddenPanelsPopupTo) {
+    Sidebar.scrollHiddenPanelsPopupTo(panel.id)
+  }
 }
 
 export function openHiddenPanelsPopup(): void {

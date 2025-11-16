@@ -88,6 +88,7 @@ export const Sidebar = {
 
   reMountSidebar: null as null | (() => void),
   selectPanel: null as null | ((dir: 1 | -1) => void),
+  scrollHiddenPanelsPopupTo: null as null | ((id: ID) => void),
 
   ...SidebarActions,
 }

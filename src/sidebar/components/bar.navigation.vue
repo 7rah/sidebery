@@ -276,6 +276,7 @@ onMounted(() => {
     Sidebar.reactive.horNavWidth = el.value.offsetWidth
   }
   Sidebar.selectPanel = selectPanel
+  Sidebar.scrollHiddenPanelsPopupTo = scrollHiddenPanelsPopupTo
 })
 
 function selectPanel(dir: 1 | -1) {

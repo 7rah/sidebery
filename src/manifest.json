@@ -75,17 +75,9 @@
       "description": "__MSG_KbOpenSidebarPanel__"
     },
     "loop_panels_forwards": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+D",
-        "mac": "MacCtrl+Shift+D"
-      },
       "description": "__MSG_KbLoopPanelsForwards__"
     },
     "loop_panels_backwards": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+A",
-        "mac": "MacCtrl+Shift+A"
-      },
       "description": "__MSG_KbLoopPanelsBackwards__"
     },
     "next_panel": {

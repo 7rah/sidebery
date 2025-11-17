@@ -1552,7 +1552,7 @@ export const commonTranslations: Translations = {
   'menu.tab.move_to_window_': {
     en: 'Move to window...',
     de: 'Verschieben in Fenster...',
-    fr: 'Déplacer vers une nouvelle fenêtre…',
+    fr: 'Déplacer vers une fenêtre existante…',
     hu: 'Áthelyezés ide: ablak…',
     pl: 'Przenieś do okna...',
     ru: 'Переместить в окно...',

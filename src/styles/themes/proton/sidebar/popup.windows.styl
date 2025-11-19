@@ -12,6 +12,12 @@
   min-height: 128px
   overflow: hidden
 
+// Make the inner scrollbox flex so that the height
+// of the scroll-container is calculated correctly
+.WindowsPopup .list .ScrollBox
+  display: flex
+  flex-direction: column
+
 .WindowsPopup .scrollable
   padding-bottom: 8px
 

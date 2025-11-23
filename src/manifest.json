@@ -157,11 +157,11 @@
       },
       "description": "__MSG_KbDownShift__"
     },
-    "activate": {
-      "suggested_key": {
-        "default": "Alt+Space"
-      },
-      "description": "__MSG_KbActivate__"
+    "sel_child_tabs": {
+      "description": "__MSG_KbSelChildTabs__"
+    },
+    "lock_selection": {
+      "description": "__MSG_KbLockSel__"
     },
     "reset_selection": {
       "suggested_key": {
@@ -169,8 +169,11 @@
       },
       "description": "__MSG_KbResetSelection__"
     },
-    "lock_selection": {
-      "description": "__MSG_KbLockSel__"
+    "activate": {
+      "suggested_key": {
+        "default": "Alt+Space"
+      },
+      "description": "__MSG_KbActivate__"
     },
     "menu": {
       "description": "__MSG_KbMenu__"
@@ -408,9 +411,6 @@
     },
     "edit_title": {
       "description": "__MSG_KbEditTitle__"
-    },
-    "sel_child_tabs": {
-      "description": "__MSG_KbSelChildTabs__"
     },
     "sort_tabs_by_title_asc": {
       "description": "__MSG_KbSortTabsByTitleAsc__"

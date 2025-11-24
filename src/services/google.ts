@@ -1,4 +1,4 @@
-import { Logs } from './_services'
+import * as Logs from 'src/services/logs'
 import { Settings } from './settings'
 
 export * as Drive from './google.drive'

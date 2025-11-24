@@ -8,7 +8,7 @@ import { WebReq } from 'src/services/web-req'
 import { Windows } from 'src/services/windows'
 import { Store } from 'src/services/storage'
 import { DetachedTabsInfo } from 'src/services/tabs.fg.move'
-import { Sync } from 'src/services/_services'
+import * as Sync from 'src/services/sync'
 
 export const enum InstanceType {
   unknown = -1,

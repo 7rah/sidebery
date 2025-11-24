@@ -15,9 +15,9 @@ import { Info } from 'src/services/info'
 import { versionToInt } from 'src/services/info.actions'
 import { Menu } from 'src/services/menu'
 import { WebReq } from 'src/services/web-req'
-import { Sync } from 'src/services/_services'
+import * as Sync from 'src/services/sync'
+import * as Omnibox from 'src/services/omnibox'
 import { Styles } from 'src/services/styles'
-import * as omnibox from 'src/services/omnibox'
 
 void (async function main() {
   Info.setInstanceType(InstanceType.bg)
@@ -120,7 +120,7 @@ void (async function main() {
     if (newVersion <= currentVersion) browser.runtime.reload()
   })
 
-  omnibox.setupListeners()
+  Omnibox.setupListeners()
 
   Logs.info(`Init end: ${performance.now() - ts}ms`)
 })()

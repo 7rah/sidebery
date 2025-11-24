@@ -7,7 +7,7 @@ import { Sidebar } from 'src/services/sidebar'
 import { Tabs } from 'src/services/tabs.fg'
 import { Settings } from 'src/services/settings'
 import { SidebarConfigRState } from './sidebar-config'
-import { Logs } from './_services'
+import * as Logs from 'src/services/logs'
 
 export type SetupPageView =
   | 'settings'

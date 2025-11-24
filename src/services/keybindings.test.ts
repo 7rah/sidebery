@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from 'vitest'
 import { Tabs } from './tabs.fg'
-import { Keybindings } from './_services'
-import { Selection } from './_services.fg'
+import * as Selection from 'src/services/selection'
+import * as Keybindings from 'src/services/keybindings'
 import { MTab } from './tabs.fg.test'
 
 describe('Keybindings.onKeySelectTabsBranch()', () => {

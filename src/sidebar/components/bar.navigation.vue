@@ -94,8 +94,11 @@ import { Mouse } from 'src/services/mouse'
 import { DnD } from 'src/services/drag-and-drop'
 import { Search } from 'src/services/search'
 import { Snapshots } from 'src/services/snapshots'
+import * as SetupPage from 'src/services/setup-page'
+import * as Popups from 'src/services/popups'
+import * as Logs from 'src/services/logs'
+import * as Sync from 'src/services/sync'
 import NavItemComponent from './nav-item.vue'
-import { Logs, Sync, Popups, SetupPage } from 'src/services/_services'
 
 const HIDDEN_PANELS_BTN: NavBtn = {
   id: 'hidden_panels_btn',

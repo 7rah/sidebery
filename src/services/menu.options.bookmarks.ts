@@ -10,7 +10,7 @@ import { Bookmarks } from 'src/services/bookmarks'
 import { Menu } from 'src/services/menu'
 import { Sidebar } from 'src/services/sidebar'
 import { Search } from './search'
-import { Logs, Utils } from './_services'
+import * as Logs from 'src/services/logs'
 
 export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[] | undefined> = {
   openInNewWin: () => {
@@ -349,7 +349,7 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
 
     for (const t of Settings.copyTemplates) {
       opts.push({
-        label: translate('menu.copy_by_template', t.name),
+        label: translate('menu.copy_by_template', t.name ?? ''),
         icon: 'icon_code',
         badge: 'icon_copy_badge',
         inactive,

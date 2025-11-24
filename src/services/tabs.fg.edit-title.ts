@@ -3,7 +3,7 @@ import { Settings } from './settings'
 import { Tabs } from './tabs.fg'
 import * as Utils from 'src/utils'
 import { Windows } from './windows'
-import { IPC } from './_services'
+import * as IPC from 'src/services/ipc'
 
 let inputEl: HTMLInputElement | null = null
 

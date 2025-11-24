@@ -37,16 +37,16 @@
 
 <script lang="ts" setup>
 import { ref, computed, onMounted } from 'vue'
+import { InputOption, TextInputComponent, TabsPanelConfig, BookmarksPanelConfig } from 'src/types'
 import * as Utils from 'src/utils'
 import * as Popups from 'src/services/popups'
 import { translate } from 'src/dict'
 import { Sidebar } from 'src/services/sidebar'
 import { PANEL_ICON_OPTS, COLOR_OPTS } from 'src/defaults'
+import * as SidebarConfig from 'src/services/sidebar-config'
+import { Settings } from 'src/services/settings'
 import TextInput from 'src/components/text-input.vue'
 import SelectInput from 'src/components/select-input.vue'
-import { SidebarConfig } from 'src/services/_services'
-import { InputOption, TextInputComponent, TabsPanelConfig, BookmarksPanelConfig } from 'src/types'
-import { Settings } from 'src/services/settings'
 
 const TABS_PANEL_ICON_OPTS = [{ value: 'icon_tabs', icon: '#icon_tabs' }, ...PANEL_ICON_OPTS]
 const BOOKMARKS_PANEL_ICON_OPTS = [

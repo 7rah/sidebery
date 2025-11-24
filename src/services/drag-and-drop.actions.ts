@@ -14,7 +14,7 @@ import { Bookmarks } from 'src/services/bookmarks'
 import { Tabs } from 'src/services/tabs.fg'
 import * as Logs from './logs'
 import * as IPC from './ipc'
-import { TabsSync } from './_services.fg'
+import * as TabsSync from 'src/services/tabs.fg.sync'
 import { Permissions } from './permissions'
 
 let lastDragStartTime = 0

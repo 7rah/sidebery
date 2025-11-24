@@ -69,16 +69,15 @@ section(ref="el")
 import { ref, reactive, onMounted, computed } from 'vue'
 import { translate } from 'src/dict'
 import { SETTINGS_OPTIONS } from 'src/defaults'
-import * as IPC from 'src/services/ipc'
-import { Settings } from 'src/services/settings'
-import { Logs, SetupPage } from 'src/services/_services'
 import { MAX_SIZE_LIMIT } from 'src/services/snapshots.actions'
+import { Settings } from 'src/services/settings'
+import { Permissions } from 'src/services/permissions'
+import * as IPC from 'src/services/ipc'
+import * as SetupPage from 'src/services/setup-page'
 import NumField from '../../components/num-field.vue'
 import TextField from '../../components/text-field.vue'
 import SelectField from '../../components/select-field.vue'
 import ToggleField from '../../components/toggle-field.vue'
-import * as Utils from 'src/utils'
-import { Permissions } from 'src/services/permissions'
 
 const el = ref<HTMLElement | null>(null)
 const state = reactive({

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { Sidebar } from './sidebar'
 import { BOOKMARKS_PANEL_STATE, DEFAULT_SETTINGS, TABS_PANEL_STATE } from 'src/defaults'
-import { Utils } from './_services'
+import * as Utils from 'src/utils'
 import { Settings } from './settings'
 
 describe('Sidebar.switchPanel()', () => {

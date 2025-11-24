@@ -85,7 +85,11 @@ import LoadingDots from 'src/components/loading-dots.vue'
 import { NormalizedSnapshot } from 'src/types/snapshots'
 import { Containers } from 'src/services/containers'
 import { Settings } from 'src/services/settings'
-import { IPC, SidebarConfig, Sync, SetupPage, Keybindings } from 'src/services/_services'
+import * as SetupPage from 'src/services/setup-page'
+import * as Sync from 'src/services/sync'
+import * as SidebarConfig from 'src/services/sidebar-config'
+import * as IPC from 'src/services/ipc'
+import * as Keybindings from 'src/services/keybindings'
 
 const props = defineProps({
   importedData: {

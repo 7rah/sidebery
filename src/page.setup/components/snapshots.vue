@@ -105,14 +105,14 @@ import {
 } from 'src/types'
 import { CONTAINER_ID, NOID } from 'src/defaults'
 import { translate } from 'src/dict'
-import * as IPC from 'src/services/ipc'
-import * as Logs from 'src/services/logs'
 import { Windows } from 'src/services/windows'
 import { Store } from 'src/services/storage'
 import { Snapshots } from 'src/services/snapshots'
+import * as IPC from 'src/services/ipc'
+import * as Logs from 'src/services/logs'
+import * as SetupPage from 'src/services/setup-page'
 import DropDownButton from 'src/components/drop-down-button.vue'
 import SnapTab from './snapshots.tab.vue'
-import { SetupPage } from 'src/services/_services'
 
 const SCROLL_CONF = { behavior: 'smooth', block: 'nearest' } as const
 

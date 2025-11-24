@@ -41,13 +41,16 @@
 </template>
 
 <script lang="ts" setup>
-import { Keybindings, Logs, Sync, Utils } from 'src/services/_services'
+import * as Utils from 'src/utils'
+import * as Logs from 'src/services/logs'
+import * as Sync from 'src/services/sync'
+import * as Keybindings from 'src/services/keybindings'
 import { translate } from 'src/dict'
 import { SyncedEntry } from 'src/services/sync'
 import { Menu } from 'src/services/menu'
 import { Settings } from 'src/services/settings'
 import { Styles } from 'src/services/styles'
-import { Favicons } from 'src/services/_services.fg'
+import * as Favicons from 'src/services/favicons.fg'
 import { Mouse } from 'src/services/mouse'
 import { Tabs } from 'src/services/tabs.fg'
 import { DragInfo, DragItem, DragType, DropType, DstPlaceInfo, ItemInfo } from 'src/types'

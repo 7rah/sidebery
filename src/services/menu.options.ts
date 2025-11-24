@@ -12,7 +12,8 @@ import { bookmarksMenuOptions } from './menu.options.bookmarks'
 import { historyMenuOptions } from './menu.options.history'
 import { CONTAINER_ID } from 'src/defaults'
 import * as Popups from 'src/services/popups'
-import { SetupPage, SidebarConfig } from './_services'
+import * as SidebarConfig from 'src/services/sidebar-config'
+import * as SetupPage from 'src/services/setup-page'
 
 export const menuOptions: Record<string, () => MenuOption | MenuOption[] | undefined> = {
   ...tabsMenuOptions,

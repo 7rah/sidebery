@@ -16,7 +16,7 @@ import { Bookmarks } from 'src/services/bookmarks'
 import { Permissions } from 'src/services/permissions'
 import { Notifications } from 'src/services/notifications'
 import * as Selection from './selection'
-import { Favicons } from './_services.fg'
+import * as Favicons from 'src/services/favicons.fg'
 
 const URL_WITHOUT_PROTOCOL_RE = /^(.+\.)\/?(.+\/)?\w+/
 

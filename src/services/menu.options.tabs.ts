@@ -13,7 +13,7 @@ import { Containers } from 'src/services/containers'
 import * as Logs from './logs'
 import * as Popups from 'src/services/popups'
 import * as TabsSorting from 'src/services/tabs.fg.sorting'
-import { TabsSync } from './_services.fg'
+import * as TabsSync from 'src/services/tabs.fg.sync'
 
 export const tabsMenuOptions: Record<string, () => MenuOption | MenuOption[] | undefined> = {
   undoRmTab: () => ({

@@ -8,7 +8,7 @@ import { Sidebar } from './sidebar'
 import { Windows } from './windows'
 import { NOID } from 'src/defaults'
 import * as Logs from 'src/services/logs'
-import { Sync } from './_services'
+import * as Sync from 'src/services/sync'
 import { Notifications } from './notifications'
 import { translate } from 'src/dict'
 

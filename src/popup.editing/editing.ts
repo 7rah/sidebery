@@ -4,7 +4,7 @@ import { Info } from 'src/services/info'
 import { Settings } from 'src/services/settings'
 import { Styles } from 'src/services/styles'
 import { Windows } from 'src/services/windows'
-import { Logs } from 'src/services/_services'
+import * as Logs from 'src/services/logs'
 
 const VERTICAL_MARGINS = 22
 const el = document.getElementById('text_input') as HTMLInputElement | null

@@ -16,11 +16,11 @@ import { ref, computed, reactive, onMounted } from 'vue'
 import { translate } from 'src/dict'
 import { ScrollBoxComponent, SubPanelType } from 'src/types'
 import { Sidebar } from 'src/services/sidebar'
+import * as Sync from 'src/services/sync'
 import ScrollBox from 'src/components/scroll-box.vue'
 import LoadingDots from 'src/components/loading-dots.vue'
 import PanelPlaceholder from './panel-placeholder.vue'
 import SyncEntryComp from './panel.sync.entry.vue'
-import { Sync } from 'src/services/_services'
 
 const props = defineProps<{ isSubPanel?: boolean }>()
 

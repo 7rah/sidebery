@@ -18,7 +18,7 @@ import * as Preview from 'src/services/tabs.preview'
 import { Search } from './search'
 import { Containers } from './containers'
 import { Mouse } from './mouse'
-import { Popups } from './_services'
+import * as Popups from 'src/services/popups'
 
 const EXT_HOST = browser.runtime.getURL('').slice(16)
 const URL_HOST_PATH_RE = /^([a-z0-9-]{1,63}\.)+\w+(:\d+)?\/[A-Za-z0-9-._~:/?#[\]%@!$&'()*+,;=]*$/

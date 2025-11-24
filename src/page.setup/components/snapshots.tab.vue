@@ -45,8 +45,10 @@
 import { ItemInfo, SnapPanelState, SnapshotState, SnapTabState } from 'src/types'
 import { CONTAINER_ID, NOID, RGB_COLORS } from 'src/defaults'
 import { Snapshots } from 'src/services/snapshots'
-import { Favicons } from 'src/services/_services.fg'
-import { IPC, Logs, Utils } from 'src/services/_services'
+import * as Favicons from 'src/services/favicons.fg'
+import * as Utils from 'src/utils'
+import * as Logs from 'src/services/logs'
+import * as IPC from 'src/services/ipc'
 import { Windows } from 'src/services/windows'
 import { SnapshotsViewerState } from './snapshots.vue'
 

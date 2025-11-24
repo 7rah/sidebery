@@ -70,7 +70,7 @@
 import { ref, onMounted } from 'vue'
 import { translate } from 'src/dict'
 import { Permissions } from 'src/services/permissions'
-import { SetupPage } from 'src/services/_services'
+import * as SetupPage from 'src/services/setup-page'
 import ToggleField from '../../components/toggle-field.vue'
 
 const rootEl = ref<HTMLElement | null>(null)

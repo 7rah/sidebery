@@ -64,7 +64,7 @@ import { Styles } from 'src/services/styles'
 import { Permissions } from 'src/services/permissions'
 import StyleField from '../../components/style-field.vue'
 import { Settings } from 'src/services/settings'
-import { SetupPage } from 'src/services/_services'
+import * as SetupPage from 'src/services/setup-page'
 
 interface CssVar {
   active: boolean

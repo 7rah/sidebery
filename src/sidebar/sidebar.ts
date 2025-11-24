@@ -24,7 +24,8 @@ import { Info } from 'src/services/info'
 import SidebarRoot from './sidebar.vue'
 import { Snapshots } from 'src/services/snapshots'
 import { updateWebReqHandlers } from 'src/services/web-req.fg'
-import { Keybindings, Sync } from 'src/services/_services'
+import * as Sync from 'src/services/sync'
+import * as Keybindings from 'src/services/keybindings'
 
 async function main(): Promise<void> {
   Info.setInstanceType(InstanceType.sidebar)

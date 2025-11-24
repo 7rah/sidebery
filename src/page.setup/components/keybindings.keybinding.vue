@@ -23,7 +23,8 @@ import { ref, reactive, computed, nextTick } from 'vue'
 import { translate } from 'src/dict'
 import { Command } from 'src/types'
 import { Info } from 'src/services/info'
-import { Keybindings, Popups } from 'src/services/_services'
+import * as Popups from 'src/services/popups'
+import * as Keybindings from 'src/services/keybindings'
 
 const ERR_SHOW_TIMEOUT = 2000
 

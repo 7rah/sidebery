@@ -29,7 +29,7 @@ import { Notifications } from './notifications'
 import * as Popups from './popups'
 import { turnOffBeforeRequestHandler, turnOnBeforeRequestHandler } from './web-req.fg'
 import { createDefaultSidebarConfig } from './sidebar-config'
-import { Sync } from './_services'
+import * as Sync from 'src/services/sync'
 
 interface PanelElements {
   scrollBox: HTMLElement

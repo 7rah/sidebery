@@ -2,7 +2,8 @@ import { History } from 'src/services/history'
 import { Sidebar } from 'src/services/sidebar'
 import { Search } from 'src/services/search'
 import * as Selection from 'src/services/selection'
-import { Utils, Logs } from './_services'
+import * as Utils from 'src/utils'
+import * as Logs from 'src/services/logs'
 import { Visit } from 'src/types'
 
 export async function onHistorySearch(noSel?: boolean): Promise<void> {

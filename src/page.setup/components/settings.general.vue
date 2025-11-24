@@ -63,7 +63,7 @@ section(ref="el")
 import { ref, reactive, onMounted } from 'vue'
 import { translate } from 'src/dict'
 import { Settings } from 'src/services/settings'
-import { SetupPage } from 'src/services/_services'
+import * as SetupPage from 'src/services/setup-page'
 import ToggleField from '../../components/toggle-field.vue'
 import TextField from '../../components/text-field.vue'
 import { Permissions } from 'src/services/permissions'

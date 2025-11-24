@@ -216,8 +216,9 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { translate } from 'src/dict'
-import { SetupPage, Keybindings } from 'src/services/_services'
 import { Settings } from 'src/services/settings'
+import * as SetupPage from 'src/services/setup-page'
+import * as Keybindings from 'src/services/keybindings'
 import KeybindingField from 'src/page.setup/components/keybindings.keybinding.vue'
 import ToggleField from 'src/components/toggle-field.vue'
 import SelectField from 'src/components/select-field.vue'

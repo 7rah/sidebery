@@ -12,21 +12,17 @@ function setupListeners() {
   })
 
   function matchContainers(input: string): Container[] {
-    // TODO: order by score of some sort?
     return Object.values(Containers.reactive.byId).filter(container =>
       container.name.toLowerCase().includes(input.toLowerCase())
     )
   }
 
-  browser.omnibox.onInputChanged.addListener(async (input, suggest) => {
-    const suggestions =
-      input.length >= 3
-        ? matchContainers(input).map(ctx => ({
-          content: ctx.name,
-          description: ctx.name,
-          deletable: false,
-        }))
-        : []
+  browser.omnibox.onInputChanged.addListener((input, suggest) => {
+    const suggestions = matchContainers(input).map(ctx => ({
+      content: ctx.name,
+      description: ctx.name,
+      deletable: false,
+    }))
     suggest(suggestions)
   })
 

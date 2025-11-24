@@ -1577,3 +1577,10 @@ export function setupListeners(): void {
 export function resetListeners(): void {
   browser.commands.onCommand.removeListener(onCmd)
 }
+
+/**
+ * Export for testing only (will be dropped in the prod build)
+ */
+export const TESTING = {
+  onKeySelectTabsBranch,
+}

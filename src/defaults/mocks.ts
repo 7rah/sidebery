@@ -1,6 +1,5 @@
 import { ReactiveTabProps, Tab, TabSessionData, TabStatus } from 'src/types'
 import { NOID } from 'src/defaults'
-import { test } from 'vitest'
 
 export class MTab implements Tab {
   isParent: boolean = false
@@ -117,5 +116,3 @@ export class MTab implements Tab {
     }
   }
 }
-
-test.todo('...')

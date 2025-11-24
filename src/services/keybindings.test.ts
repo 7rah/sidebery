@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from 'vitest'
 import { Tabs } from './tabs.fg'
 import * as Selection from 'src/services/selection'
 import * as Keybindings from 'src/services/keybindings'
-import { MTab } from './tabs.fg.test'
+import { MTab } from 'src/defaults/mocks'
 
 describe('Keybindings.onKeySelectTabsBranch()', () => {
   afterEach(() => {

@@ -1,3 +1,5 @@
+import * as E from 'src/enums'
+
 export type NativeTab = browser.tabs.Tab
 
 export interface Tab extends NativeTab {
@@ -51,12 +53,6 @@ export interface Tab extends NativeTab {
   resolveSessionRestoreDetection?: (isSessionRestore: boolean) => void
 }
 
-export const enum TabStatus {
-  Complete = 1,
-  Loading = 2,
-  Pending = 3,
-}
-
 export interface ReactiveTabProps {
   active: boolean
   mediaAudible: boolean
@@ -65,7 +61,7 @@ export interface ReactiveTabProps {
   containerColor: string | null
   discarded: boolean
   pinned: boolean
-  status: TabStatus
+  status: E.TabStatus
   isParent: boolean
   folded: boolean
   tooltip: string
@@ -84,10 +80,6 @@ export interface ReactiveTabProps {
   customColor: string | null
   isGroup: boolean
   preview: boolean
-}
-
-export const enum LoadSrc {
-  SessionOnly = 1,
 }
 
 export interface InlineTabData {

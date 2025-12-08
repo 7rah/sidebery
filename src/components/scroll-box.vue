@@ -9,7 +9,7 @@
 
 <script lang="ts" setup>
 import { reactive, ref, onMounted, onBeforeUnmount } from 'vue'
-import { ScrollBoxComponent } from 'src/types'
+import type * as T from 'src/types'
 import * as Utils from 'src/utils'
 import * as Logs from 'src/services/logs'
 
@@ -88,7 +88,7 @@ function getScrollableBox(): HTMLElement | null {
   return scrollContentEl.value
 }
 
-const publicInterface: ScrollBoxComponent = {
+const publicInterface: T.ScrollBoxComponent = {
   setScrollY,
   recalcScroll,
   getScrollBox,

@@ -1,39 +1,44 @@
 import { Tab } from 'src/types'
 import * as Logs from 'src/services/logs'
-import { Tabs } from 'src/services/tabs.fg'
-import { Bookmarks } from 'src/services/bookmarks'
-import { Settings } from 'src/services/settings'
-import { Windows } from 'src/services/windows'
+import * as Tabs from 'src/services/tabs.fg'
+import * as Bookmarks from 'src/services/bookmarks.fg'
+import * as Settings from 'src/services/settings'
+import * as Windows from 'src/services/windows.fg'
+
+export let shadowMode = false
+export const setShadowMode = (s: boolean) => (shadowMode = s)
+export let shadowReady = false
+export const setShadowReady = (s: boolean) => (shadowReady = s)
 
 export async function loadInShadowMode(): Promise<void> {
   setupShadowListeners()
-  Tabs.shadowMode = true
+  shadowMode = true
   const tabs = (await browser.tabs.query({ windowId: browser.windows.WINDOW_ID_CURRENT })) as Tab[]
 
-  Tabs.list = tabs
+  Tabs.setList(tabs)
   for (const tab of tabs) {
     Tabs.byId[tab.id] = tab
     Tabs.updateUrlCounter(tab.url, 1)
   }
 
-  Tabs.shadowReady = true
+  shadowReady = true
 
   // Call deferred event handlers
   if (Tabs.deferredEventHandling.length) {
     Logs.warn('Tabs: Deferred event handlers:', Tabs.deferredEventHandling.length)
   }
   Tabs.deferredEventHandling.forEach(cb => cb())
-  Tabs.deferredEventHandling = []
+  Tabs.clearDeferredEventHandling()
 }
 
 export function unloadShadowed(): void {
   Tabs.resetShadowListeners()
 
-  Tabs.byId = {}
-  Tabs.urlsInUse = {}
-  Tabs.list = []
-  Tabs.shadowMode = false
-  Tabs.shadowReady = false
+  Tabs.setById({})
+  Tabs.setUrlsInUse({})
+  Tabs.setList([])
+  shadowMode = false
+  shadowReady = false
 }
 
 export function setupShadowListeners(): void {

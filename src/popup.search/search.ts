@@ -1,10 +1,10 @@
-import { InstanceType } from 'src/types'
+import { InstanceType } from 'src/enums'
 import * as IPC from 'src/services/ipc'
-import { Info } from 'src/services/info'
-import { Settings } from 'src/services/settings'
-import { Styles } from 'src/services/styles'
-import { Windows } from 'src/services/windows'
-import { Search } from 'src/services/search'
+import * as Info from 'src/services/info'
+import * as Settings from 'src/services/settings.fg'
+import * as Styles from 'src/services/styles.fg'
+import * as Windows from 'src/services/windows.fg'
+import * as Search from 'src/services/search.fg'
 
 const el = document.getElementById('textInput') as HTMLInputElement
 
@@ -94,15 +94,15 @@ void (async () => {
   IPC.registerActions({ closePopup })
   const [win] = await Promise.all([
     browser.windows.getCurrent({ populate: false }),
-    Settings.loadSettings(),
+    Settings.load(),
   ])
   if (win.id !== undefined) {
     IPC.setWinId(win.id)
-    Windows.id = win.id
+    Windows.setCurrentId(win.id)
     IPC.connectTo(InstanceType.sidebar, Windows.id)
     IPC.sidebar(win.id, 'getSearchQuery').then(query => {
       if (query) el.value = query
     })
   }
-  Styles.initColorScheme()
+  Styles.load()
 })()

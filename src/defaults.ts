@@ -83,11 +83,6 @@ export const NEWID: ID = -10
 export const ASKID: ID = -11
 export const MOVEID: ID = -12
 
-export const enum Err {
-  TabsLocked = 1,
-  Canceled = 2,
-}
-
 export const CONTAINER_ICON_OPTS = [
   { value: 'fingerprint', icon: '#fingerprint' },
   { value: 'briefcase', icon: '#briefcase' },

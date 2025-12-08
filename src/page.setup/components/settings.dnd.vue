@@ -77,8 +77,8 @@ section(ref="el")
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue'
 import { translate } from 'src/dict'
-import { Settings } from 'src/services/settings'
-import * as SetupPage from 'src/services/setup-page'
+import * as Settings from 'src/services/settings.fg'
+import * as SetupPage from 'src/services/setup-page.fg'
 import NumField from '../../components/num-field.vue'
 import ToggleField from '../../components/toggle-field.vue'
 import SelectField from '../../components/select-field.vue'

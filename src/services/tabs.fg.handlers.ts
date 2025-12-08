@@ -1,24 +1,23 @@
+import { NativeTab, Tab, TabsPanel, RemovedTabInfo, TabSessionData } from 'src/types'
+import { LoadSrc, TabStatus } from 'src/enums'
+import * as D from 'src/defaults'
 import * as Utils from 'src/utils'
-import { NativeTab, Tab, TabStatus, TabsPanel, RemovedTabInfo, TabSessionData } from 'src/types'
-import { LoadSrc } from 'src/types'
-import { NOID, GROUP_URL, ADDON_HOST, GROUP_INITIAL_TITLE } from 'src/defaults'
-import { DEFAULT_CONTAINER_ID } from 'src/defaults'
 import * as Logs from 'src/services/logs'
-import { Windows } from 'src/services/windows'
-import { Bookmarks } from 'src/services/bookmarks'
-import { Menu } from 'src/services/menu'
-import * as Selection from 'src/services/selection'
-import { Settings } from 'src/services/settings'
-import { Sidebar } from 'src/services/sidebar'
+import * as Windows from 'src/services/windows.fg'
+import * as Bookmarks from 'src/services/bookmarks.fg'
+import * as Menu from 'src/services/menu.fg'
+import * as Selection from 'src/services/selection.fg'
+import * as Settings from 'src/services/settings'
+import * as Sidebar from 'src/services/sidebar.fg'
 import * as Favicons from 'src/services/favicons.fg'
-import { DnD } from 'src/services/drag-and-drop'
-import { Tabs } from './tabs.fg'
-import * as IPC from './ipc'
-import * as Preview from 'src/services/tabs.preview'
-import { Search } from './search'
-import { Containers } from './containers'
-import { Mouse } from './mouse'
-import * as Popups from 'src/services/popups'
+import * as DnD from 'src/services/drag-and-drop.fg'
+import * as Tabs from 'src/services/tabs.fg'
+import * as IPC from 'src/services/ipc'
+import * as Preview from 'src/services/tabs.fg.preview'
+import * as Search from 'src/services/search.fg'
+import * as Containers from 'src/services/containers'
+import * as Mouse from 'src/services/mouse.fg'
+import * as Popups from 'src/services/popups.fg'
 
 const EXT_HOST = browser.runtime.getURL('').slice(16)
 const URL_HOST_PATH_RE = /^([a-z0-9-]{1,63}\.)+\w+(:\d+)?\/[A-Za-z0-9-._~:/?#[\]%@!$&'()*+,;=]*$/
@@ -98,7 +97,7 @@ function releaseReopenedTabsBuffer(): void {
   waitForOtherReopenedTabsCheckLen = 0
 
   Tabs.deferredEventHandling.forEach(cb => cb())
-  Tabs.deferredEventHandling = []
+  Tabs.clearDeferredEventHandling()
 }
 
 const SESSION_RESTORE_MIN_TABS_COUNT = 2
@@ -304,7 +303,7 @@ async function onTabCreated(nativeTab: NativeTab, attached?: boolean) {
     panel = Sidebar.panelsById[position.panel]
     if (!Utils.isTabsPanel(panel)) {
       const prevTab = Tabs.list[tab.index - 1]
-      if (prevTab && !prevTab.pinned && prevTab.panelId !== NOID) {
+      if (prevTab && !prevTab.pinned && prevTab.panelId !== D.NOID) {
         panel = Sidebar.panelsById[prevTab.panelId] as TabsPanel
       } else {
         panel = Sidebar.panels.find(p => Utils.isTabsPanel(p)) as TabsPanel
@@ -416,7 +415,7 @@ async function onTabCreated(nativeTab: NativeTab, attached?: boolean) {
     if (!panel) return Logs.err('Cannot handle new tab: Cannot find target panel')
 
     // Outdent if opener tab is folded (if configured)
-    const parent = Tabs.byId[tab.openerTabId ?? NOID]
+    const parent = Tabs.byId[tab.openerTabId ?? D.NOID]
     if (!attached && parent?.folded && Settings.state.ignoreFoldedParent) {
       tab.openerTabId = parent.parentId
     }
@@ -450,10 +449,10 @@ async function onTabCreated(nativeTab: NativeTab, attached?: boolean) {
     tab.reactive.unread = tab.unread = true
   }
   if (panel) tab.panelId = panel.id
-  tab.internal = tab.url.startsWith(ADDON_HOST)
+  tab.internal = tab.url.startsWith(D.ADDON_HOST)
   if (tab.internal) tab.isGroup = Utils.isGroupUrl(tab.url)
   tab.index = index
-  tab.parentId = Settings.state.tabsTree ? (tab.openerTabId ?? NOID) : NOID
+  tab.parentId = Settings.state.tabsTree ? (tab.openerTabId ?? D.NOID) : D.NOID
   if (!tab.favIconUrl && !tab.internal && !tab.url.startsWith('a')) {
     tab.favIconUrl = Favicons.getFavicon(tab.url)
     Tabs.renderFavicon(tab)
@@ -473,7 +472,7 @@ async function onTabCreated(nativeTab: NativeTab, attached?: boolean) {
   if (
     !attached &&
     !reopenedTabInfo &&
-    tab.cookieStoreId === DEFAULT_CONTAINER_ID &&
+    tab.cookieStoreId === D.DEFAULT_CONTAINER_ID &&
     panel &&
     panel.newTabCtx !== 'none'
   ) {
@@ -820,7 +819,7 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
   // Url
   let branchColorizationNeeded = false
   if (change.url !== undefined && change.url !== tab.url) {
-    const isInternal = change.url.startsWith(ADDON_HOST)
+    const isInternal = change.url.startsWith(D.ADDON_HOST)
     const isGroup = isInternal && Utils.isGroupUrl(change.url)
     if (tab.isGroup !== isGroup) {
       tab.reactive.isGroup = tab.isGroup = isGroup
@@ -937,7 +936,7 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
     }
 
     // Reset custom title
-    if (tab.isGroup && tab.active && change.title !== GROUP_INITIAL_TITLE) {
+    if (tab.isGroup && tab.active && change.title !== D.GROUP_INITIAL_TITLE) {
       if (tab.customTitle) {
         tab.customTitle = undefined
         Tabs.renderTitle(tab)
@@ -1177,7 +1176,7 @@ function onTabRemoved(tabId: ID, info: browser.tabs.RemoveInfo, detached?: boole
     }
     Tabs.removedTabs.unshift(removedTabInfo)
     if (Tabs.removedTabs.length > 64) {
-      Tabs.removedTabs = Tabs.removedTabs.slice(0, 50)
+      Tabs.setRemovedTabs(Tabs.removedTabs.slice(0, 50))
     }
   }
 
@@ -1207,7 +1206,7 @@ function onTabRemoved(tabId: ID, info: browser.tabs.RemoveInfo, detached?: boole
     const firstChild = nextTab
 
     // Handle reopening tab in different container
-    if (tab.reopening && tab.reopening.id !== NOID) {
+    if (tab.reopening && tab.reopening.id !== D.NOID) {
       const newTab = Tabs.byId[tab.reopening.id]
       // New tab is already created
       if (newTab) {
@@ -1352,7 +1351,7 @@ function onTabRemoved(tabId: ID, info: browser.tabs.RemoveInfo, detached?: boole
   // On removing the last tab
   if (!Tabs.removingTabs.length) {
     // Update parent tab state
-    if (Settings.state.tabsTree && tab.parentId !== NOID) {
+    if (Settings.state.tabsTree && tab.parentId !== D.NOID) {
       const parentTab = Tabs.byId[tab.parentId]
       if (parentTab) {
         // Update branch length
@@ -1458,7 +1457,7 @@ function onTabMoved(id: ID, info: browser.tabs.MoveInfo): void {
 
   // Check if tab moved by Sidebery so no additional handling is needed
   if (tab.moving !== undefined) {
-    tab.dstPanelId = NOID
+    tab.dstPanelId = D.NOID
     Tabs.saveTabData(id)
     Tabs.cacheTabsData(640)
     if (tab.active) Tabs.updateSuccessionDebounced(0)
@@ -1493,7 +1492,7 @@ function onTabMoved(id: ID, info: browser.tabs.MoveInfo): void {
   if (!movedTab.pinned) {
     srcPanel = Sidebar.panelsById[movedTab.panelId]
     dstPanel = Sidebar.panelsById[movedTab.dstPanelId]
-    movedTab.dstPanelId = NOID
+    movedTab.dstPanelId = D.NOID
 
     const outOfPanel =
       Utils.isTabsPanel(dstPanel) &&
@@ -1593,7 +1592,7 @@ function onTabDetached(id: ID, info: browser.tabs.DetachInfo): void {
 /**
  * Tabs.onAttached
  */
-const deferredActivationHandling = { id: NOID, cb: null as (() => void) | null }
+const deferredActivationHandling = { id: D.NOID, cb: null as (() => void) | null }
 async function onTabAttached(id: ID, info: browser.tabs.AttachInfo): Promise<void> {
   if (info.newWindowId !== Windows.id) return
   if (!Tabs.ready || Tabs.sorting) {
@@ -1617,7 +1616,7 @@ async function onTabAttached(id: ID, info: browser.tabs.AttachInfo): Promise<voi
 
   tab.windowId = Windows.id
   tab.index = info.newPosition
-  tab.panelId = NOID
+  tab.panelId = D.NOID
   tab.reactive.sel = tab.sel = false
 
   Tabs.reactivateTab(tab)
@@ -1634,7 +1633,7 @@ async function onTabAttached(id: ID, info: browser.tabs.AttachInfo): Promise<voi
     Tabs.updateNativeTabsVisibility()
   }
 
-  deferredActivationHandling.id = NOID
+  deferredActivationHandling.id = D.NOID
 }
 
 let bufTabActivatedEventIndex = -1
@@ -1670,7 +1669,7 @@ function onTabActivated(info: browser.tabs.ActiveInfo): void {
       return
     }
 
-    Tabs.activeId = info.tabId
+    Tabs.setActiveId(info.tabId)
     return
   }
 
@@ -1699,7 +1698,7 @@ function onTabActivated(info: browser.tabs.ActiveInfo): void {
     tab.reactive.unread = tab.unread = false
   }
   tab.lastAccessed = Date.now()
-  Tabs.activeId = info.tabId
+  Tabs.setActiveId(info.tabId)
 
   const panel = Sidebar.panelsById[tab.panelId]
   if (!Utils.isTabsPanel(panel)) return
@@ -1722,7 +1721,7 @@ function onTabActivated(info: browser.tabs.ActiveInfo): void {
     !Sidebar.switchingLock
   ) {
     if (Settings.state.switchPanelAfterSwitchingTab === 'mouseleave' && Mouse.mouseIn) {
-      if (activePanel.id !== tab.panelId) Sidebar.switchOnMouseLeave = true
+      if (activePanel.id !== tab.panelId) Sidebar.setSwitchOnMouseLeaveState(true)
     } else if (!Sidebar.subPanelActive) {
       Sidebar.activatePanel(panel.id)
     }
@@ -1765,7 +1764,7 @@ function onTabActivated(info: browser.tabs.ActiveInfo): void {
 
   if (Settings.state.scrollPanelAfterSwitchingTab !== 'no' && !tab.pinned) {
     if (Settings.state.scrollPanelAfterSwitchingTab === 'mouseleave' && Mouse.mouseIn) {
-      Sidebar.scrollOnMouseLeave = true
+      Sidebar.setScrollOnMouseLeaveState(true)
     } else Tabs.scrollToTabDebounced(3, tab.id, true)
   }
 

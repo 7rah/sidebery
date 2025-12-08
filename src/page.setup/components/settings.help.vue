@@ -33,10 +33,10 @@ section(ref="el")
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { translate } from 'src/dict'
-import { BackupData } from 'src/types'
-import { Settings } from 'src/services/settings'
+import type { BackupData } from 'src/types'
+import * as Settings from 'src/services/settings.fg'
 import * as Logs from 'src/services/logs'
-import * as SetupPage from 'src/services/setup-page'
+import * as SetupPage from 'src/services/setup-page.fg'
 import ExportConfig from './popup.export-config.vue'
 import ImportConfig from './popup.import-config.vue'
 

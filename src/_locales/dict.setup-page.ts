@@ -1,4 +1,4 @@
-import { NUM_1_RE, NUM_234_RE } from './dict.common'
+import { NUM_1_RE, NUM_234_RE } from 'src/_locales/dict.common'
 
 export const setupPageTranslations: Translations = {
   // ---

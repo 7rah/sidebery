@@ -32,8 +32,8 @@ section(ref="el")
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { translate } from 'src/dict'
-import * as SetupPage from 'src/services/setup-page'
-import { Settings } from 'src/services/settings'
+import * as SetupPage from 'src/services/setup-page.fg'
+import * as Settings from 'src/services/settings.fg'
 import SelectField from '../../components/select-field.vue'
 import TextField from 'src/components/text-field.vue'
 import InfoField from 'src/components/info-field.vue'

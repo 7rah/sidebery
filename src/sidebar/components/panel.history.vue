@@ -34,11 +34,12 @@
 import { ref, computed, reactive, onMounted } from 'vue'
 import * as Utils from 'src/utils'
 import { translate } from 'src/dict'
-import { ScrollBoxComponent, SubPanelType } from 'src/types'
-import { History } from 'src/services/history'
-import { Search } from 'src/services/search'
-import { Permissions } from 'src/services/permissions'
-import { Sidebar } from 'src/services/sidebar'
+import type { ScrollBoxComponent } from 'src/types'
+import { SubPanelType } from 'src/enums'
+import * as History from 'src/services/history.fg'
+import * as Search from 'src/services/search.fg'
+import * as Permissions from 'src/services/permissions.fg'
+import * as Sidebar from 'src/services/sidebar.fg'
 import ScrollBox from 'src/components/scroll-box.vue'
 import LoadingDots from 'src/components/loading-dots.vue'
 import PanelPlaceholder from './panel-placeholder.vue'
@@ -58,9 +59,9 @@ const state = reactive({
 onMounted(() => {
   if (scrollBox.value) {
     if (Sidebar.subPanelActive && Sidebar.subPanelType === SubPanelType.History) {
-      History.subPanelScrollEl = scrollBox.value.getScrollBox()
+      History.setSubPanelScrollEl(scrollBox.value.getScrollBox())
     } else {
-      History.panelScrollEl = scrollBox.value.getScrollBox()
+      History.setPanelScrollEl(scrollBox.value.getScrollBox())
     }
   }
 })

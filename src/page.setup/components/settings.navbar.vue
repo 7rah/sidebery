@@ -110,13 +110,13 @@ section(
           .card-badge(
             v-if="btn.badgeMoveRules"
             :title="translate('panel.tab_move_rules_manage_badge')"
-            @click="Popups.openTabMoveRulesPopup(SidebarConfigRState.panels[btn.id])")
+            @click="Popups.openTabMoveRulesPopup(SidebarConfig.reactive.panels[btn.id])")
             svg.-rotate270: use(href="#icon_download_in_progress")
             .len {{btn.badgeMoveRules}}
           .card-badge(
             v-if="btn.badgeShortcuts"
             :title="translate('panel.new_tab_shortcuts_manage_btn')"
-            @click="Popups.openNewTabShortcutsPopup(SidebarConfigRState.panels[btn.id])")
+            @click="Popups.openNewTabShortcutsPopup(SidebarConfig.reactive.panels[btn.id])")
             svg: use(href="#icon_plus")
             .len {{btn.badgeShortcuts}}
         .card-ctrls
@@ -154,21 +154,14 @@ section(
 <script lang="ts" setup>
 import { computed, ref, onMounted } from 'vue'
 import * as Utils from 'src/utils'
-import * as Popups from 'src/services/popups'
+import * as Popups from 'src/services/popups.fg'
 import { translate } from 'src/dict'
-import { BookmarksPanel, Panel, PanelConfig } from 'src/types'
+import type { BookmarksPanel, Panel, PanelConfig } from 'src/types'
 import { BTN_ICONS } from 'src/defaults'
-import { Settings } from 'src/services/settings'
-import {
-  SidebarConfigRState,
-  saveSidebarConfig,
-  createTabsPanelConfig,
-  createBookmarksPanelConfig,
-  createHistoryPanelConfig,
-  createSyncPanelConfig,
-} from 'src/services/sidebar-config'
-import { Permissions } from 'src/services/permissions'
-import * as SetupPage from 'src/services/setup-page'
+import * as Settings from 'src/services/settings.fg'
+import * as SidebarConfig from 'src/services/sidebar-config.fg'
+import * as Permissions from 'src/services/permissions.fg'
+import * as SetupPage from 'src/services/setup-page.fg'
 import ToggleField from '../../components/toggle-field.vue'
 import SelectField from '../../components/select-field.vue'
 import InfoField from '../../components/info-field.vue'
@@ -194,8 +187,8 @@ function normalizeItemId(id: ID): ID {
 }
 
 const enabledBtns = computed<Btn[]>(() => {
-  return SidebarConfigRState.nav.map(id => {
-    const panelConf = SidebarConfigRState.panels[id]
+  return SidebarConfig.reactive.nav.map(id => {
+    const panelConf = SidebarConfig.reactive.panels[id]
     if (panelConf) {
       const btn: Btn = {
         id: panelConf.id,
@@ -230,7 +223,7 @@ const availableBtns = computed<Btn[]>(() => {
   ]
 
   for (const id of ids) {
-    if (SidebarConfigRState.nav.includes(id)) continue
+    if (SidebarConfig.reactive.nav.includes(id)) continue
 
     result.push({ id, iconSVG: BTN_ICONS[id], name: translate(`settings.nav_bar_btn_${id}`) })
   }
@@ -252,47 +245,47 @@ function isBookmarksBadgeNeeded(btn: Btn): boolean {
 }
 
 function moveBtn(index: number, dir: number): void {
-  const btnId = SidebarConfigRState.nav[index]
+  const btnId = SidebarConfig.reactive.nav[index]
   if (!btnId) return
 
   // Start
   if (index === 0 && dir < 0) return
   // End
-  else if (index === SidebarConfigRState.nav.length - 1 && dir > 0) return
+  else if (index === SidebarConfig.reactive.nav.length - 1 && dir > 0) return
   // Inside
   else {
-    SidebarConfigRState.nav.splice(index, 1)
-    SidebarConfigRState.nav.splice(index + dir, 0, btnId)
+    SidebarConfig.reactive.nav.splice(index, 1)
+    SidebarConfig.reactive.nav.splice(index + dir, 0, btnId)
   }
 
-  saveSidebarConfig()
+  SidebarConfig.saveSidebarConfig()
 }
 
 async function createNavElement(id?: ID): Promise<ID | undefined> {
   if (!id) return
   if (id === 'tabs_panel') {
-    const panelConf = createTabsPanelConfig()
-    SidebarConfigRState.panels[panelConf.id] = panelConf
+    const panelConf = SidebarConfig.createTabsPanelConfig()
+    SidebarConfig.reactive.panels[panelConf.id] = panelConf
     return panelConf.id
   } else if (id === 'bookmarks_panel') {
     if (!Permissions.reactive.bookmarks) {
       const result = await Permissions.request('bookmarks')
       if (!result) return
     }
-    const panelConf = createBookmarksPanelConfig()
-    SidebarConfigRState.panels[panelConf.id] = panelConf
+    const panelConf = SidebarConfig.createBookmarksPanelConfig()
+    SidebarConfig.reactive.panels[panelConf.id] = panelConf
     return panelConf.id
   } else if (id === 'history') {
     if (!Permissions.reactive.history) {
       const result = await Permissions.request('history')
       if (!result) return
     }
-    const panelConf = createHistoryPanelConfig()
-    SidebarConfigRState.panels[panelConf.id] = panelConf
+    const panelConf = SidebarConfig.createHistoryPanelConfig()
+    SidebarConfig.reactive.panels[panelConf.id] = panelConf
     return panelConf.id
   } else if (id === 'sync') {
-    const panelConf = createSyncPanelConfig()
-    SidebarConfigRState.panels[panelConf.id] = panelConf
+    const panelConf = SidebarConfig.createSyncPanelConfig()
+    SidebarConfig.reactive.panels[panelConf.id] = panelConf
     return panelConf.id
   } else if (id === 'sp') id = 'sp-' + Utils.uid()
   else if (id === 'sd') id = 'sd-' + Utils.uid()
@@ -304,21 +297,21 @@ async function enableElement(id?: ID): Promise<void> {
   id = await createNavElement(id)
   if (!id) return
 
-  SidebarConfigRState.nav.push(id)
-  saveSidebarConfig()
+  SidebarConfig.reactive.nav.push(id)
+  SidebarConfig.saveSidebarConfig()
 }
 
 function disableBtn(index: number): void {
-  const panelConf = SidebarConfigRState.panels[SidebarConfigRState.nav[index]]
+  const panelConf = SidebarConfig.reactive.panels[SidebarConfig.reactive.nav[index]]
   if (panelConf) {
     const msg = getRmConfirmMsg(panelConf)
     if (msg && !window.confirm(msg)) return
 
-    delete SidebarConfigRState.panels[panelConf.id]
+    delete SidebarConfig.reactive.panels[panelConf.id]
   }
 
-  SidebarConfigRState.nav.splice(index, 1)
-  saveSidebarConfig()
+  SidebarConfig.reactive.nav.splice(index, 1)
+  SidebarConfig.saveSidebarConfig()
 }
 
 function getRmConfirmMsg(panel: PanelConfig): string | undefined {
@@ -398,7 +391,7 @@ async function onDrop(e: DragEvent): Promise<void> {
   if (!dndItemId.value) return
 
   const srcIndex = dndSrcIndex.value
-  const isEnabled = srcIndex !== null && SidebarConfigRState.nav[srcIndex]
+  const isEnabled = srcIndex !== null && SidebarConfig.reactive.nav[srcIndex]
   const isAdding = dstIndexRaw && !isEnabled
   const isRemoving = !dstIndexRaw && isEnabled
   const isMoving = dstIndexRaw && isEnabled
@@ -413,23 +406,23 @@ async function onDrop(e: DragEvent): Promise<void> {
   if (isNaN(dstIndex)) dstIndex = 0
 
   if (isEnabled) {
-    const panelConf = SidebarConfigRState.panels[dndItemId.value]
+    const panelConf = SidebarConfig.reactive.panels[dndItemId.value]
     if (panelConf && isRemoving) {
       const msg = getRmConfirmMsg(panelConf)
       if (msg && !window.confirm(msg)) return resetDnd()
     }
 
-    SidebarConfigRState.nav.splice(srcIndex, 1)
+    SidebarConfig.reactive.nav.splice(srcIndex, 1)
     if (srcIndex < dstIndex) dstIndex--
   }
 
   if (isAdding || isMoving) {
-    if (newElementId) SidebarConfigRState.nav.splice(dstIndex, 0, newElementId)
-    else SidebarConfigRState.nav.splice(dstIndex, 0, dndItemId.value)
+    if (newElementId) SidebarConfig.reactive.nav.splice(dstIndex, 0, newElementId)
+    else SidebarConfig.reactive.nav.splice(dstIndex, 0, dndItemId.value)
   }
 
   resetDnd()
-  saveSidebarConfig(500)
+  SidebarConfig.saveSidebarConfig(500)
 }
 
 function onDragEnd(): void {
@@ -443,7 +436,7 @@ function resetDnd(): void {
 }
 
 function openConfig(item: Panel | Btn): void {
-  const panelConf = SidebarConfigRState.panels[item.id]
+  const panelConf = SidebarConfig.reactive.panels[item.id]
   if (!panelConf) return
   SetupPage.reactive.selectedPanelConfig = panelConf
 }

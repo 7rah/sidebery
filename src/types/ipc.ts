@@ -1,35 +1,21 @@
-import { Tab, GroupInfo, TabsTreeData } from './tabs'
-import { ItemInfo, DstPlaceInfo, Notification, PanelConfig, DragInfo } from '../types'
-import { Stored } from './storage'
-import { Tabs } from 'src/services/tabs.bg'
-import { Snapshots } from 'src/services/snapshots'
-import * as Favicons from 'src/services/favicons.bg'
-import { WebReq } from 'src/services/web-req'
-import { Windows } from 'src/services/windows'
-import { Store } from 'src/services/storage'
+import { ItemInfo, DstPlaceInfo, Notification, PanelConfig, DragInfo, Stored } from '../types'
 import { DetachedTabsInfo } from 'src/services/tabs.fg.move'
-import * as Sync from 'src/services/sync'
+import { Tab, GroupInfo, TabsTreeData } from './tabs'
+import * as Tabs from 'src/services/tabs.bg'
+import * as Snapshots from 'src/services/snapshots.bg'
+import * as Favicons from 'src/services/favicons.bg'
+import * as WebReq from 'src/services/web-req.bg'
+import * as WindowsBg from 'src/services/windows.bg'
+import * as WindowsFg from 'src/services/windows.fg'
+import * as Store from 'src/services/storage.bg'
+import type * as SyncBg from 'src/services/sync.bg'
+import type * as E from 'src/enums'
 
-export const enum InstanceType {
-  unknown = -1,
-  bg = 0,
-  group = 1,
-  sidebar = 2,
-  setup = 3,
-  search = 4,
-  url = 5,
-  proxy = 6,
-  preview = 7,
-  sync = 8,
-  panelConfig = 9,
-  editing = 10,
-}
-
-export interface Message<T extends InstanceType, A extends ActionsKeys<T>> {
+export interface Message<T extends E.InstanceType, A extends ActionsKeys<T>> {
   id?: number
   dstWinId?: ID
   dstTabId?: ID
-  dstType?: InstanceType
+  dstType?: E.InstanceType
   action?: A
   name?: string
   arg?: FirstParameter<ActionsType<T>[A]>
@@ -39,7 +25,7 @@ export interface Message<T extends InstanceType, A extends ActionsKeys<T>> {
 }
 
 export interface IPCNodeInfo {
-  type: InstanceType
+  type: E.InstanceType
   winId: ID
   tabId: ID
 }
@@ -57,29 +43,33 @@ export type BgActions = {
   openSnapshotWindows: typeof Snapshots.openWindows
   saveFavicon: typeof Favicons.saveFavicon
   reloadFavicons: () => any
-  createWindowWithTabs: typeof Windows.createWithTabs
-  isWindowTabsLocked: typeof Windows.isWindowTabsLocked
+  createWindowWithTabs: typeof WindowsBg.createWithTabs
+  isWindowTabsLocked: typeof WindowsBg.isWindowTabsLocked
   saveInLocalStorage: typeof Store.setFromRemoteFg
   checkIpInfo: typeof WebReq.checkIpInfo
   disableAutoReopening: typeof WebReq.disableAutoReopening
   enableAutoReopening: typeof WebReq.enableAutoReopening
 
-  saveToSync: typeof Sync.save
-  saveTabsToSync: typeof Sync.saveTabs
-  removeFromSync: typeof Sync.remove
-  getDataFromSync: typeof Sync.getData
-  loadSync: typeof Sync.load
+  saveToSync: typeof SyncBg.save
+  saveTabsToSync: typeof SyncBg.saveTabs
+  saveProfileInfoToGoogleSync: typeof SyncBg.Google.saveProfileInfo
+  removeFromSync: typeof SyncBg.remove
+  removeFromFirefoxSync: typeof SyncBg.Firefox.remove
+  removeByTypeFromSync: typeof SyncBg.removeByType
+  removeCachedIdFromGoogleSync: typeof SyncBg.Google.removeCachedId
+  getDataFromSync: typeof SyncBg.getData
+  loadSync: typeof SyncBg.load
 }
 
 export type SettingsActions = {
   storageChanged: typeof Store.storageChangeListener
-  connectTo: (dstType: InstanceType, dstWinId?: ID, dstTabId?: ID) => void
+  connectTo: (dstType: E.InstanceType, dstWinId?: ID, dstTabId?: ID) => void
   reloadFavicons: () => any
 }
 
 export type PanelConfigPopupActions = {
   storageChanged: typeof Store.storageChangeListener
-  connectTo: (dstType: InstanceType, dstWinId?: ID, dstTabId?: ID) => void
+  connectTo: (dstType: E.InstanceType, dstWinId?: ID, dstTabId?: ID) => void
 }
 
 export type SidebarActions = {
@@ -121,11 +111,11 @@ export type SidebarActions = {
   notifyAboutWrongProxyAuthData: (containerId: string) => void
 
   storageChanged: (newValues: Stored) => void
-  connectTo: (dstType: InstanceType, dstWinId?: ID, dstTabId?: ID) => void
+  connectTo: (dstType: E.InstanceType, dstWinId?: ID, dstTabId?: ID) => void
 
   getSearchQuery: () => string
   getEditingValue: () => string
-  updWindowPreface: typeof Windows.updWindowPreface
+  updWindowPreface: typeof WindowsFg.updWindowPreface
 }
 
 export type SearchPopupActions = {
@@ -151,34 +141,34 @@ export type Actions =
   | PreviewActions
   | PanelConfigPopupActions
 
-export type ActionsKeys<T> = T extends InstanceType.bg
+export type ActionsKeys<T> = T extends E.InstanceType.bg
   ? keyof BgActions
-  : T extends InstanceType.setup
+  : T extends E.InstanceType.setup
     ? keyof SettingsActions
-    : T extends InstanceType.sidebar
+    : T extends E.InstanceType.sidebar
       ? keyof SidebarActions
-      : T extends InstanceType.search
+      : T extends E.InstanceType.search
         ? keyof SearchPopupActions
-        : T extends InstanceType.editing
+        : T extends E.InstanceType.editing
           ? keyof EditingPopupAction
-          : T extends InstanceType.preview
+          : T extends E.InstanceType.preview
             ? keyof PreviewActions
-            : T extends InstanceType.panelConfig
+            : T extends E.InstanceType.panelConfig
               ? keyof PanelConfigPopupActions
               : never
 
-export type ActionsType<T> = T extends InstanceType.bg
+export type ActionsType<T> = T extends E.InstanceType.bg
   ? BgActions
-  : T extends InstanceType.setup
+  : T extends E.InstanceType.setup
     ? SettingsActions
-    : T extends InstanceType.sidebar
+    : T extends E.InstanceType.sidebar
       ? SidebarActions
-      : T extends InstanceType.search
+      : T extends E.InstanceType.search
         ? SearchPopupActions
-        : T extends InstanceType.editing
+        : T extends E.InstanceType.editing
           ? EditingPopupAction
-          : T extends InstanceType.preview
+          : T extends E.InstanceType.preview
             ? PreviewActions
-            : T extends InstanceType.panelConfig
+            : T extends E.InstanceType.panelConfig
               ? PanelConfigPopupActions
               : any

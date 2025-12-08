@@ -12,9 +12,9 @@ Transition(name="panel-placeholder")
 import { translate } from 'src/dict'
 
 import LoadingDots from 'src/components/loading-dots.vue'
-import { Permissions } from 'src/services/permissions'
-import { RequestablePermission } from 'src/services/permissions.actions'
-import * as SetupPage from 'src/services/setup-page'
+import type { RequestablePermission } from 'src/services/permissions.fg'
+import * as Permissions from 'src/services/permissions.fg'
+import * as SetupPage from 'src/services/setup-page.fg'
 
 const props = defineProps<{
   isLoading?: boolean

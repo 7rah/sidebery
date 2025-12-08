@@ -62,11 +62,11 @@ section(ref="el")
 <script lang="ts" setup>
 import { ref, reactive, onMounted } from 'vue'
 import { translate } from 'src/dict'
-import { Settings } from 'src/services/settings'
-import * as SetupPage from 'src/services/setup-page'
+import * as Settings from 'src/services/settings.fg'
+import * as SetupPage from 'src/services/setup-page.fg'
 import ToggleField from '../../components/toggle-field.vue'
 import TextField from '../../components/text-field.vue'
-import { Permissions } from 'src/services/permissions'
+import * as Permissions from 'src/services/permissions.fg'
 
 const el = ref<HTMLElement | null>(null)
 const state = reactive({

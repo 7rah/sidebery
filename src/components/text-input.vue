@@ -41,7 +41,7 @@
 
 <script lang="ts" setup>
 import { ref, reactive, onMounted } from 'vue'
-import { TextInputComponent } from 'src/types'
+import type { TextInputComponent } from 'src/types'
 
 interface TextInputProps {
   value?: string | number

@@ -68,13 +68,15 @@ section(ref="el")
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, onMounted, CSSProperties, computed } from 'vue'
-import { Bookmark, Stored, InstanceType } from 'src/types'
-import * as Utils from 'src/utils'
+import type { CSSProperties } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
+import type { Bookmark, Stored } from 'src/types'
+import { InstanceType } from 'src/enums'
 import { translate } from 'src/dict'
-import { Settings } from 'src/services/settings'
-import { Permissions } from 'src/services/permissions'
-import * as SetupPage from 'src/services/setup-page'
+import * as Utils from 'src/utils'
+import * as Settings from 'src/services/settings.fg'
+import * as Permissions from 'src/services/permissions.fg'
+import * as SetupPage from 'src/services/setup-page.fg'
 import * as IPC from 'src/services/ipc'
 import ToggleField from '../../components/toggle-field.vue'
 import SelectField from '../../components/select-field.vue'

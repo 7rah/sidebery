@@ -80,21 +80,21 @@
 
 <script lang="ts" setup>
 import { computed, ref, onMounted } from 'vue'
-import { DragInfo, DragItem, DragType, DropType, MenuType, Tab } from 'src/types'
-import { TabStatus } from 'src/types'
-import { Settings } from 'src/services/settings'
-import { Windows } from 'src/services/windows'
-import * as Selection from 'src/services/selection'
-import { Menu } from 'src/services/menu'
-import { Sidebar } from 'src/services/sidebar'
-import { Tabs } from 'src/services/tabs.fg'
-import { Mouse } from 'src/services/mouse'
-import { DnD } from 'src/services/drag-and-drop'
-import { Search } from 'src/services/search'
+import type { DragInfo, DragItem, Tab } from 'src/types'
+import { TabStatus, DragType, DropType, MenuType } from 'src/enums'
+import * as Settings from 'src/services/settings'
+import * as Windows from 'src/services/windows.fg'
+import * as Selection from 'src/services/selection.fg'
+import * as Menu from 'src/services/menu.fg'
+import * as Sidebar from 'src/services/sidebar.fg'
+import * as Tabs from 'src/services/tabs.fg'
+import * as Mouse from 'src/services/mouse.fg'
+import * as DnD from 'src/services/drag-and-drop.fg'
+import * as Search from 'src/services/search.fg'
 import { NOID, RGB_COLORS } from 'src/defaults'
 import * as Utils from 'src/utils'
 import * as Logs from 'src/services/logs'
-import * as Preview from 'src/services/tabs.preview'
+import * as Preview from 'src/services/tabs.fg.preview'
 
 const props = defineProps<{ tabId: ID }>()
 const tab = Tabs.byId[props.tabId] as Tab
@@ -718,7 +718,7 @@ function onError(): void {
 function onCustomTitleBlur(e: Event) {
   const titleInputEl = e.target as HTMLInputElement
 
-  Tabs.editableTabId = NOID
+  Tabs.setEditableTabId(NOID)
   tab.customTitle = titleInputEl.value
   tab.reactive.customTitleEdit = false
   Tabs.saveCustomTitle(tab.id)

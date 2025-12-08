@@ -31,9 +31,9 @@ section(ref="el")
 import { ref, onMounted } from 'vue'
 import * as Utils from 'src/utils'
 import { translate } from 'src/dict'
-import { Settings } from 'src/services/settings'
-import { Menu } from 'src/services/menu'
-import * as SetupPage from 'src/services/setup-page'
+import * as Settings from 'src/services/settings.fg'
+import * as Menu from 'src/services/menu.fg'
+import * as SetupPage from 'src/services/setup-page.fg'
 import TextField from '../../components/text-field.vue'
 import ToggleField from '../../components/toggle-field.vue'
 

@@ -9,10 +9,10 @@
 </template>
 
 <script lang="ts" setup>
-import { PropType } from 'vue'
-import { BookmarksPanel, HistoryPanel, ViewModeBtn } from 'src/types'
-import { Sidebar } from 'src/services/sidebar'
-import { Search } from 'src/services/search'
+import type { PropType } from 'vue'
+import type { BookmarksPanel, HistoryPanel, ViewModeBtn } from 'src/types'
+import * as Sidebar from 'src/services/sidebar.fg'
+import * as Search from 'src/services/search.fg'
 
 type PanelWithViewSwitcher = BookmarksPanel | HistoryPanel
 

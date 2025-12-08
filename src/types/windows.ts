@@ -1,6 +1,7 @@
 import { Tab } from './tabs'
 
 export interface Window extends browser.windows.Window {
+  id: ID
   tabs?: Tab[]
 }
 

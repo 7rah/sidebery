@@ -21,8 +21,8 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import { translate } from 'src/dict'
+import type { TextInputComponent } from 'src/types'
 import TextInput from './text-input.vue'
-import { TextInputComponent } from 'src/types'
 
 interface TextFieldProps {
   value: string | number

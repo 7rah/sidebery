@@ -21,10 +21,10 @@
 <script lang="ts" setup>
 import { ref, reactive, computed, nextTick } from 'vue'
 import { translate } from 'src/dict'
-import { Command } from 'src/types'
-import { Info } from 'src/services/info'
-import * as Popups from 'src/services/popups'
-import * as Keybindings from 'src/services/keybindings'
+import type { Command } from 'src/types'
+import * as Info from 'src/services/info'
+import * as Popups from 'src/services/popups.fg'
+import * as Keybindings from 'src/services/keybindings.fg'
 
 const ERR_SHOW_TIMEOUT = 2000
 

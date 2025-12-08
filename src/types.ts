@@ -1,11 +1,12 @@
-import { Container } from './types/containers'
-import { SettingsState } from './types/settings'
-import { SidebarConfig, TabsPanel } from './types/sidebar'
-import { MenuConfs } from './types/menu'
-import { Snapshot } from './types/snapshots'
-import { ItemInfo } from './types/tabs'
-import { WindowChoosingDetails } from './types/windows'
-import { ItemBounds } from './types/sidebar'
+import type { Container } from './types/containers'
+import type { SettingsState } from './types/settings'
+import type { SidebarConfig, TabsPanel } from './types/sidebar'
+import type { MenuConfs } from './types/menu'
+import type { Snapshot } from './types/snapshots'
+import type { ItemInfo } from './types/tabs'
+import type { WindowChoosingDetails } from './types/windows'
+import type { ItemBounds } from './types/sidebar'
+import * as E from 'src/enums'
 
 export * from './types/containers'
 export * from './types/menu'
@@ -21,15 +22,10 @@ export * from './types/bookmarks'
 export * from './types/history'
 
 export interface ConfirmDialog {
-  type: ConfirmationType
+  type: E.ConfirmationType
   msg: string
   ok: () => void
   cancel: () => void
-}
-
-export const enum ConfirmationType {
-  Unknown = 1,
-  RmTab = 2,
 }
 
 export interface BookmarksFolderSelection {
@@ -115,16 +111,8 @@ export interface ScrollBoxComponent {
 }
 
 export interface SubPanelComponent {
-  open: (type: SubPanelType, panel: TabsPanel) => void
+  open: (type: E.SubPanelType, panel: TabsPanel) => void
   close: () => void
-}
-
-export const enum SubPanelType {
-  Null = 0,
-  RecentlyClosedTabs = 1,
-  Bookmarks = 2,
-  History = 3,
-  Sync = 4,
 }
 
 export interface ToggleInputComponent {
@@ -160,29 +148,6 @@ export interface IPCheckResult {
   country?: string
 }
 
-export const enum DragType {
-  Nothing = 0,
-  Tabs = 1,
-  NewTab = 11,
-  Bookmarks = 2,
-  NavItem = 3,
-  TabsPanel = 31,
-  BookmarksPanel = 32,
-  Native = 4,
-  History = 5,
-}
-export const enum DropType {
-  Nowhere = 0,
-  Tabs = 1,
-  Bookmarks = 2,
-  NavItem = 3,
-  TabsPanel = 31,
-  BookmarksPanel = 32,
-  SyncPanel = 33,
-  BookmarksSubPanelBtn = 41,
-  SyncSubPanelBtn = 42,
-}
-
 export interface DragItem {
   id: ID
   url?: string
@@ -198,7 +163,7 @@ export interface DragItem {
 export interface DragInfo {
   x: number
   y: number
-  type: DragType
+  type: E.DragType
   items?: DragItem[]
   incognito?: boolean
   windowId: ID
@@ -346,51 +311,18 @@ export interface DialogConfig {
 
 export interface TabsPanelRemoving {
   id: ID
-  withMode: (mode: TabsPanelRemovingMode | null) => void
-}
-
-export const enum TabsPanelRemovingMode {
-  Attach = 1,
-  SaveAndClose = 2,
-  Close = 3,
+  withMode: (mode: E.TabsPanelRemovingMode | null) => void
 }
 
 export interface TabsPanelSaving {
   id: ID
-  withMode: (mode: TabsPanelSavingMode | null) => void
-}
-
-export const enum TabsPanelSavingMode {
-  Additive = 1,
-  Exclusive = 2,
-}
-
-export const enum SelectionType {
-  Nothing = 0,
-  Tabs = 1,
-  Bookmarks = 2,
-  History = 3,
-  NewTabBar = 5,
-  NavItem = 6,
-  Header = 7,
-}
-
-export const enum WheelDirection {
-  Horizontal = 1,
-  Vertical = 2,
+  withMode: (mode: E.TabsPanelSavingMode | null) => void
 }
 
 export type Entries<T> = (Iterator<T> & { [K in keyof T]: [K, T[K]] }[keyof T])[]
 
 export type RGBA = [number, number, number, number]
 export type RGB = [number, number, number]
-
-export const enum MediaState {
-  Muted = -1,
-  Silent = 0,
-  Audible = 1,
-  Paused = 2,
-}
 
 export interface CopyTemplate {
   name?: string
@@ -402,3 +334,5 @@ export interface CopyTemplate {
 }
 
 export type DataUriImage = string & {}
+
+export type Reactivator<T extends object> = (target: T) => T

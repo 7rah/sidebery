@@ -53,9 +53,9 @@ section(ref="el")
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { translate } from 'src/dict'
-import { Settings } from 'src/services/settings'
-import { Styles } from 'src/services/styles'
-import * as SetupPage from 'src/services/setup-page'
+import * as Settings from 'src/services/settings.fg'
+import * as Styles from 'src/services/styles.fg'
+import * as SetupPage from 'src/services/setup-page.fg'
 import ToggleField from '../../components/toggle-field.vue'
 import SelectField from '../../components/select-field.vue'
 import TextField from '../../components/text-field.vue'
@@ -63,7 +63,7 @@ import TextField from '../../components/text-field.vue'
 const el = ref<HTMLElement | null>(null)
 
 function onColorSchemeUpdate() {
-  Styles.initColorScheme()
+  Styles.updateColorScheme()
   Settings.saveDebounced(150)
 }
 

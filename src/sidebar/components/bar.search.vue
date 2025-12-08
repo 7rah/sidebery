@@ -31,8 +31,8 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { translate } from 'src/dict'
-import { Settings } from 'src/services/settings'
-import { Search } from 'src/services/search'
+import * as Settings from 'src/services/settings'
+import * as Search from 'src/services/search.fg'
 
 const textEl = ref<HTMLInputElement | null>(null)
 
@@ -114,7 +114,7 @@ function onKD(e: KeyboardEvent): void {
 
 let inputTimeout: number | undefined
 function onInput(e: Event) {
-  Search.rawValue = (e.target as HTMLInputElement | null)?.value ?? ''
+  Search.setRawValue((e.target as HTMLInputElement | null)?.value ?? '')
 
   clearTimeout(inputTimeout)
   inputTimeout = setTimeout(() => {

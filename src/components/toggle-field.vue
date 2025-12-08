@@ -20,7 +20,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import { translate } from 'src/dict'
-import { ToggleInputComponent } from 'src/types'
+import type { ToggleInputComponent } from 'src/types'
 import ToggleInput from './toggle-input.vue'
 import LoadingDots from './loading-dots.vue'
 

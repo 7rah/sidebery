@@ -8,7 +8,7 @@
   @dblclick="onDoubleClick"
   @drop="onDrop")
   PinnedTabsBar(v-if="panel.reactive.pinnedTabIds.length" :panel="panel")
-  ScrollBox(ref="scrollBox" :preScroll="PRE_SCROLL")
+  ScrollBox(ref="scrollBox" :preScroll="D.PRE_SCROLL")
     DragAndDropPointer(:panelId="panel.id" :subPanel="false")
     AnimatedTabList(:panel="panel")
       .tab-preview(
@@ -44,17 +44,17 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { translate } from 'src/dict'
-import { DropType, MenuType, ScrollBoxComponent, TabsPanel } from 'src/types'
-import { WheelDirection } from 'src/types'
-import { PRE_SCROLL } from 'src/defaults'
-import { Settings } from 'src/services/settings'
-import * as Selection from 'src/services/selection'
-import { Menu } from 'src/services/menu'
-import { Sidebar } from 'src/services/sidebar'
-import { Tabs } from 'src/services/tabs.fg'
-import { Mouse } from 'src/services/mouse'
-import { DnD } from 'src/services/drag-and-drop'
-import { Search } from 'src/services/search'
+import type { ScrollBoxComponent, TabsPanel } from 'src/types'
+import * as E from 'src/enums'
+import * as D from 'src/defaults'
+import * as Settings from 'src/services/settings'
+import * as Selection from 'src/services/selection.fg'
+import * as Menu from 'src/services/menu.fg'
+import * as Sidebar from 'src/services/sidebar.fg'
+import * as Tabs from 'src/services/tabs.fg'
+import * as Mouse from 'src/services/mouse.fg'
+import * as DnD from 'src/services/drag-and-drop.fg'
+import * as Search from 'src/services/search.fg'
 import PinnedTabsBar from './bar.pinned-tabs.vue'
 import ScrollBox from 'src/components/scroll-box.vue'
 import TabComponent from './tab.vue'
@@ -62,7 +62,6 @@ import PanelPlaceholder from './panel-placeholder.vue'
 import NewTabBar from './bar.new-tab.vue'
 import DragAndDropPointer from './dnd-pointer.vue'
 import AnimatedTabList from './animated-tab-list.vue'
-import * as Preview from 'src/services/tabs.preview'
 
 const props = defineProps<{ panel: TabsPanel }>()
 const scrollBox = ref<ScrollBoxComponent | null>(null)
@@ -81,7 +80,7 @@ onMounted(() => {
 })
 
 function onDrop(): void {
-  DnD.reactive.dstType = DropType.Tabs
+  DnD.reactive.dstType = E.DropType.Tabs
 }
 
 function onMouseDown(e: MouseEvent): void {
@@ -165,7 +164,7 @@ function onRightMouseUp(e: MouseEvent): void {
   if (Settings.state.ctxMenuNative) return
 
   Selection.selectNavItem(props.panel.id)
-  Menu.open(MenuType.TabsPanel, e.clientX, e.clientY)
+  Menu.open(E.MenuType.TabsPanel, e.clientX, e.clientY)
 }
 
 function onNavCtxMenu(e: MouseEvent): void {
@@ -194,7 +193,7 @@ function onNavCtxMenu(e: MouseEvent): void {
   browser.menus.overrideContext(nativeCtx)
 
   if (!Selection.isSet()) Selection.selectNavItem(props.panel.id)
-  Menu.open(MenuType.TabsPanel)
+  Menu.open(E.MenuType.TabsPanel)
 }
 
 function onDoubleClick(e: MouseEvent) {
@@ -211,7 +210,7 @@ function onDoubleClick(e: MouseEvent) {
   }
 }
 
-const onWheel = Mouse.getWheelDebouncer(WheelDirection.Vertical, (e: WheelEvent) => {
+const onWheel = Mouse.getWheelDebouncer(E.WheelDirection.Vertical, (e: WheelEvent) => {
   if (e.deltaY !== 0 && Tabs.blockedScrollPosition) Tabs.resetScrollRetainer(props.panel)
   if (Sidebar.scrollAreaRightX && e.clientX > Sidebar.scrollAreaRightX) return
   if (Sidebar.scrollAreaLeftX && e.clientX < Sidebar.scrollAreaLeftX) return
@@ -231,7 +230,7 @@ const onWheel = Mouse.getWheelDebouncer(WheelDirection.Vertical, (e: WheelEvent)
     const globaly = glob !== e.shiftKey
     const cyclic = Settings.state.scrollThroughTabsCyclic !== e.ctrlKey
 
-    if (e.deltaY !== 0) Mouse.blockWheel(WheelDirection.Horizontal)
+    if (e.deltaY !== 0) Mouse.blockWheel(E.WheelDirection.Horizontal)
 
     if (presel) {
       if (e.deltaY > 0) Tabs.switchTabWithPreselect(globaly, cyclic, 1)

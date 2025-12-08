@@ -13,3 +13,5 @@ export interface Bookmark extends browser.bookmarks.TreeNode {
 }
 
 export type BookmarksSortType = 'name' | 'link' | 'time'
+
+export type ExpandedBookmarks = Record<ID, Record<ID, boolean>>

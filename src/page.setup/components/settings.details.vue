@@ -21,7 +21,7 @@
 
 <script lang="ts" setup>
 import { translate } from 'src/dict'
-import * as SetupPage from 'src/services/setup-page'
+import * as SetupPage from 'src/services/setup-page.fg'
 
 /**
  * Block scrolling the main page when debug info showed.

@@ -29,8 +29,8 @@
 
 <script lang="ts" setup>
 import { ref, onActivated } from 'vue'
-import { Info } from 'src/services/info'
-import * as SetupPage from 'src/services/setup-page'
+import * as Info from 'src/services/info'
+import * as SetupPage from 'src/services/setup-page.fg'
 import GeneralSection from './settings.general.vue'
 import MenuSection from './settings.menu.vue'
 import NavbarSection from './settings.navbar.vue'

@@ -27,7 +27,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import { translate } from 'src/dict'
-import { SelectInputComponent } from 'src/types'
+import type { SelectInputComponent } from 'src/types'
 import * as Utils from 'src/utils'
 import SelectInput from './select-input.vue'
 

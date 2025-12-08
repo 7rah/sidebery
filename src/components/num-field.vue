@@ -22,7 +22,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
 import { translate } from 'src/dict'
-import { InputOption } from 'src/types'
+import type { InputOption } from 'src/types'
 import TextInput from './text-input.vue'
 import SelectInput from './select-input.vue'
 

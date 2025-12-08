@@ -1,4 +1,4 @@
-import { InstanceType } from 'src/types'
+import { InstanceType } from 'src/enums'
 import { NOID } from 'src/defaults'
 import * as IPC from 'src/services/ipc'
 import * as Logs from 'src/services/logs'

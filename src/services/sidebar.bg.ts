@@ -1,0 +1,53 @@
+import * as T from 'src/types'
+import * as E from 'src/enums'
+import * as D from 'src/defaults'
+import * as Store from 'src/services/storage.bg'
+import * as Logs from 'src/services/logs'
+import * as SidebarConfig from 'src/services/sidebar-config'
+
+export let hasTabs = false
+export let hasBookmarks = false
+export let hasHistory = false
+export let hasSync = false
+
+export async function loadNav(): Promise<void> {
+  let storage = await browser.storage.managed.get<T.Stored>('sidebar').catch(() => {})
+  if (!storage?.sidebar) {
+    storage = await browser.storage.local.get<T.Stored>('sidebar')
+  }
+
+  let saveNeeded = false
+  if (!storage.sidebar?.nav?.length) {
+    Logs.warn('Sidebar.loadNav: Creating default sidebar config and saving it')
+    storage.sidebar = SidebarConfig.createDefaultSidebarConfig()
+    saveNeeded = true
+  }
+  if (storage.sidebar) parseNav(storage.sidebar)
+  if (saveNeeded) await Store.set({ sidebar: storage.sidebar }, 300)
+}
+
+function parseNav(config: T.SidebarConfig): void {
+  hasTabs = false
+  hasBookmarks = false
+  hasHistory = false
+  hasSync = false
+
+  for (const id of config.nav) {
+    const panel = config.panels[id]
+    if (!panel) continue
+
+    if (!hasTabs && panel.type === E.PanelType.tabs) hasTabs = true
+    if (!hasBookmarks && panel.type === E.PanelType.bookmarks) hasBookmarks = true
+    if (!hasHistory && panel.type === E.PanelType.history) hasHistory = true
+    if (!hasSync && panel.type === E.PanelType.sync) hasSync = true
+  }
+}
+
+export function setupListeners(): void {
+  Store.onKeyChange('sidebar', updateSidebar)
+}
+
+function updateSidebar(newConfig?: T.SidebarConfig | null): void {
+  if (!newConfig) return
+  parseNav(newConfig)
+}

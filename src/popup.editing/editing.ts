@@ -1,9 +1,9 @@
-import { InstanceType } from 'src/types'
+import { InstanceType } from 'src/enums'
 import * as IPC from 'src/services/ipc'
-import { Info } from 'src/services/info'
-import { Settings } from 'src/services/settings'
-import { Styles } from 'src/services/styles'
-import { Windows } from 'src/services/windows'
+import * as Info from 'src/services/info'
+import * as Settings from 'src/services/settings.fg'
+import * as Styles from 'src/services/styles.fg'
+import * as Windows from 'src/services/windows.fg'
 import * as Logs from 'src/services/logs'
 
 const VERTICAL_MARGINS = 22
@@ -94,11 +94,12 @@ void (async () => {
 
   if (winId !== undefined) {
     IPC.setWinId(winId)
-    Windows.id = winId
+    Windows.setCurrentId(winId)
     IPC.connectTo(InstanceType.sidebar, Windows.id)
   }
 
-  Settings.loadSettings().then(() => Styles.initColorScheme())
+  Styles.setupListeners()
+  Settings.load().then(() => Styles.load())
 
   setTimeout(() => {
     if (el) {

@@ -33,24 +33,25 @@
 </template>
 
 <script lang="ts" setup>
-import { Bookmark, BookmarksPanel, DropType, ScrollBoxComponent } from 'src/types'
+import type { Bookmark, BookmarksPanel, ScrollBoxComponent } from 'src/types'
 import { reactive, computed, onMounted, ref, nextTick } from 'vue'
+import { DropType } from 'src/enums'
 import { translate } from 'src/dict'
 import { BKM_OTHER_ID, BKM_ROOT_ID, NOID } from 'src/defaults'
 import * as Logs from 'src/services/logs'
 import * as Utils from 'src/utils'
-import { Bookmarks } from 'src/services/bookmarks'
-import { Permissions } from 'src/services/permissions'
-import { Menu } from 'src/services/menu'
-import * as Selection from 'src/services/selection'
-import { Sidebar } from 'src/services/sidebar'
-import { Search } from 'src/services/search'
+import * as Bookmarks from 'src/services/bookmarks.fg'
+import * as Permissions from 'src/services/permissions.fg'
+import * as Menu from 'src/services/menu.fg'
+import * as Selection from 'src/services/selection.fg'
+import * as Sidebar from 'src/services/sidebar.fg'
+import * as Search from 'src/services/search.fg'
+import * as DnD from 'src/services/drag-and-drop.fg'
 import PanelPlaceholder from './panel-placeholder.vue'
 import ScrollBox from 'src/components/scroll-box.vue'
 import BookmarkNode from 'src/components/bookmark-node.vue'
 import LoadingDots from 'src/components/loading-dots.vue'
 import DragAndDropPointer from './dnd-pointer.vue'
-import { DnD } from 'src/services/drag-and-drop'
 
 const scrollBox = ref<ScrollBoxComponent | null>(null)
 const rootTitle = translate('sub_panel.bookmarks_panel.root_title')

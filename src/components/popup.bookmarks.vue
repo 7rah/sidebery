@@ -75,16 +75,16 @@
 <script lang="ts" setup>
 import { ref, reactive, computed, nextTick } from 'vue'
 import { translate } from 'src/dict'
-import { Bookmark, Stored, TextInputComponent } from 'src/types'
+import type { Bookmark, Stored, TextInputComponent } from 'src/types'
 import { NOID, BKM_ROOT_ID, BKM_OTHER_ID } from 'src/defaults'
-import { Bookmarks } from 'src/services/bookmarks'
-import * as Selection from 'src/services/selection'
+import * as Bookmarks from 'src/services/bookmarks.fg'
+import * as Selection from 'src/services/selection.fg'
 import BookmarkNode from 'src/components/bookmark-node.vue'
 import ScrollBox from 'src/components/scroll-box.vue'
 import LoadingDots from './loading-dots.vue'
 import TextInput from './text-input.vue'
 import * as Utils from 'src/utils'
-import { Store } from 'src/services/storage'
+import * as Store from 'src/services/storage.fg'
 
 const nameInput = ref<TextInputComponent | null>(null)
 const urlInput = ref<TextInputComponent | null>(null)

@@ -1,9 +1,12 @@
 import { EDITING_POPUP_URL, NOID } from 'src/defaults'
-import { Settings } from './settings'
-import { Tabs } from './tabs.fg'
+import * as Settings from 'src/services/settings'
+import * as Tabs from 'src/services/tabs.fg'
 import * as Utils from 'src/utils'
-import { Windows } from './windows'
+import * as Windows from 'src/services/windows.fg'
 import * as IPC from 'src/services/ipc'
+
+export let editableTabId = NOID
+export const setEditableTabId = (id: ID) => (editableTabId = id)
 
 let inputEl: HTMLInputElement | null = null
 
@@ -23,7 +26,7 @@ export async function editTabTitle(tabIds: ID[]) {
   const hasFocus = document.hasFocus()
   if (!hasFocus) openEditingPopup(tab.customTitle ?? tab.title, tab.title)
 
-  Tabs.editableTabId = tab.id
+  editableTabId = tab.id
   tab.reactive.customTitleEdit = true
   tab.customTitle ??= tab.title
   Tabs.renderTitle(tab)
@@ -75,7 +78,7 @@ export function onOutsideEditingEnter() {
 
   saveCustomTitle(Tabs.editableTabId)
 
-  Tabs.editableTabId = NOID
+  editableTabId = NOID
   tab.reactive.customTitleEdit = false
 }
 
@@ -95,7 +98,7 @@ export function onOutsideEditingExit() {
 
   saveCustomTitle(Tabs.editableTabId)
 
-  Tabs.editableTabId = NOID
+  editableTabId = NOID
   tab.reactive.customTitleEdit = false
 }
 

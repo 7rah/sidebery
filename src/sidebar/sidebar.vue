@@ -77,27 +77,27 @@
         .BottomBar(
           v-if="bottomBar && Utils.isTabsPanel(activePanel)"
           @dragover.prevent.stop=""
-          :data-drop-target-bookmarks="DnD.reactive.dstType === DropType.BookmarksSubPanelBtn && DnD.reactive.dstPanelId === activePanel.id"
-          :data-drop-target-sync="DnD.reactive.dstType === DropType.SyncSubPanelBtn")
+          :data-drop-target-bookmarks="DnD.reactive.dstType === E.DropType.BookmarksSubPanelBtn && DnD.reactive.dstPanelId === activePanel.id"
+          :data-drop-target-sync="DnD.reactive.dstType === E.DropType.SyncSubPanelBtn")
           .tool-btn(
             v-if="Settings.state.subPanelRecentlyClosedBar"
             :data-disabled="!Tabs.reactive.recentlyRemovedLen"
-            @click="Sidebar.openSubPanel(SubPanelType.RecentlyClosedTabs, activePanel)")
+            @click="Sidebar.openSubPanel(E.SubPanelType.RecentlyClosedTabs, activePanel)")
             svg: use(href="#icon_trash")
           .tool-btn.-bookmarks(
             v-if="Settings.state.subPanelBookmarks"
             @dragleave="onBSPBDragLeave"
-            @click="Sidebar.openSubPanel(SubPanelType.Bookmarks, activePanel)")
+            @click="Sidebar.openSubPanel(E.SubPanelType.Bookmarks, activePanel)")
             .dnd-layer(data-dnd-type="bspb")
             svg: use(href="#icon_bookmarks")
           .tool-btn(
             v-if="Settings.state.subPanelHistory"
-            @click="Sidebar.openSubPanel(SubPanelType.History, activePanel)")
+            @click="Sidebar.openSubPanel(E.SubPanelType.History, activePanel)")
             svg: use(href="#icon_clock")
           .tool-btn.-sync(
             v-if="Settings.state.subPanelSync"
             @dragleave="onSSPBDragLeave"
-            @click="Sidebar.openSubPanel(SubPanelType.Sync, activePanel)")
+            @click="Sidebar.openSubPanel(E.SubPanelType.Sync, activePanel)")
             .dnd-layer(data-dnd-type="sspb")
             svg: use(href="#icon_sync")
 
@@ -114,24 +114,27 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, onMounted, Component, nextTick } from 'vue'
-import { PanelType, Panel, MenuType, WheelDirection, DropType } from 'src/types'
-import { SubPanelType } from 'src/types'
-import { NOID } from 'src/defaults'
-import { Settings } from 'src/services/settings'
-import { GroupConfigResult, Sidebar } from 'src/services/sidebar'
-import { Styles } from 'src/services/styles'
-import * as Selection from 'src/services/selection'
-import { Menu } from 'src/services/menu'
-import { Tabs } from 'src/services/tabs.fg'
-import { Mouse } from 'src/services/mouse'
-import { DnD } from 'src/services/drag-and-drop'
-import { Bookmarks } from 'src/services/bookmarks'
-import { Windows } from 'src/services/windows'
-import { Search } from 'src/services/search'
-import { SwitchingTabScope } from 'src/services/tabs.fg.actions'
-import * as Sync from 'src/services/sync'
-import { Info } from 'src/services/info'
+import type { Component } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
+import type { Panel } from 'src/types'
+import * as E from 'src/enums'
+import * as Settings from 'src/services/settings'
+import * as Sidebar from 'src/services/sidebar.fg'
+import * as Styles from 'src/services/styles.fg'
+import * as Selection from 'src/services/selection.fg'
+import * as Menu from 'src/services/menu.fg'
+import * as Tabs from 'src/services/tabs.fg'
+import * as Mouse from 'src/services/mouse.fg'
+import * as DnD from 'src/services/drag-and-drop.fg'
+import * as Bookmarks from 'src/services/bookmarks.fg'
+import * as Windows from 'src/services/windows.fg'
+import * as Search from 'src/services/search.fg'
+import * as Sync from 'src/services/sync.fg'
+import * as Info from 'src/services/info'
+import * as Utils from 'src/utils'
+import * as Popups from 'src/services/popups.fg'
+import * as Logs from 'src/services/logs'
+import * as Preview from 'src/services/tabs.fg.preview'
 import ConfirmPopup from './components/popup.confirm.vue'
 import CtxMenuPopup from './components/popup.context-menu.vue'
 import DragAndDropTooltip from './components/dnd-tooltip.vue'
@@ -153,10 +156,6 @@ import NewTabShortcutsPopup from '../components/popup.new-tab-shortcuts.vue'
 import SiteConfigPopup from '../components/popup.site-config.vue'
 import ProcessingTabsPopup from './components/popup.processing-tabs.vue'
 import SubPanel from './components/sub-panel.vue'
-import * as Utils from 'src/utils'
-import * as Popups from 'src/services/popups'
-import * as Logs from 'src/services/logs'
-import * as Preview from 'src/services/tabs.preview'
 
 const rootEl = ref<HTMLElement | null>(null)
 const panelBoxEl = ref<HTMLElement | null>(null)
@@ -194,12 +193,12 @@ function recalcStaticVars() {
     Settings.state.subPanelSync
 }
 
-Sidebar.reMountSidebar = () => {
+Sidebar.setReMountSidebarFn(() => {
   Sidebar.rememberActivePanelScrollPosition()
   recalcStaticVars()
   rrc.value++
   nextTick(updSidebarEls)
-}
+})
 
 const activePanel = computed<Panel | undefined>(() => {
   return Sidebar.panelsById[Sidebar.reactive.activePanelId]
@@ -228,10 +227,10 @@ onMounted(() => {
 })
 
 function getPanelComponent(panel: Panel): Component | undefined {
-  if (panel.type === PanelType.tabs) return TabsPanel
-  if (panel.type === PanelType.bookmarks) return BookmarksPanel
-  if (panel.type === PanelType.history) return HistoryPanel
-  if (panel.type === PanelType.sync) return SyncPanel
+  if (panel.type === E.PanelType.tabs) return TabsPanel
+  if (panel.type === E.PanelType.bookmarks) return BookmarksPanel
+  if (panel.type === E.PanelType.history) return HistoryPanel
+  if (panel.type === E.PanelType.sync) return SyncPanel
 }
 
 function onFocusIn(e: FocusEvent): void {
@@ -275,7 +274,7 @@ function onDocumentKeydown(e: KeyboardEvent): void {
 
     // Group config popup
     if (Popups.reactive.groupConfigPopup) {
-      Popups.reactive.groupConfigPopup.done(GroupConfigResult.Cancel)
+      Popups.reactive.groupConfigPopup.done(E.GroupConfigResult.Cancel)
       Popups.reactive.groupConfigPopup = null
     }
 
@@ -340,10 +339,10 @@ function onDocumentKeydown(e: KeyboardEvent): void {
 }
 
 let lastDir: number | undefined
-const onWheel = Mouse.getWheelDebouncer(WheelDirection.Horizontal, e => {
+const onWheel = Mouse.getWheelDebouncer(E.WheelDirection.Horizontal, e => {
   if (Menu.isOpen) Menu.close()
 
-  if (e.deltaX !== 0) Mouse.blockWheel(WheelDirection.Vertical)
+  if (e.deltaX !== 0) Mouse.blockWheel(E.WheelDirection.Vertical)
   else return
 
   if (Settings.state.hScrollAction === 'switch_panels') {
@@ -356,15 +355,15 @@ const onWheel = Mouse.getWheelDebouncer(WheelDirection.Horizontal, e => {
 
     return Sidebar.switchPanel(dir, true, false, restartDebouncer)
   } else if (Settings.state.hScrollAction === 'switch_act_tabs') {
-    if (e.deltaX > 0) return Tabs.switchToRecentlyActiveTab(SwitchingTabScope.global, 1)
-    if (e.deltaX < 0) return Tabs.switchToRecentlyActiveTab(SwitchingTabScope.global, -1)
+    if (e.deltaX > 0) return Tabs.switchToRecentlyActiveTab(Tabs.SwitchingTabScope.global, 1)
+    if (e.deltaX < 0) return Tabs.switchToRecentlyActiveTab(Tabs.SwitchingTabScope.global, -1)
   }
 })
 
 let leaveTimeout: number | undefined
 let subPanelTimeout: number | undefined
 function onMouseEnter(): void {
-  Mouse.mouseIn = true
+  Mouse.setMouseInState(true)
 
   Sidebar.switchPanelBackResetTimeout()
 
@@ -388,7 +387,7 @@ function onMouseLeave(): void {
   // so the mouse cursor might actually still be inside the sidebar
   if (DnD.dragEndedRecently || DnD.droppedRecently) return
 
-  Mouse.mouseIn = false
+  Mouse.setMouseInState(false)
   Mouse.stopResizing()
 
   const activePanel = Sidebar.panelsById[Sidebar.activePanelId]
@@ -412,7 +411,7 @@ function onMouseLeave(): void {
   if (Sidebar.scrollOnMouseLeave) Sidebar.scrollPanelOnMouseLeave()
 
   if (Tabs.activateSelectedOnMouseLeave && Selection.isTabs()) {
-    Tabs.activateSelectedOnMouseLeave = false
+    Tabs.setActivateSelectedOnMouseLeaveState(false)
 
     const id = Selection.ids()[0]
     const targetTab = Tabs.byId[id]
@@ -456,9 +455,9 @@ function onMouseUp(e: MouseEvent): void {
 
     Tabs.removeTabs(Selection.ids())
   } else if (e.button === 2) {
-    let type: MenuType | undefined
-    if (Selection.isBookmarks()) type = MenuType.Bookmarks
-    if (Selection.isTabs()) type = MenuType.Tabs
+    let type: E.MenuType | undefined
+    if (Selection.isBookmarks()) type = E.MenuType.Bookmarks
+    if (Selection.isTabs()) type = E.MenuType.Tabs
     if (type === undefined) return
     if (inMultiSelectionMode && !Settings.state.autoMenuMultiSel && Selection.getLength() > 1) {
       return
@@ -479,8 +478,8 @@ function getPanelPos(i: number, panelId: ID): PanelPosition {
 
 let onBSPBDragLeaveTimeout: number | undefined
 function onBSPBDragLeave() {
-  if (Sidebar.subPanelActive) DnD.reactive.dstType = DropType.Bookmarks
-  else DnD.reactive.dstType = DropType.Nowhere
+  if (Sidebar.subPanelActive) DnD.reactive.dstType = E.DropType.Bookmarks
+  else DnD.reactive.dstType = E.DropType.Nowhere
 
   clearTimeout(onBSPBDragLeaveTimeout)
   onBSPBDragLeaveTimeout = setTimeout(() => {
@@ -489,6 +488,6 @@ function onBSPBDragLeave() {
 }
 
 function onSSPBDragLeave() {
-  DnD.reactive.dstType = DropType.Nowhere
+  DnD.reactive.dstType = E.DropType.Nowhere
 }
 </script>

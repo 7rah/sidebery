@@ -1,4 +1,5 @@
-import { ReactiveTabProps, Tab, TabSessionData, TabStatus } from 'src/types'
+import { ReactiveTabProps, Tab, TabSessionData } from 'src/types'
+import { TabStatus } from 'src/enums'
 import { NOID } from 'src/defaults'
 
 export class MTab implements Tab {

@@ -48,7 +48,7 @@
 <script lang="ts" setup>
 import { computed, ref, reactive, onMounted, nextTick } from 'vue'
 import { translate } from 'src/dict'
-import { SelectInputComponent } from 'src/types'
+import type { SelectInputComponent } from 'src/types'
 
 type InputObjOpt = {
   value: string | number

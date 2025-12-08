@@ -25,21 +25,20 @@
 
 <script lang="ts" setup>
 import { computed } from 'vue'
-import * as Utils from 'src/utils'
-import { Bookmark, DragInfo, DragType, DropType, DstPlaceInfo } from 'src/types'
-import { MenuType } from 'src/types'
-import { Settings } from 'src/services/settings'
-import { Windows } from 'src/services/windows'
-import * as Selection from 'src/services/selection'
+import type { Bookmark, DragInfo } from 'src/types'
+import { MenuType, DragType, DropType } from 'src/enums'
+import * as Settings from 'src/services/settings'
+import * as Windows from 'src/services/windows.fg'
+import * as Selection from 'src/services/selection.fg'
 import * as Favicons from 'src/services/favicons.fg'
-import { Bookmarks } from 'src/services/bookmarks'
-import { Menu } from 'src/services/menu'
-import { Sidebar } from 'src/services/sidebar'
-import { Tabs } from 'src/services/tabs.fg'
-import { Mouse } from 'src/services/mouse'
-import { DnD } from 'src/services/drag-and-drop'
+import * as Bookmarks from 'src/services/bookmarks.fg'
+import * as Menu from 'src/services/menu.fg'
+import * as Sidebar from 'src/services/sidebar.fg'
+import * as Tabs from 'src/services/tabs.fg'
+import * as Mouse from 'src/services/mouse.fg'
+import * as DnD from 'src/services/drag-and-drop.fg'
 import { FOLDER_NAME_DATA_RE, RGB_COLORS } from 'src/defaults'
-import { Search } from 'src/services/search'
+import * as Search from 'src/services/search.fg'
 
 const props = defineProps<{ node: Bookmark; panelId: ID }>()
 

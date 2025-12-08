@@ -11,8 +11,8 @@ section(ref="el")
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { translate } from 'src/dict'
-import { Settings } from 'src/services/settings'
-import * as SetupPage from 'src/services/setup-page'
+import * as Settings from 'src/services/settings.fg'
+import * as SetupPage from 'src/services/setup-page.fg'
 import ToggleField from 'src/components/toggle-field.vue'
 
 const el = ref<HTMLElement | null>(null)

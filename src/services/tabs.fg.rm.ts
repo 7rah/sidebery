@@ -1,17 +1,20 @@
-import { ConfirmationType, ItemInfo, RecentlyClosedTabInfo, Tab } from 'src/types'
+import { ItemInfo, RecentlyClosedTabInfo, Tab } from 'src/types'
+import { ConfirmationType } from 'src/enums'
 import { NOID } from 'src/defaults'
 import { translate } from 'src/dict'
-import { Sidebar } from 'src/services/sidebar'
-import { Tabs } from 'src/services/tabs.fg'
-import { Containers } from 'src/services/containers'
-import { Settings } from 'src/services/settings'
-import { Notifications } from 'src/services/notifications'
-import * as Selection from 'src/services/selection'
-import { Windows } from 'src/services/windows'
-import * as Popups from 'src/services/popups'
+import * as Sidebar from 'src/services/sidebar.fg'
+import * as Tabs from 'src/services/tabs.fg'
+import * as Containers from 'src/services/containers'
+import * as Settings from 'src/services/settings'
+import * as Notifications from 'src/services/notifications.fg'
+import * as Selection from 'src/services/selection.fg'
+import * as Popups from 'src/services/popups.fg'
 import * as Favicons from 'src/services/favicons.fg'
 import * as Logs from 'src/services/logs'
 import * as Utils from 'src/utils'
+
+export let removingTabs: ID[] = []
+export const setRemovingTabs = (ids: ID[]) => (removingTabs = ids)
 
 export function removeBranches(ids: ID[]): void {
   for (const tab of Tabs.list) {
@@ -176,7 +179,7 @@ export function rememberRemoved(tabs: Tab[]) {
 
   // Limit recentlyRemoved list
   if (Tabs.recentlyRemoved.length > RECENTLY_REMOVED_LIMIT_MAX) {
-    Tabs.recentlyRemoved = Tabs.recentlyRemoved.slice(0, RECENTLY_REMOVED_LIMIT_MIN)
+    Tabs.setRecentlyRemoved(Tabs.recentlyRemoved.slice(0, RECENTLY_REMOVED_LIMIT_MIN))
   }
 
   Tabs.reactive.recentlyRemovedLen = Tabs.recentlyRemoved.length
@@ -299,9 +302,9 @@ export async function removeTabs(
   const tabsInfo = Tabs.getTabsInfo(toRemove, true)
 
   if (Tabs.removingTabs && Tabs.removingTabs.length) {
-    Tabs.removingTabs = [...Tabs.removingTabs, ...toRemove]
+    removingTabs = [...Tabs.removingTabs, ...toRemove]
   } else {
-    Tabs.removingTabs = [...toRemove]
+    removingTabs = [...toRemove]
   }
 
   // Remember removed tabs

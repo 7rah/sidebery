@@ -135,13 +135,13 @@
 
 <script lang="ts" setup>
 import { ref, reactive, computed, nextTick, onMounted } from 'vue'
-import { MenuBlock, MenuOption, ContextMenuComponent } from 'src/types'
-import { Sidebar } from 'src/services/sidebar'
-import { Settings } from 'src/services/settings'
-import * as Selection from 'src/services/selection'
-import { Menu } from 'src/services/menu'
-import { Mouse } from 'src/services/mouse'
-import { Search } from 'src/services/search'
+import type * as T from 'src/types'
+import * as Sidebar from 'src/services/sidebar.fg'
+import * as Settings from 'src/services/settings'
+import * as Selection from 'src/services/selection.fg'
+import * as Menu from 'src/services/menu.fg'
+import * as Mouse from 'src/services/mouse.fg'
+import * as Search from 'src/services/search.fg'
 import ScrollBox from 'src/components/scroll-box.vue'
 import { PRE_SCROLL } from 'src/defaults'
 
@@ -152,25 +152,25 @@ const tackEl = ref<HTMLElement | null>(null)
 const state = reactive({
   tickActive: false,
   tackActive: false,
-  tickBlocks: [] as MenuBlock[],
-  tackBlocks: [] as MenuBlock[],
+  tickBlocks: [] as T.MenuBlock[],
+  tackBlocks: [] as T.MenuBlock[],
   tickPosStyle: { transform: 'translateY(0px) translateX(0px)', bottom: '' },
   tackPosStyle: { transform: 'translateY(0px) translateX(0px)', bottom: '' },
 
   selected: -1,
-  sub: null as MenuBlock | null,
+  sub: null as T.MenuBlock | null,
 })
 
 const isActive = computed((): boolean => state.tickActive || state.tackActive)
-const tickAll = computed((): MenuOption[] => {
-  return state.tickBlocks.reduce<MenuOption[]>((a, v) => a.concat(v.opts), [])
+const tickAll = computed((): T.MenuOption[] => {
+  return state.tickBlocks.reduce<T.MenuOption[]>((a, v) => a.concat(v.opts), [])
 })
-const tackAll = computed((): MenuOption[] => {
-  return state.tackBlocks.reduce<MenuOption[]>((a, v) => a.concat(v.opts), [])
+const tackAll = computed((): T.MenuOption[] => {
+  return state.tackBlocks.reduce<T.MenuOption[]>((a, v) => a.concat(v.opts), [])
 })
 
 onMounted(() => {
-  Menu.onOpen((blocks: MenuBlock[], x = 0, y = 0) => {
+  Menu.onOpen((blocks: T.MenuBlock[], x = 0, y = 0) => {
     const boxH = document.body.offsetHeight
 
     state.selected = -1
@@ -218,11 +218,11 @@ onMounted(() => {
   })
 })
 
-function onMouseDown(e: MouseEvent, opt: MenuOption): void {
+function onMouseDown(e: MouseEvent, opt: T.MenuOption): void {
   Mouse.setTarget('menu.option', opt.label)
 }
 
-function onMouseUp(e: MouseEvent, opt: MenuOption): void {
+function onMouseUp(e: MouseEvent, opt: T.MenuOption): void {
   if (!Mouse.isTarget('menu.option', opt.label)) return
 
   if (e.button === 0 && !e.altKey) activateOption(opt)
@@ -230,7 +230,7 @@ function onMouseUp(e: MouseEvent, opt: MenuOption): void {
 }
 
 const scrollConf: ScrollToOptions = { behavior: 'smooth', top: 0 }
-function scrollToOption(opt: MenuOption) {
+function scrollToOption(opt: T.MenuOption) {
   const query = `.opt[title="${opt.tooltip ?? opt.label}"]`
   const optEl = document.querySelector(query) as HTMLElement | null
   if (!optEl) return
@@ -292,7 +292,7 @@ function selectOption(dir: number): void {
   }
 }
 
-function activateOption(opt?: MenuOption, altMode?: boolean): boolean | undefined {
+function activateOption(opt?: T.MenuOption, altMode?: boolean): boolean | undefined {
   if (!opt) {
     if (state.selected < 0) return
     let opts
@@ -332,7 +332,7 @@ function getY(menuH: number, y: number, isAbovePointer: boolean): number {
   return isAbovePointer ? y - 1 : y + 1
 }
 
-function btnWidth(opts: MenuOption[]): string {
+function btnWidth(opts: T.MenuOption[]): string {
   let len = opts.reduce((a, v) => (v.constructor === String ? a : a + 1), 0)
   if (len <= 5) return 'norm'
   if (len === 6) return '3'
@@ -340,14 +340,14 @@ function btnWidth(opts: MenuOption[]): string {
   return 'wrap'
 }
 
-function isSelected(opt: MenuOption): boolean {
+function isSelected(opt: T.MenuOption): boolean {
   let opts
   if (state.sub) opts = state.sub.opts
   else opts = state.tickActive ? tickAll.value : tackAll.value
   return opts[state.selected] === opt
 }
 
-const publicInterface: ContextMenuComponent = { selectOption, activateOption }
+const publicInterface: T.ContextMenuComponent = { selectOption, activateOption }
 defineExpose(publicInterface)
 Menu.registerComponent(publicInterface)
 </script>

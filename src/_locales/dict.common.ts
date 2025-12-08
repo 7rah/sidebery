@@ -86,7 +86,14 @@ export const commonTranslations: Translations = {
   },
   'btn.grant_permissions': {
     en: 'Grant permissions',
+    de: 'Berechtigungen erteilen',
     fr: 'Accorder les permissions',
+    hu: 'Engedélyek megadása',
+    pl: 'Przyznaj uprawnienia',
+    ru: 'Предоставить разрешения',
+    zh_CN: '授予权限',
+    zh_TW: '授予權限',
+    ja: '権限を付与する',
   },
   'btn.yes': {
     en: 'Yes',

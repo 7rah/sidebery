@@ -2,7 +2,7 @@
 import fs from 'fs'
 import path from 'path'
 import stylus from 'stylus'
-import * as csso from 'csso'
+import esbuild from 'esbuild'
 import { IS_DEV, ADDON_PATH, getTime, watch, log, logOk } from './utils.js'
 
 const OUTPUT_DIR = `${ADDON_PATH}/styles`
@@ -95,7 +95,10 @@ async function compile(srcPath, outputPath, srcContent) {
       stylus(srcContent)
         .set('paths', [path.dirname(srcPath)])
         .render(async (err, css) => {
-          if (!IS_DEV) css = csso.minify(css, { restructure: false }).css
+          if (!IS_DEV) {
+            const { code } = await esbuild.transform(css, { minify: true, loader: 'css' })
+            css = code
+          }
           res(fs.promises.writeFile(outputPath, css))
         })
     } catch (err) {

@@ -18,6 +18,7 @@
     "build.ext": "web-ext build --source-dir ./addon -a dist/ -i __tests__",
     "build.run": "node build/webext.run.js",
     "build": "node build/all.js",
+    "vite": "node build/all.vite.js",
     "clear.npm": "rm -rf node_modules package-lock.json",
     "clear": "rm -rf addon",
     "lint": "eslint ./src",
@@ -63,7 +64,6 @@
     "useTabs": false
   },
   "alias": {
-    "vue": "./node_modules/vue/dist/vue.runtime.esm-browser.js",
     "src": "./src"
   },
   "browserslist": [

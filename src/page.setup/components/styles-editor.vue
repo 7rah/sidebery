@@ -230,7 +230,7 @@ async function getRootStyles(
     shadowLinkEl.onload = () => res(getComputedStyle(shadowedRootEl))
     shadowLinkEl.onerror = () => res(undefined)
     shadowLinkEl.setAttribute('rel', 'stylesheet')
-    shadowLinkEl.setAttribute('href', `../themes/proton/${target}.css`)
+    shadowLinkEl.setAttribute('href', `../styles/${target}.css`)
     shadow.appendChild(shadowLinkEl)
   })
 }

@@ -225,8 +225,11 @@ function onWindowCreated(nativeWin: browser.windows.Window): void {
     return
   }
 
-  const existedTabs = byId.get(window.id)?.tabs
-  if (existedTabs) window.tabs = existedTabs
+  const existedWin = byId.get(window.id)
+  if (existedWin?.tabs) window.tabs = existedWin.tabs
+  if (existedWin && existedWin.activeTabId !== NOID) {
+    window.activeTabId = existedWin.activeTabId
+  }
   byId.set(window.id, window)
 
   // TODO: test this, maybe make it lazy

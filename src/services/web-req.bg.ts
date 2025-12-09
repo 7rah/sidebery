@@ -1,4 +1,4 @@
-import type { Tab, IPCheckResult } from 'src/types'
+import type { BgTab, IPCheckResult } from 'src/types'
 import * as Utils from 'src/utils'
 import * as E from 'src/enums'
 import * as Containers from 'src/services/containers'
@@ -48,7 +48,7 @@ export function enableAutoReopening(excludeTabIds: ID[]) {
 }
 
 async function recreateTab(
-  tab: Tab,
+  tab: BgTab,
   info: browser.proxy.RequestDetails,
   cookieStoreId?: string
 ): Promise<void> {

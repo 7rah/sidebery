@@ -62,8 +62,8 @@ export async function createSnapshot(auto = false): Promise<Snapshot | undefined
     let targetGroup: ID = ''
 
     for (const tab of window.tabs) {
-      const snapTab: SnapTab = { url: tab.url, title: tab.title, panelId: tab.panelId }
-      const parent = snapTabsById[tab.parentId]
+      const snapTab: SnapTab = { url: tab.url, title: tab.title, panelId: tab.panelId ?? NOID }
+      const parent = snapTabsById[tab.parentId ?? NOID]
       if (parent && parent.panelId === tab.panelId) snapTab.lvl = (parent.lvl ?? 0) + 1
       if (tab.pinned) {
         snapTab.pinned = true
@@ -103,7 +103,7 @@ export async function createSnapshot(auto = false): Promise<Snapshot | undefined
       if (!tab.pinned && targetGroup !== tab.panelId) {
         panelTabs = []
         winTabs.push(panelTabs)
-        targetGroup = tab.panelId
+        targetGroup = tab.panelId ?? NOID
       }
 
       if (panelTabs) panelTabs.push(snapTab)

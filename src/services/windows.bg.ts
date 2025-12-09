@@ -1,4 +1,4 @@
-import { ItemInfo, Notification, Tab, TabCache, TabSessionData, Window } from 'src/types'
+import { BgWindow, ItemInfo, Notification, Tab, TabCache, TabSessionData, Window } from 'src/types'
 import { DEFAULT_CONTAINER_ID, MOVEID, NOID, PRIVATE_CONTAINER_ID } from 'src/defaults'
 import * as Tabs from 'src/services/tabs.bg'
 import * as Info from 'src/services/info'
@@ -8,7 +8,7 @@ import * as IPC from 'src/services/ipc'
 import * as Utils from 'src/utils'
 import { translate } from 'src/dict'
 
-export const byId = new Map<ID, Window>()
+export const byId = new Map<ID, BgWindow>()
 export let lastFocusedId = NOID
 export let focusedId = NOID
 
@@ -210,10 +210,11 @@ export function resetWindowsListeners(): void {
   browser.windows.onFocusChanged.removeListener(onWindowFocused)
 }
 
-function mutateNativeWindowToSideberyWindow(nativeWin: browser.windows.Window): Window {
-  const win = nativeWin as Window
+function mutateNativeWindowToSideberyWindow(nativeWin: browser.windows.Window): BgWindow {
+  const win = nativeWin as BgWindow
   if (nativeWin.id === undefined) win.id = NOID
-  // TODO: tabs
+  if (!nativeWin.tabs) win.tabs = []
+  win.activeTabId = win.tabs.find(t => t.active)?.id ?? NOID
   return win
 }
 

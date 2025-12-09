@@ -17,7 +17,7 @@ import { translate } from 'src/dict'
 import * as Tabs from 'src/services/tabs.bg'
 
 export let ready = false
-export let byId: Record<ID, T.Tab> = {}
+export let byId: Record<ID, T.BgTab> = {}
 export let cacheByWin: Record<ID, T.TabCache[]> = {}
 export let deferredEventHandling: (() => void)[] = []
 
@@ -28,7 +28,7 @@ let _tabsDataCache: T.TabCache[][] | undefined
  */
 export async function load(): Promise<void> {
   Logs.info('Tabs.loadTabs')
-  const [tabs, storage] = await Promise.all([
+  const [nativeTabs, storage] = await Promise.all([
     browser.tabs.query({}).catch(() => []),
     _tabsDataCache
       ? undefined
@@ -36,12 +36,16 @@ export async function load(): Promise<void> {
   ])
   if (!_tabsDataCache) _tabsDataCache = storage?.tabsDataCache
 
-  for (const tab of tabs as T.Tab[]) {
-    const tabWindow = Windows.byId.get(tab.windowId)
+  for (const nativeTab of nativeTabs) {
+    const tabWindow = Windows.byId.get(nativeTab.windowId)
     if (!tabWindow) continue
+
+    const tab = mutateNativeTabToSideberyTab(nativeTab)
 
     if (tabWindow.tabs) tabWindow.tabs.push(tab)
     else tabWindow.tabs = [tab]
+
+    if (tab.active) tabWindow.activeTabId = tab.id
 
     Tabs.byId[tab.id] = tab
 
@@ -156,35 +160,43 @@ function openCachedWindow(cache: T.TabCache[]) {
   Windows.createWithTabs(items)
 }
 
+function mutateNativeTabToSideberyTab(nativeTab: T.NativeTab): T.BgTab {
+  const tab = nativeTab as T.BgTab
+  return tab
+}
+
 /**
  * Handle new tab
  */
-function onTabCreated(tab: browser.tabs.Tab): void {
+function onTabCreated(nativeTab: browser.tabs.Tab): void {
   if (!Tabs.ready) {
-    Tabs.deferredEventHandling.push(() => onTabCreated(tab))
+    Tabs.deferredEventHandling.push(() => onTabCreated(nativeTab))
     return
   }
 
-  Tabs.byId[tab.id] = tab as T.Tab
+  const tab = mutateNativeTabToSideberyTab(nativeTab)
+
+  Tabs.byId[tab.id] = tab
 
   const parentTab = Tabs.byId[tab.openerTabId ?? D.NOID]
-  if (parentTab && parentTab.preventAutoReopening) (tab as T.Tab).preventAutoReopening = true
+  if (parentTab && parentTab.preventAutoReopening) tab.preventAutoReopening = true
 
   const tabWindow = Windows.byId.get(tab.windowId)
   if (!tabWindow) {
-    const win: T.Window = {
+    const win: T.BgWindow = {
       id: tab.windowId,
       alwaysOnTop: false,
       focused: false,
       incognito: tab.incognito,
+      tabs: [tab],
+      activeTabId: tab.active ? tab.id : D.NOID,
     }
-    win.tabs = [tab as T.Tab]
     Windows.byId.set(tab.windowId, win)
     return
   }
 
-  if (tabWindow.tabs) tabWindow.tabs.splice(tab.index, 0, tab as T.Tab)
-  else tabWindow.tabs = [tab as T.Tab]
+  if (tabWindow.tabs) tabWindow.tabs.splice(tab.index, 0, tab)
+  else tabWindow.tabs = [tab]
 
   const len = tabWindow.tabs.length
   for (let i = tab.index, t; i < len; i++) {
@@ -322,6 +334,9 @@ function onTabActivated(info: browser.tabs.ActiveInfo): void {
 
   const prevTab = Tabs.byId[info.previousTabId]
   if (prevTab) prevTab.active = false
+
+  const window = Windows.byId.get(info.windowId)
+  if (window) window.activeTabId = info.tabId
 
   // Update tab's url
   if (tab?.reloadOnActivation) {
@@ -487,7 +502,7 @@ export function cacheTabsData(windowId: ID, tabs: T.TabCache[], delay = 300): vo
  */
 export async function updateBgTabsTreeData(): Promise<void> {
   const receivingSidebarTrees: Promise<T.TabsTreeData>[] = []
-  const windowsList: T.Window[] = []
+  const windowsList: T.BgWindow[] = []
 
   for (const window of Windows.byId.values()) {
     if (window.id === undefined) continue
@@ -547,12 +562,12 @@ export async function updateBgTabsTreeData(): Promise<void> {
       if (tabInfo.cc) tab.customColor = tabInfo.cc
       if (tabInfo.f) tab.folded = true
       const parent = Tabs.byId[tab.parentId]
-      if (parent) tab.lvl = parent.lvl + 1
+      if (parent) tab.lvl = (parent.lvl ?? 0) + 1
     }
   }
 }
 
-export async function initInternalPageScripts(tabs: T.Tab[]) {
+export async function initInternalPageScripts(tabs: T.BgTab[]) {
   for (const tab of tabs) {
     if (!Windows.byId.has(tab.windowId)) continue
 

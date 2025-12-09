@@ -1,8 +1,14 @@
-import { Tab } from './tabs'
+import { BgTab, Tab } from './tabs'
 
 export interface Window extends browser.windows.Window {
   id: ID
   tabs?: Tab[]
+}
+
+export interface BgWindow extends browser.windows.Window {
+  id: ID
+  tabs: BgTab[]
+  activeTabId: ID
 }
 
 export interface WindowChooseOption {

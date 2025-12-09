@@ -17,7 +17,7 @@ export interface Tab extends NativeTab {
   loading: boolean | 'ok' | 'err'
   warn: boolean
   unread?: boolean
-  proxified?: boolean
+  // proxified?: boolean
   relGroupId: ID
   dstPanelId: ID
   autoGroupped?: boolean
@@ -34,9 +34,9 @@ export interface Tab extends NativeTab {
   reopenInContainer?: string
   customTitle?: string
   customColor?: string
-  reloadOnActivation?: boolean
+  // reloadOnActivation?: boolean
   moving?: boolean
-  preventAutoReopening?: boolean
+  // preventAutoReopening?: boolean
   previewImg?: string
   removing?: boolean
   flashAnimationTimeout?: number
@@ -80,6 +80,21 @@ export interface ReactiveTabProps {
   customColor: string | null
   isGroup: boolean
   preview: boolean
+}
+
+export interface BgTab extends NativeTab {
+  lvl?: number
+  parentId?: ID
+  panelId?: ID
+  folded?: boolean
+  customTitle?: string
+  customColor?: string
+
+  internal?: boolean
+  isGroup?: boolean
+  proxified?: boolean
+  preventAutoReopening?: boolean
+  reloadOnActivation?: boolean
 }
 
 export interface InlineTabData {

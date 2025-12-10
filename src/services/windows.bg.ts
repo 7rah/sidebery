@@ -251,8 +251,6 @@ function onWindowRemoved(windowId: ID): void {
 }
 
 function onWindowFocused(windowId: ID): void {
-  Logs.info('onWindowFocused', windowId)
-
   // Unfocused
   if (windowId === -1) {
     for (const [id, window] of byId) {

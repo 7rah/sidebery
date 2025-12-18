@@ -4,6 +4,7 @@ import * as Utils from 'src/utils'
 import * as Store from 'src/services/storage.bg'
 import * as WebReq from 'src/services/web-req.bg'
 import * as Omnibox from 'src/services/omnibox.bg'
+import * as Settings from 'src/services/settings'
 import * as Logs from 'src/services/logs'
 
 import * as Containers from './containers'
@@ -78,7 +79,7 @@ export function updateContainers(newContainers?: Record<ID, Container> | null): 
 
   WebReq.updateReqHandlersDebounced(0)
 
-  Omnibox.updateCommandsDebounced(300)
+  if (Settings.state.omniReopenInCtr) Omnibox.updateCommandsDebounced(500)
 }
 
 export async function create(name: string, color: string, icon: string): Promise<Container> {
@@ -99,7 +100,7 @@ function onContainerCreated(info: browser.contextualIdentities.ChangeInfo): void
   Containers.onContainerCreated(info)
   saveContainers(300)
 
-  Omnibox.updateCommandsDebounced(300)
+  if (Settings.state.omniReopenInCtr) Omnibox.updateCommandsDebounced(500)
 }
 
 function onContainerRemoved(info: browser.contextualIdentities.ChangeInfo): void {
@@ -108,7 +109,7 @@ function onContainerRemoved(info: browser.contextualIdentities.ChangeInfo): void
   delete Containers.reactive.byId[id]
   saveContainers(300)
 
-  Omnibox.updateCommandsDebounced(300)
+  if (Settings.state.omniReopenInCtr) Omnibox.updateCommandsDebounced(500)
 }
 
 function onContainerUpdated(info: browser.contextualIdentities.ChangeInfo): void {
@@ -123,5 +124,5 @@ function onContainerUpdated(info: browser.contextualIdentities.ChangeInfo): void
 
   saveContainers(300)
 
-  Omnibox.updateCommandsDebounced(300)
+  if (Settings.state.omniReopenInCtr) Omnibox.updateCommandsDebounced(500)
 }

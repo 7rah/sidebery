@@ -21,6 +21,16 @@ export const DEFAULT_SETTINGS: SettingsState = {
   ctxMenuRenderIcons: true,
   ctxMenuIgnoreContainers: '',
 
+  // Address bar (Omnibox)
+  omniReopenInCtr: true,
+  omniReopenInCtrPrefix: '',
+  omniSwitchToPanel: true,
+  omniSwitchToPanelPrefix: '',
+  omniMoveToPanel: true,
+  omniMoveToPanelPrefix: '',
+  omniMoveToGroup: true,
+  omniMoveToGroupPrefix: '',
+
   // Nav bar
   navBarLayout: 'horizontal',
   navBarInline: true,

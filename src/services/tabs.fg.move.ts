@@ -423,6 +423,7 @@ export async function moveToThisWin(
 
   const probeTab = tabs[0]
   const isPinned = probeTab.pinned
+  const toPinned = dst?.pinned || (probeTab.pinned && dst?.pinned === undefined && !dst?.parentId)
   const srcWinId = probeTab.windowId
 
   let panel = Sidebar.panelsById[dst?.panelId ?? NOID]
@@ -437,7 +438,7 @@ export async function moveToThisWin(
 
   // Set index
   if (dst.index === undefined) dst.index = isPinned ? Tabs.pinned.length : indexFallback
-  if (isPinned && dst.index > Tabs.pinned.length) dst.index = Tabs.pinned.length
+  if (isPinned && toPinned && dst.index > Tabs.pinned.length) dst.index = Tabs.pinned.length
   if (dst.index < 0) dst.index = 0
 
   const index = dst.index ?? 0
@@ -454,15 +455,17 @@ export async function moveToThisWin(
   for (let i = 0; i < tabs.length; i++) {
     const tab = tabs[i]
 
-    // Pin / Unpin
-    if (!!tab.pinned !== !!dst.pinned) {
-      await browser.tabs.update(tab.id, { pinned: !!dst.pinned })
-      tab.reactive.pinned = tab.pinned = !!dst.pinned
-    }
-
     // Put this tab to the local state
     Tabs.byId[tab.id] = tab
     Tabs.list.splice(index + i, 0, tab)
+
+    // Pin / Unpin
+    if (!!tab.pinned !== !!dst.pinned) {
+      if (!dst.pinned) tab.unpinning = true
+      await browser.tabs.update(tab.id, { pinned: !!dst.pinned })
+      tab.reactive.pinned = tab.pinned = !!dst.pinned
+      if (tab.unpinning) tab.unpinning = false
+    }
 
     // Update some tab props
     if (dst.windowId !== undefined) tab.windowId = dst.windowId
@@ -825,6 +828,7 @@ export function moveByRule(tabId: ID, delay: number) {
 function moveTabToPanel(tab: T.Tab, panelId: ID) {
   const panel = Sidebar.panelsById[panelId]
   if (!Utils.isTabsPanel(panel)) return
+  // TODO: why I use moveNewTabParent here? add config specifically for this case (move by rule)
   const moveToPanelStart = Settings.state.moveNewTabParent === 'start'
   const index = moveToPanelStart ? panel.startTabIndex : panel.nextTabIndex
   const src: T.SrcPlaceInfo = { windowId: Windows.id, pinned: tab.pinned }
@@ -834,6 +838,29 @@ function moveTabToPanel(tab: T.Tab, panelId: ID) {
   if (tab.active && Settings.state.tabsPanelSwitchActMoveAuto) {
     Sidebar.switchToPanel(panelId, true, true)
   }
+}
+
+export function moveTabToPanelViaOmnibox(tabId: ID, panelId: ID) {
+  const tab = Tabs.byId[tabId]
+  if (!tab) return Logs.warn('Tabs.moveTabToPanelViaOmnibox: no such tab:', tabId)
+  if (tab.panelId === panelId) {
+    return Logs.warn('Tabs.moveTabToPanelViaOmnibox: same target:', panelId)
+  }
+
+  const panel = Sidebar.panelsById[panelId]
+  if (!Utils.isTabsPanel(panel)) {
+    return Logs.warn('Tabs.moveTabToPanelViaOmnibox: no such tab panel:', panelId)
+  }
+
+  // TODO: make position configurable
+  const index = panel.nextTabIndex
+  const windowId = Windows.id
+
+  const src: T.SrcPlaceInfo = { windowId, pinned: tab.pinned }
+  const dst: T.DstPlaceInfo = { windowId, panelId, index }
+  Utils.GLOBAL_QUEUE.add(Tabs.move, [tab], src, dst)
+
+  if (tab.active) Sidebar.switchToPanel(panelId, true, true)
 }
 
 export function findMoveRuleBy(
@@ -862,4 +889,24 @@ export function findMoveRule(tab: T.Tab): T.TabToPanelMoveRule | undefined {
 
     return rule
   }
+}
+
+export async function moveTabToGroupViaOmnibox(tabInfo: T.ItemInfo, srcWinId: ID, groupTabId: ID) {
+  const groupTab = Tabs.byId[groupTabId]
+  if (!groupTab) return Logs.warn('Tabs.moveTabToGroup: no target tab:', groupTabId)
+
+  // TODO: make position configurable
+  const index = groupTab.index + (Tabs.getBranchLen(groupTabId) ?? 0) + 1
+  const panelId = groupTab.panelId
+  const windowId = Windows.id
+
+  if (!Windows.focused) browser.windows.update(Windows.id, { focused: true })
+  if (Sidebar.activePanelId !== panelId) Sidebar.switchToPanel(panelId, true, true)
+  if (groupTab.folded || groupTab.invisible) Tabs.expTabsBranch(groupTabId, false)
+
+  const src: T.SrcPlaceInfo = { windowId: srcWinId }
+  const dst: T.DstPlaceInfo = { windowId, panelId, parentId: groupTabId, index, pinned: false }
+  await Utils.GLOBAL_QUEUE.add(Tabs.move, [tabInfo], src, dst)
+
+  Tabs.scrollToTab(tabInfo.id)
 }

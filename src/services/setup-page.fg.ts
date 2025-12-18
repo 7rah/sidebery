@@ -72,6 +72,7 @@ export let reactive: SetupPageReactiveState = {
     { active: false, name: 'settings', lvl: 0 },
     { active: false, name: 'settings_general', lvl: 1 },
     { active: false, name: 'settings_menu', lvl: 1 },
+    { active: false, name: 'settings_omnibox', lvl: 1 },
     { active: false, name: 'settings_nav', lvl: 1 },
     { active: false, name: 'settings_group', lvl: 1 },
     { active: false, name: 'settings_containers', lvl: 1 },

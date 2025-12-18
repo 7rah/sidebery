@@ -1299,6 +1299,7 @@ declare namespace browser {
     type OnInputEnteredDisposition = 'currentTab' | 'newForegroundTab' | 'newBackgroundTab'
     interface SuggestResult {
       content: string
+      deletable: boolean
       description: string
     }
 

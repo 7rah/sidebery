@@ -336,3 +336,8 @@ export interface CopyTemplate {
 export type DataUriImage = string & {}
 
 export type Reactivator<T extends object> = (target: T) => T
+
+export interface OmniboxHistory {
+  types: E.OmniCmdType[]
+  cmds: string[]
+}

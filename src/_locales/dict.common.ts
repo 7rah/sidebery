@@ -2799,10 +2799,19 @@ export const commonTranslations: Translations = {
     en: 'Choose the command (default is the first one):',
   },
   'omnibox.reopen_in_ctr': {
-    en: ctr_name => `Reopen in "${ctr_name}" container`,
+    en: ctrName => `⭮ Reopen an active tab in "${ctrName}" container`,
   },
   'omnibox.reopen_in_ctr.default_ctr_name': {
     en: 'Default container',
+  },
+  'omnibox.move_to_panel': {
+    en: panelName => `↔ Move an active tab to "${panelName}" panel`,
+  },
+  'omnibox.switch_to_panel': {
+    en: panelName => `⮞ Switch to "${panelName}" panel`,
+  },
+  'omnibox.move_to_tab': {
+    en: tabTitle => `↕ Move an active tab to group: "${tabTitle}"`,
   },
 }
 

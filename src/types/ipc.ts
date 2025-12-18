@@ -9,6 +9,8 @@ import * as WindowsBg from 'src/services/windows.bg'
 import * as WindowsFg from 'src/services/windows.fg'
 import * as Store from 'src/services/storage.bg'
 import type * as SyncBg from 'src/services/sync.bg'
+import type * as TabsFg from 'src/services/tabs.fg'
+import type * as SidebarFg from 'src/services/sidebar.fg'
 import type * as E from 'src/enums'
 
 export interface Message<T extends E.InstanceType, A extends ActionsKeys<T>> {
@@ -79,6 +81,7 @@ export type SidebarActions = {
   detachTabs: (tabIds: ID[]) => DetachedTabsInfo | undefined
   getTabsTreeData: () => TabsTreeData
   getActivePanelConfig: () => PanelConfig | undefined
+  switchToPanel: typeof SidebarFg.switchToPanel
   stopDrag: () => void
   setDragInfo: (dragInfo: DragInfo) => void
   getGroupInfo: (groupTabId: ID) => Promise<GroupInfo | null>
@@ -104,7 +107,8 @@ export type SidebarActions = {
 
   moveTabsToThisWin: (tabs: Tab[], dst?: DstPlaceInfo) => Promise<boolean>
   openTabs: (items: ItemInfo[], dst: DstPlaceInfo) => Promise<boolean>
-  reopenInContainer: (ids: ID[], containerId: string) => Promise<void>
+  moveTabToPanelViaOmnibox: typeof TabsFg.moveTabToPanelViaOmnibox
+  moveTabToGroupViaOmnibox: typeof TabsFg.moveTabToGroupViaOmnibox
 
   notify: (config: Notification, timeout?: number) => void
   notifyAboutNewSnapshot: () => void

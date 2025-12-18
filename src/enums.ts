@@ -190,3 +190,13 @@ export const enum SnapOpenType {
   NewWindow = 2,
   NewPrivateWindow = 3,
 }
+
+// ---
+// -- Omnibox
+// -
+export const enum OmniCmdType {
+  ReopenInContainer = 1,
+  MoveToPanel = 2,
+  SwitchToPanel = 3,
+  MoveToGroup = 4,
+}

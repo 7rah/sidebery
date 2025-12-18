@@ -4,13 +4,18 @@ import * as D from 'src/defaults'
 import * as Store from 'src/services/storage.bg'
 import * as Logs from 'src/services/logs'
 import * as SidebarConfig from 'src/services/sidebar-config'
+import * as Omnibox from 'src/services/omnibox.bg'
+import * as Settings from 'src/services/settings'
 
+export let nav: ID[] = []
+export let panelConfById: Partial<Record<ID, T.PanelConfig>> = {}
+export let panelConfigs: T.PanelConfig[] = []
 export let hasTabs = false
 export let hasBookmarks = false
 export let hasHistory = false
 export let hasSync = false
 
-export async function loadNav(): Promise<void> {
+export async function load(): Promise<void> {
   let storage = await browser.storage.managed.get<T.Stored>('sidebar').catch(() => {})
   if (!storage?.sidebar) {
     storage = await browser.storage.local.get<T.Stored>('sidebar')
@@ -22,7 +27,9 @@ export async function loadNav(): Promise<void> {
     storage.sidebar = SidebarConfig.createDefaultSidebarConfig()
     saveNeeded = true
   }
-  if (storage.sidebar) parseNav(storage.sidebar)
+
+  updateSidebar(storage.sidebar)
+
   if (saveNeeded) await Store.set({ sidebar: storage.sidebar }, 300)
 }
 
@@ -50,4 +57,16 @@ export function setupListeners(): void {
 function updateSidebar(newConfig?: T.SidebarConfig | null): void {
   if (!newConfig) return
   parseNav(newConfig)
+  nav = newConfig.nav
+  panelConfById = newConfig.panels
+
+  panelConfigs = []
+  for (const id of nav) {
+    const panelConfig = panelConfById[id]
+    if (panelConfig) panelConfigs.push(panelConfig)
+  }
+
+  if (Settings.state.omniMoveToPanel || Settings.state.omniSwitchToPanel) {
+    Omnibox.updateCommandsDebounced(500)
+  }
 }

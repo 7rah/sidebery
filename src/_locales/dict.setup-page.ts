@@ -619,6 +619,9 @@ Liste de “sous-chaines” ou “/RegExp/” avec une entrée par ligne:
     zh_TW: '選單',
     ja: 'メニュー',
   },
+  'settings.nav_settings_omnibox': {
+    en: 'Address bar',
+  },
   'settings.nav_settings_nav': {
     en: 'Navigation bar',
     de: 'Navigationsleiste',
@@ -1581,6 +1584,37 @@ Available variables: %B - a list mark (bullet); %CT - custom title or title; %T 
     zh_CN: '编辑上下文菜单',
     zh_TW: '編輯快捷選單',
     ja: 'コンテキストメニューを編集',
+  },
+
+  // - Address bar (Omnibox)
+  'settings.omnibox_title': {
+    en: 'Address bar (Omnibox)',
+  },
+  'settings.omnibox_desc': {
+    en: `Use the address bar (aka Omnibox) for fast triggering some Sidebery commands.`,
+  },
+  'settings.omnibox_note': {
+    en: `To start, focus the address bar (Ctrl+L/Cmd+L), then input "=" followed by a space, then start typing target container/panel/group name (case-insensitive). Choose desired command from the list or just press Enter to use the first one.
+
+You can also set prefixes for each command type for faster navigation. Starting your query (after the "=" and space) with any characters from the configured prefix will give commands of this type a higher priority.`,
+  },
+  'settings.omnibox_cmds': {
+    en: 'Available commands:',
+  },
+  'settings.omni_reopen_in_ctr': {
+    en: 'Reopen an active tab in container...',
+  },
+  'settings.omni_switch_to_panel': {
+    en: 'Switch to panel...',
+  },
+  'settings.omni_move_to_panel': {
+    en: 'Move an active tab to panel...',
+  },
+  'settings.omni_move_to_group': {
+    en: 'Move an active tab to group...',
+  },
+  'settings.omni_cmd_prefix': {
+    en: 'Prefix:',
   },
 
   // - Navigation bar

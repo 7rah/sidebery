@@ -5,6 +5,7 @@ import { InstanceType } from 'src/enums'
 import * as Sync from 'src/services/sync.bg'
 import * as Store from 'src/services/storage.bg'
 import * as Windows from 'src/services/windows.bg'
+import * as Omnibox from 'src/services/omnibox.bg'
 import * as Styles from 'src/services/styles.bg'
 import * as SnapshotsBg from 'src/services/snapshots.bg'
 import * as IPC from 'src/services/ipc'
@@ -58,6 +59,14 @@ export function updateSettingsBg(settings?: SettingsState | null): void {
   const snapIntervalChanged = prev.snapInterval !== next.snapInterval
   const snapIntervalUnitChanged = prev.snapIntervalUnit !== next.snapIntervalUnit
   const colorSchemeChanged = prev.colorScheme !== next.colorScheme
+  const omniReopenInCtr = prev.omniReopenInCtr !== next.omniReopenInCtr
+  const omniReopenInCtrPrefix = prev.omniReopenInCtrPrefix !== next.omniReopenInCtrPrefix
+  const omniSwitchToPanel = prev.omniSwitchToPanel !== next.omniSwitchToPanel
+  const omniSwitchToPanelPrefix = prev.omniSwitchToPanelPrefix !== next.omniSwitchToPanelPrefix
+  const omniMoveToPanel = prev.omniMoveToPanel !== next.omniMoveToPanel
+  const omniMoveToPanelPrefix = prev.omniMoveToPanelPrefix !== next.omniMoveToPanelPrefix
+  const omniMoveToGroup = prev.omniMoveToGroup !== next.omniMoveToGroup
+  const omniMoveToGroupPrefix = prev.omniMoveToGroupPrefix !== next.omniMoveToGroupPrefix
 
   Utils.updateObject(Settings.state, settings, Settings.state)
 
@@ -82,6 +91,19 @@ export function updateSettingsBg(settings?: SettingsState | null): void {
   if (snapIntervalChanged || snapIntervalUnitChanged) SnapshotsBg.scheduleSnapshots()
 
   if (colorSchemeChanged) Styles.load()
+
+  if (
+    omniReopenInCtr ||
+    omniReopenInCtrPrefix ||
+    omniSwitchToPanel ||
+    omniSwitchToPanelPrefix ||
+    omniMoveToPanel ||
+    omniMoveToPanelPrefix ||
+    omniMoveToGroup ||
+    omniMoveToGroupPrefix
+  ) {
+    Omnibox.updateCommandsDebounced(500)
+  }
 
   Settings.updPrecalcSettings()
 }

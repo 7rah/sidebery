@@ -5,6 +5,7 @@ import * as Info from 'src/services/info'
 import * as Containers from 'src/services/containers'
 import * as Logs from 'src/services/logs'
 import * as IPC from 'src/services/ipc'
+import * as Omnibox from 'src/services/omnibox.bg'
 import * as Utils from 'src/utils'
 import { translate } from 'src/dict'
 
@@ -20,7 +21,10 @@ export async function load(): Promise<void> {
     if (nativeWindow.type !== 'normal' || nativeWindow.id === undefined) continue
     const window = mutateNativeWindowToSideberyWindow(nativeWindow)
     byId.set(window.id, window)
-    Logs.info('Windows.bg.load: window:', window)
+    if (window.focused) {
+      lastFocusedId = window.id
+      focusedId = window.id
+    }
   }
 }
 
@@ -234,6 +238,8 @@ function onWindowCreated(nativeWin: browser.windows.Window): void {
 
   // TODO: test this, maybe make it lazy
   // Styles.updateWindowStyles(window.id)
+
+  Omnibox.updateCommandsDebounced(500)
 }
 
 function onWindowRemoved(windowId: ID): void {
@@ -248,6 +254,8 @@ function onWindowRemoved(windowId: ID): void {
       delete Tabs.byId[tab.id]
     }
   }
+
+  Omnibox.updateCommandsDebounced(500)
 }
 
 function onWindowFocused(windowId: ID): void {

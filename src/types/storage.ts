@@ -32,6 +32,8 @@ export interface Stored {
   bookmarksRecentFolders?: ID[]
 
   googleDriveFileIds?: Record<string, string>
+
+  omnibox?: T.OmniboxHistory
 }
 
 export type StorageChanges = {

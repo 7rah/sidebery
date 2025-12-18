@@ -21,6 +21,16 @@ export interface SettingsState {
   ctxMenuRenderIcons: boolean
   ctxMenuIgnoreContainers: string
 
+  // Address bar (Omnibox)
+  omniReopenInCtr: boolean
+  omniReopenInCtrPrefix: string
+  omniSwitchToPanel: boolean
+  omniSwitchToPanelPrefix: string
+  omniMoveToPanel: boolean
+  omniMoveToPanelPrefix: string
+  omniMoveToGroup: boolean
+  omniMoveToGroupPrefix: string
+
   // Nav bar
   navBarLayout: (typeof SETTINGS_OPTIONS.navBarLayout)[number]
   navBarInline: boolean

@@ -68,7 +68,7 @@ void (async function main() {
   Containers.setupListeners()
   Settings.setupSettingsChangeListener()
 
-  await Sidebar.loadNav()
+  await Sidebar.load()
   Sidebar.setupListeners()
 
   WebReq.updateReqHandlers()

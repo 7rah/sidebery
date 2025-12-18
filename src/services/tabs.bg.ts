@@ -11,6 +11,7 @@ import * as IPC from 'src/services/ipc'
 import * as Settings from 'src/services/settings'
 import * as Logs from 'src/services/logs'
 import * as Styles from 'src/services/styles.bg'
+import * as Omnibox from 'src/services/omnibox.bg'
 import { DetachedTabsInfo } from 'src/services/tabs.fg.move'
 import { translate } from 'src/dict'
 
@@ -188,6 +189,9 @@ function onTabCreated(nativeTab: browser.tabs.Tab): void {
 
   const tab = mutateNativeTabToSideberyTab(nativeTab)
 
+  tab.internal = tab.url.startsWith(D.ADDON_HOST)
+  tab.isGroup = tab.internal && Utils.isGroupUrl(tab.url)
+
   Tabs.byId[tab.id] = tab
 
   const parentTab = Tabs.byId[tab.openerTabId ?? D.NOID]
@@ -248,6 +252,10 @@ function onTabCreated(nativeTab: browser.tabs.Tab): void {
       }
     }
   }
+
+  if (tab.isGroup && Settings.state.omniMoveToGroup) {
+    Omnibox.updateCommandsDebounced(500)
+  }
 }
 
 /**
@@ -279,6 +287,10 @@ function onTabRemoved(tabId: ID, info: browser.tabs.RemoveInfo): void {
       return
     }
   }
+
+  if (tab.isGroup && Settings.state.omniMoveToGroup) {
+    Omnibox.updateCommandsDebounced(500)
+  }
 }
 
 /**
@@ -296,6 +308,7 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo): void {
     return
   }
 
+  const wasGroup = !!tab.isGroup
   if (change.url) {
     const isInternal = change.url.startsWith(D.ADDON_HOST)
     tab.internal = isInternal
@@ -329,6 +342,10 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo): void {
   if (!WebReq.containersProxies[tab.cookieStoreId] && tab.proxified) {
     tab.proxified = false
     hideProxyBadge(tabId)
+  }
+
+  if (Settings.state.omniMoveToGroup && (wasGroup || tab.isGroup)) {
+    Omnibox.updateCommandsDebounced(500)
   }
 }
 
@@ -460,6 +477,10 @@ function onTabAttached(id: ID, info: browser.tabs.AttachInfo): void {
       return
     }
   }
+
+  if (Settings.state.omniMoveToGroup && tab.isGroup) {
+    Omnibox.updateCommandsDebounced(500)
+  }
 }
 
 /**
@@ -488,6 +509,10 @@ function onTabDetached(id: ID, info: browser.tabs.DetachInfo): void {
       reinitTabs('onTabDetached: Empty space in list')
       return
     }
+  }
+
+  if (Settings.state.omniMoveToGroup && tab.isGroup) {
+    Omnibox.updateCommandsDebounced(500)
   }
 }
 

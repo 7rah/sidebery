@@ -687,8 +687,12 @@ function activate(): void {
   if (Mouse.longClickApplied) return
 
   if (Search.rawValue) {
-    Search.stop()
-    Selection.resetSelection()
+    if (Settings.state.searchTabSwitch) {
+      Search.focus()
+    } else {
+      Search.stop()
+      Selection.resetSelection()
+    }
   }
 
   if (tab.id !== Tabs.activeId) {

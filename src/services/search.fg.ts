@@ -85,8 +85,12 @@ export function onOutsideSearchExit(): void {
   }
 
   const sidebarFocused = document.hasFocus()
-  if (!sidebarFocused) Search.close()
-  else if (inputEl && inputEl !== document.activeElement) Search.reactive.barIsActive = false
+  if (!sidebarFocused) {
+    if (!Settings.state.searchTabSwitch) Search.close()
+    else IPC.sendToSearchPopup(Windows.id, 'closePopup')
+  } else if (inputEl && inputEl !== document.activeElement) {
+    Search.reactive.barIsActive = false
+  }
 }
 
 export function next(): void {

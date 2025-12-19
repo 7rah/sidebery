@@ -4,6 +4,7 @@ import * as Tabs from 'src/services/tabs.fg'
 import * as Selection from 'src/services/selection.fg'
 import * as Search from 'src/services/search.fg'
 import * as Sidebar from 'src/services/sidebar.fg'
+import * as Settings from 'src/services/settings'
 
 let prevActivePanelId: ID | undefined
 export function onTabsSearch(activePanel: Panel, noSel?: boolean): void {
@@ -114,7 +115,7 @@ export function onTabsSearchEnter(panel?: Panel): void {
   const tab = Tabs.byId[selId]
   if (tab) browser.tabs.update(tab.id, { active: true })
 
-  Search.stop()
+  if (!Settings.state.searchTabSwitch) Search.stop()
 }
 
 export function onTabsSearchSelectAll(panel: TabsPanel): void {

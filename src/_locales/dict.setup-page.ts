@@ -2507,6 +2507,9 @@ You can also set prefixes for each command type for faster navigation. Starting 
     zh_TW: '關閉',
     ja: 'オフ',
   },
+  'settings.search_tab_switch': {
+    en: 'Keep searching after switching tabs',
+  },
   'settings.search.shortcuts': {
     en: 'Shortcuts',
     de: 'Tastenkombinationen',

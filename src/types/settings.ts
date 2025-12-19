@@ -75,6 +75,7 @@ export interface SettingsState {
   // Search
   searchBarMode: (typeof SETTINGS_OPTIONS.searchBarMode)[number]
   searchPanelSwitch: (typeof SETTINGS_OPTIONS.searchPanelSwitch)[number]
+  searchTabSwitch: boolean
   searchBookmarksShortcut: string
   searchHistoryShortcut: string
 

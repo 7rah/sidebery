@@ -15,6 +15,10 @@ section(ref="el")
     :opts="Settings.getOpts('searchPanelSwitch')"
     :folded="true"
     @update:value="Settings.saveDebounced(150)")
+  ToggleField(
+    label="settings.search_tab_switch"
+    v-model:value="Settings.state.searchTabSwitch"
+    @update:value="Settings.saveDebounced(150)")
   InfoField(
     label="settings.search.shortcuts"
     :value="translate('settings.search.shortcuts.note')")
@@ -35,6 +39,7 @@ import { translate } from 'src/dict'
 import * as SetupPage from 'src/services/setup-page.fg'
 import * as Settings from 'src/services/settings.fg'
 import SelectField from '../../components/select-field.vue'
+import ToggleField from '../../components/toggle-field.vue'
 import TextField from 'src/components/text-field.vue'
 import InfoField from 'src/components/info-field.vue'
 

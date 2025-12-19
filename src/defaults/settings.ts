@@ -76,6 +76,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   // Search
   searchBarMode: 'dynamic',
   searchPanelSwitch: 'same_type',
+  searchTabSwitch: false,
   searchBookmarksShortcut: '',
   searchHistoryShortcut: '',
 

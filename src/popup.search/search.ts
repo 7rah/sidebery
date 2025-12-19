@@ -5,8 +5,9 @@ import * as Settings from 'src/services/settings.fg'
 import * as Styles from 'src/services/styles.fg'
 import * as Windows from 'src/services/windows.fg'
 import * as Search from 'src/services/search.fg'
+import * as Utils from 'src/utils'
 
-const el = document.getElementById('textInput') as HTMLInputElement
+const el = document.getElementById('textInput') as HTMLInputElement | null
 
 el?.focus()
 
@@ -101,8 +102,14 @@ void (async () => {
     Windows.setCurrentId(win.id)
     IPC.connectTo(InstanceType.sidebar, Windows.id)
     IPC.sidebar(win.id, 'getSearchQuery').then(query => {
-      if (query) el.value = query
+      if (query && el) el.value = query
     })
   }
   Styles.load()
+
+  // Check if input is not focused and focus it if needed.
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1918031
+  Utils.untilElGetFocus(el, el => {
+    el.focus()
+  })
 })()

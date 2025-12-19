@@ -5,6 +5,7 @@ import * as Settings from 'src/services/settings.fg'
 import * as Styles from 'src/services/styles.fg'
 import * as Windows from 'src/services/windows.fg'
 import * as Logs from 'src/services/logs'
+import * as Utils from 'src/utils'
 
 const VERTICAL_MARGINS = 22
 const el = document.getElementById('text_input') as HTMLInputElement | null
@@ -87,10 +88,19 @@ void (async () => {
   const value = sp.get('value')
   if (value && el) {
     el.value = value
+    el.select()
 
     // 1px less, so later I can update height to fix graphical glitches
     el.style.height = `${el.scrollHeight - VERTICAL_MARGINS - 1}px`
   }
+
+  // Update height to fix graphical glitches
+  setTimeout(() => {
+    if (el) {
+      el.style.height = `${el.scrollHeight - VERTICAL_MARGINS}px`
+      initWidth = document.body.offsetWidth
+    }
+  }, 3)
 
   if (winId !== undefined) {
     IPC.setWinId(winId)
@@ -98,27 +108,13 @@ void (async () => {
     IPC.connectTo(InstanceType.sidebar, Windows.id)
   }
 
-  Styles.setupListeners()
-  Settings.load().then(() => Styles.load())
+  await Settings.load()
+  Styles.load()
 
-  setTimeout(() => {
-    if (el) {
-      // Focus input again, although there are still cases of popups with no focus
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=1918031
-      el.focus()
-      el.select()
-
-      // Update height to fix graphical glitches
-      el.style.height = `${el.scrollHeight - VERTICAL_MARGINS}px`
-      initWidth = document.body.offsetWidth
-    }
-  }, 3)
-
-  setTimeout(() => {
-    // And again...
-    if (el) {
-      el.focus()
-      el.select()
-    }
-  }, 250)
+  // Check if input is not focused and focus it if needed.
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1918031
+  Utils.untilElGetFocus(el, el => {
+    el.focus()
+    el.select()
+  })
 })()

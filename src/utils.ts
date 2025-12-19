@@ -1377,3 +1377,21 @@ export function someIter<T>(it: IteratorObject<T>, pred: (value: T) => unknown):
   }
   return false
 }
+
+export function untilElGetFocus(el: HTMLInputElement | null, cb: (el: HTMLInputElement) => void) {
+  if (!el) return
+
+  if (document.activeElement !== el) cb(el)
+  else return
+
+  let n = 0
+  const interval = setInterval(() => {
+    n++
+    if (document.activeElement === el || n > 200) {
+      clearInterval(interval)
+      return
+    }
+
+    cb(el)
+  }, 5)
+}

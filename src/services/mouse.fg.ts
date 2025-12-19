@@ -185,50 +185,19 @@ export function onMouseMove(e: MouseEvent): void {
 }
 
 let longClickTimeout: number | undefined
-export function startLongClick(
-  e: MouseEvent,
-  type: LongClickTargetType,
-  id: ID,
-  cb?: () => void
-): void {
+export function startLongClick(e: MouseEvent, cb: (e: MouseEvent) => boolean): void {
   clearTimeout(longClickTimeout)
   longClickTimeout = setTimeout(() => {
     // Close tab preview
     if (Settings.state.previewTabs) Preview.closePreview()
 
     if (DnD.reactive.isStarted) return
+
     longClickApplied = true
-
-    let action
-    if (type === 'tab') {
-      if (e.button === 0) {
-        action = Settings.state.tabLongLeftClick
-      } else if (e.button === 2) {
-        action = Settings.state.tabLongRightClick
-        stopMultiSelection()
-        Selection.resetSelection()
-      }
-
-      const tab = Tabs.byId[id]
-      if (!tab) return
-
-      if (action === 'reload') Tabs.reloadTabs([tab.id])
-      if (action === 'discard') Tabs.discardTabs([tab.id])
-      if (action === 'duplicate') Tabs.duplicateTabs([tab.id])
-      if (action === 'dup_child') Tabs.duplicateTabs([tab.id], true)
-      if (action === 'pin') Tabs.repinTabs([tab.id])
-      if (action === 'mute') Tabs.remuteTabs([tab.id])
-      if (action === 'clear_cookies') Tabs.clearTabsCookies([tab.id])
-      if (action === 'new_after') Tabs.createTabAfter(tab.id)
-      if (action === 'new_child' && !tab.pinned) Tabs.createChildTab(tab.id)
-      if (action === 'edit_title' && !tab.pinned) Tabs.editTabTitle([tab.id])
-
-      if (action !== 'none') clickLock = true
-    }
-
     longClickTimeout = undefined
 
-    if (cb && clickLock) cb()
+    const actionIsTriggered = cb(e)
+    if (actionIsTriggered) clickLock = true
   }, Settings.state.longClickDelay)
 }
 

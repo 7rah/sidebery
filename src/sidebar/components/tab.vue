@@ -273,7 +273,7 @@ function onMouseDown(e: MouseEvent): void {
 
     if (!Selection.isSet() && !Settings.state.activateOnMouseUp) activate()
 
-    Mouse.startLongClick(e, 'tab', tab.id, longClickFeedback)
+    Mouse.startLongClick(e, longClickFeedback)
   }
 
   // Middle
@@ -368,12 +368,36 @@ function onMouseDown(e: MouseEvent): void {
       Selection.resetSelection()
       Mouse.startMultiSelection(e, tab.id)
     }
-    Mouse.startLongClick(e, 'tab', tab.id, longClickFeedback)
+    Mouse.startLongClick(e, longClickFeedback)
   }
 }
 
-function longClickFeedback(): void {
-  Tabs.triggerFlashAnimation(tab)
+function longClickFeedback(e: MouseEvent) {
+  let action
+  if (e.button === 0) {
+    action = Settings.state.tabLongLeftClick
+  } else if (e.button === 2) {
+    action = Settings.state.tabLongRightClick
+    Mouse.stopMultiSelection()
+    Selection.resetSelection()
+  }
+
+  let noop = false
+  if (action === 'reload') Tabs.reloadTabs([tab.id])
+  else if (action === 'discard') Tabs.discardTabs([tab.id])
+  else if (action === 'duplicate') Tabs.duplicateTabs([tab.id])
+  else if (action === 'dup_child') Tabs.duplicateTabs([tab.id], true)
+  else if (action === 'pin') Tabs.repinTabs([tab.id])
+  else if (action === 'mute') Tabs.remuteTabs([tab.id])
+  else if (action === 'clear_cookies') Tabs.clearTabsCookies([tab.id])
+  else if (action === 'new_after') Tabs.createTabAfter(tab.id)
+  else if (action === 'new_child' && !tab.pinned) Tabs.createChildTab(tab.id)
+  else if (action === 'edit_title' && !tab.pinned) Tabs.editTabTitle([tab.id])
+  else noop = true
+
+  if (!noop) Tabs.triggerFlashAnimation(tab)
+
+  return !noop
 }
 
 function onMouseUp(e: MouseEvent): void {

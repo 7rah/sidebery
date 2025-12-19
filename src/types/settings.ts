@@ -78,6 +78,7 @@ export interface SettingsState {
   searchTabSwitch: boolean
   searchBookmarksShortcut: string
   searchHistoryShortcut: string
+  searchInputTimeout: number
 
   // Tabs
   warnOnMultiTabClose: (typeof SETTINGS_OPTIONS.warnOnMultiTabClose)[number]

@@ -55,8 +55,6 @@ export function reactivate(r: Reactivator<SearchState>) {
   reactive = r(reactive)
 }
 
-export const INPUT_TIMEOUT = 300
-
 export function init(): void {
   if (Settings.state.searchBarMode === 'static') Search.reactive.barIsShowed = true
 }
@@ -71,7 +69,7 @@ export function onOutsideSearchInput(value: string): void {
   clearTimeout(inputTimeout)
   inputTimeout = setTimeout(() => {
     Search.search(Search.rawValue)
-  }, INPUT_TIMEOUT)
+  }, Settings.state.searchInputTimeout)
 }
 
 export function onOutsideSearchExit(): void {

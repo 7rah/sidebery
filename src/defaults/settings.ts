@@ -79,6 +79,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   searchTabSwitch: false,
   searchBookmarksShortcut: '',
   searchHistoryShortcut: '',
+  searchInputTimeout: 300,
 
   // Tabs
   warnOnMultiTabClose: 'collapsed',

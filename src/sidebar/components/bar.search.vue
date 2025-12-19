@@ -119,7 +119,7 @@ function onInput(e: Event) {
   clearTimeout(inputTimeout)
   inputTimeout = setTimeout(() => {
     Search.search((e.target as HTMLInputElement | null)?.value)
-  }, Search.INPUT_TIMEOUT)
+  }, Settings.state.searchInputTimeout)
 }
 
 function onChange(e: Event): void {

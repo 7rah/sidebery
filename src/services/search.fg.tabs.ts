@@ -5,6 +5,7 @@ import * as Selection from 'src/services/selection.fg'
 import * as Search from 'src/services/search.fg'
 import * as Sidebar from 'src/services/sidebar.fg'
 import * as Settings from 'src/services/settings'
+import * as Logs from 'src/services/logs'
 
 let prevActivePanelId: ID | undefined
 export function onTabsSearch(activePanel: Panel, noSel?: boolean): void {
@@ -93,6 +94,10 @@ export function onTabsSearchPrev(panel?: Panel): void {
 
   const selId = Selection.getFirst()
   let index = panel.filteredTabs.findIndex(t => t.id === selId)
+
+  if (index === -1 && panel.filteredTabs.length) {
+    index = panel.filteredTabs.length
+  }
 
   index -= 1
   if (index < 0 || index >= panel.filteredTabs.length) return

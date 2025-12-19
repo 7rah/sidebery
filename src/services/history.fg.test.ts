@@ -1,39 +1,29 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
-import * as Tabs from 'src/services/tabs.fg'
 import * as History from 'src/services/history.fg'
 import * as Settings from 'src/services/settings'
 import * as Sidebar from 'src/services/sidebar.fg'
-import * as Utils from 'src/utils'
-import { MTab } from 'src/defaults/mocks'
-import { TABS_PANEL_STATE } from 'src/defaults'
+import { addMTTab, resetMTabs, setDefaultMTabPanel } from 'src/defaults/mocks.tabs.fg'
 import { PanelType } from 'src/enums'
+import { addMPanel, resetMSidebar } from 'src/defaults/mocks.sidebar.fg'
 
 describe('History.getMouseOpeningConf()', () => {
   beforeEach(() => {
     Sidebar.setReadyState(true)
+    addMPanel({ type: PanelType.tabs, id: 'a' })
+    setDefaultMTabPanel('a')
     Sidebar.setActivePanelId('a')
-    Sidebar.setNav(['a'])
-    Sidebar.setPanelsById({
-      a: { ...Utils.clone(TABS_PANEL_STATE), id: 'a' },
-    })
-    Sidebar.setPanels(Sidebar.nav.map(id => Sidebar.panelsById[id]))
-    Sidebar.setHasPanelTypeState(PanelType.tabs, true)
   })
 
   afterEach(() => {
     Settings.resetSettings()
-    Tabs.setList([])
-    Tabs.setById({})
+    resetMTabs()
+    resetMSidebar()
   })
 
   test('new tab pos: left click: fallback to general settings', () => {
-    Tabs.setList([
-      new MTab({ id: 2, index: 0, panelId: 'a', isParent: true }),
-      new MTab({ id: 3, index: 1, panelId: 'a', parentId: 2, lvl: 1, active: true }),
-      new MTab({ id: 4, index: 2, panelId: 'a', parentId: 2, lvl: 1 }),
-    ])
-    Tabs.list.forEach(t => (Tabs.byId[t.id] = t))
-    Tabs.setActiveId(3)
+    addMTTab({ id: 2 })
+    addMTTab(0, { id: 3, active: true })
+    addMTTab(0, { id: 4 })
 
     Settings.state.moveNewTab = 'after'
     Settings.state.historyLeftClickAction = 'open_in_new'
@@ -45,13 +35,9 @@ describe('History.getMouseOpeningConf()', () => {
   })
 
   test('new tab pos: left click: fallback to general settings 2', () => {
-    Tabs.setList([
-      new MTab({ id: 2, index: 0, panelId: 'a', isParent: true }),
-      new MTab({ id: 3, index: 1, panelId: 'a', parentId: 2, lvl: 1, active: true }),
-      new MTab({ id: 4, index: 2, panelId: 'a', parentId: 2, lvl: 1 }),
-    ])
-    Tabs.list.forEach(t => (Tabs.byId[t.id] = t))
-    Tabs.setActiveId(3)
+    addMTTab({ id: 2 })
+    addMTTab(0, { id: 3, active: true })
+    addMTTab(0, { id: 4 })
 
     Settings.state.moveNewTab = 'end'
     Settings.state.historyLeftClickAction = 'open_in_new'
@@ -63,13 +49,9 @@ describe('History.getMouseOpeningConf()', () => {
   })
 
   test('new tab pos: left click: after', () => {
-    Tabs.setList([
-      new MTab({ id: 2, index: 0, panelId: 'a', isParent: true }),
-      new MTab({ id: 3, index: 1, panelId: 'a', parentId: 2, lvl: 1, active: true }),
-      new MTab({ id: 4, index: 2, panelId: 'a', parentId: 2, lvl: 1 }),
-    ])
-    Tabs.list.forEach(t => (Tabs.byId[t.id] = t))
-    Tabs.setActiveId(3)
+    addMTTab({ id: 2 })
+    addMTTab(0, { id: 3, active: true })
+    addMTTab(0, { id: 4 })
 
     Settings.state.historyLeftClickAction = 'open_in_new'
     Settings.state.historyLeftClickPos = 'after'
@@ -80,13 +62,9 @@ describe('History.getMouseOpeningConf()', () => {
   })
 
   test('new tab pos: middle click: fallback to general settings', () => {
-    Tabs.setList([
-      new MTab({ id: 2, index: 0, panelId: 'a', isParent: true }),
-      new MTab({ id: 3, index: 1, panelId: 'a', parentId: 2, lvl: 1, active: true }),
-      new MTab({ id: 4, index: 2, panelId: 'a', parentId: 2, lvl: 1 }),
-    ])
-    Tabs.list.forEach(t => (Tabs.byId[t.id] = t))
-    Tabs.setActiveId(3)
+    addMTTab({ id: 2 })
+    addMTTab(0, { id: 3, active: true })
+    addMTTab(0, { id: 4 })
 
     Settings.state.moveNewTab = 'after'
     Settings.state.historyMidClickAction = 'open_in_new'
@@ -98,13 +76,9 @@ describe('History.getMouseOpeningConf()', () => {
   })
 
   test('new tab pos: middle click: fallback to general settings 2', () => {
-    Tabs.setList([
-      new MTab({ id: 2, index: 0, panelId: 'a', isParent: true }),
-      new MTab({ id: 3, index: 1, panelId: 'a', parentId: 2, lvl: 1, active: true }),
-      new MTab({ id: 4, index: 2, panelId: 'a', parentId: 2, lvl: 1 }),
-    ])
-    Tabs.list.forEach(t => (Tabs.byId[t.id] = t))
-    Tabs.setActiveId(3)
+    addMTTab({ id: 2 })
+    addMTTab(0, { id: 3, active: true })
+    addMTTab(0, { id: 4 })
 
     Settings.state.moveNewTab = 'end'
     Settings.state.historyMidClickAction = 'open_in_new'
@@ -116,13 +90,9 @@ describe('History.getMouseOpeningConf()', () => {
   })
 
   test('new tab pos: middle click: after', () => {
-    Tabs.setList([
-      new MTab({ id: 2, index: 0, panelId: 'a', isParent: true }),
-      new MTab({ id: 3, index: 1, panelId: 'a', parentId: 2, lvl: 1, active: true }),
-      new MTab({ id: 4, index: 2, panelId: 'a', parentId: 2, lvl: 1 }),
-    ])
-    Tabs.list.forEach(t => (Tabs.byId[t.id] = t))
-    Tabs.setActiveId(3)
+    addMTTab({ id: 2 })
+    addMTTab(0, { id: 3, active: true })
+    addMTTab(0, { id: 4 })
 
     Settings.state.historyMidClickAction = 'open_in_new'
     Settings.state.historyMidClickPos = 'after'

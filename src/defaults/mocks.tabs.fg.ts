@@ -1,5 +1,6 @@
 import { ReactiveTabProps, Tab, TabSessionData } from 'src/types'
 import { TabStatus } from 'src/enums'
+import * as Tabs from 'src/services/tabs.fg'
 import { NOID } from 'src/defaults'
 
 export class MTab implements Tab {
@@ -104,16 +105,64 @@ export class MTab implements Tab {
   windowId: ID = 1
   groupId?: ID | undefined
 
-  constructor(ptab?: Partial<Tab>, prtab?: Partial<ReactiveTabProps>) {
+  constructor(ptab?: Partial<Tab>) {
     if (ptab) {
-      for (const k of Object.keys(ptab) as (keyof browser.tabs.Tab)[]) {
+      for (const k of Object.keys(ptab) as (keyof Tab)[]) {
+        if (k === 'reactive') continue
         if (ptab[k]) (this[k] as any) = ptab[k]
       }
     }
-    if (prtab) {
-      for (const k of Object.keys(prtab) as (keyof ReactiveTabProps)[]) {
-        if (prtab[k]) (this.reactive[k] as any) = prtab[k]
+    if (ptab?.reactive) {
+      for (const k of Object.keys(ptab.reactive) as (keyof ReactiveTabProps)[]) {
+        if (ptab.reactive[k]) (this.reactive[k] as any) = ptab.reactive[k]
       }
     }
   }
+}
+
+let defaultPanelId = NOID
+
+export function setDefaultMTabPanel(panelId: ID) {
+  defaultPanelId = panelId
+}
+
+export function addMTab(t: Partial<Tab>) {
+  if (t.panelId === undefined) t.panelId = defaultPanelId
+
+  const tab = new MTab(t)
+  tab.index = Tabs.list.length
+  Tabs.list.push(tab)
+  Tabs.byId[tab.id] = tab
+  if (tab.active) Tabs.setActiveId(tab.id)
+
+  return tab
+}
+
+export function addMTTab(...args: [...number[], Partial<Tab>]) {
+  const lvl = args.length - 1
+  const t = args[lvl] as Partial<Tab>
+
+  if (t.panelId === undefined) t.panelId = defaultPanelId
+
+  const tab = new MTab(t)
+  tab.index = Tabs.list.length
+  tab.lvl = lvl
+  if (lvl > 0) {
+    const parent = Tabs.list.findLast(t => t.lvl === lvl - 1)
+    if (!parent) throw 'no parent'
+    tab.parentId = parent.id
+    parent.isParent = true
+  }
+  Tabs.list.push(tab)
+  Tabs.byId[tab.id] = tab
+  if (tab.active) Tabs.setActiveId(tab.id)
+
+  return tab
+}
+
+export function resetMTabs() {
+  Tabs.setList([])
+  Tabs.setById({})
+  Tabs.setActiveId(NOID)
+  defaultPanelId = NOID
 }

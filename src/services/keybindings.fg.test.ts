@@ -2,19 +2,17 @@ import { afterEach, describe, expect, test } from 'vitest'
 import * as Tabs from 'src/services/tabs.fg'
 import * as Selection from 'src/services/selection.fg'
 import * as Keybindings from 'src/services/keybindings.fg'
-import { MTab } from 'src/defaults/mocks'
+import { addMTTab, resetMTabs } from 'src/defaults/mocks.tabs.fg'
 
 describe('Keybindings.onKeySelectTabsBranch()', () => {
   afterEach(() => {
-    Tabs.setList([])
-    Tabs.setById({})
+    resetMTabs()
     Selection.resetSelection()
   })
 
   test('Select branch of active non-parent tab', () => {
-    Tabs.setList([new MTab({ id: 2, index: 0, active: true }), new MTab({ id: 3, index: 1 })])
-    Tabs.list.forEach(t => (Tabs.byId[t.id] = t))
-    Tabs.setActiveId(2)
+    addMTTab({ id: 2, active: true })
+    addMTTab({ id: 3 })
 
     Keybindings.TESTING.onKeySelectTabsBranch()
     expect(Tabs.byId[2]?.sel).toBe(true)
@@ -22,12 +20,8 @@ describe('Keybindings.onKeySelectTabsBranch()', () => {
   })
 
   test('Select branch of active parent tab', () => {
-    Tabs.setList([
-      new MTab({ id: 2, index: 0, active: true, isParent: true }),
-      new MTab({ id: 3, index: 1, parentId: 2, lvl: 1 }),
-    ])
-    Tabs.list.forEach(t => (Tabs.byId[t.id] = t))
-    Tabs.setActiveId(2)
+    addMTTab({ id: 2, active: true })
+    addMTTab(0, { id: 3 })
 
     Keybindings.TESTING.onKeySelectTabsBranch()
     expect(Tabs.byId[2]?.sel).toBe(true)
@@ -35,15 +29,11 @@ describe('Keybindings.onKeySelectTabsBranch()', () => {
   })
 
   test('Select branch of selected parent tab', () => {
-    Tabs.setList([
-      new MTab({ id: 2, index: 0, active: true }),
-      new MTab({ id: 3, index: 1, isParent: true }),
-      new MTab({ id: 4, index: 2, parentId: 3, lvl: 1 }),
-      new MTab({ id: 5, index: 3, parentId: 3, lvl: 1 }),
-      new MTab({ id: 6, index: 4 }),
-    ])
-    Tabs.list.forEach(t => (Tabs.byId[t.id] = t))
-    Tabs.setActiveId(2)
+    addMTTab({ id: 2, active: true })
+    addMTTab({ id: 3 })
+    addMTTab(0, { id: 4 })
+    addMTTab(0, { id: 5 })
+    addMTTab({ id: 6 })
     Selection.selectTab(3)
 
     Keybindings.TESTING.onKeySelectTabsBranch()
@@ -55,16 +45,12 @@ describe('Keybindings.onKeySelectTabsBranch()', () => {
   })
 
   test('Select multiple branches of selected tabs', () => {
-    Tabs.setList([
-      new MTab({ id: 2, index: 0, active: true }),
-      new MTab({ id: 3, index: 1, isParent: true }),
-      new MTab({ id: 4, index: 2, parentId: 3, lvl: 1, isParent: true }),
-      new MTab({ id: 5, index: 3, parentId: 4, lvl: 2 }),
-      new MTab({ id: 6, index: 4, isParent: true }),
-      new MTab({ id: 7, index: 5, parentId: 6, lvl: 1 }),
-    ])
-    Tabs.list.forEach(t => (Tabs.byId[t.id] = t))
-    Tabs.setActiveId(2)
+    addMTTab({ id: 2, active: true })
+    addMTTab({ id: 3 })
+    addMTTab(0, { id: 4 })
+    addMTTab(0, 1, { id: 5 })
+    addMTTab({ id: 6 })
+    addMTTab(0, { id: 7 })
     Selection.selectTab(2)
     Selection.selectTab(3)
     Selection.selectTab(6)

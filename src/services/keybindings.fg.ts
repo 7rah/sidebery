@@ -198,6 +198,7 @@ function onCmd(name: string): void {
     Selection.resetSelection()
     Menu.close()
     if (Sidebar.reactive.hiddenPanelsPopup) Sidebar.reactive.hiddenPanelsPopup = false
+    if (Search.rawValue) Search.close()
   } else if (name === 'select_all') onKeySelectAll()
   else if (name === 'up') onKeySelect(-1)
   else if (name === 'down') onKeySelect(1)

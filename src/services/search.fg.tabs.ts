@@ -29,22 +29,15 @@ export function onTabsSearch(activePanel: Panel): void {
 
       const filtered: Tab[] = []
       const filteredIds: ID[] = []
-      const filteredInvisible: Tab[] = []
-      const filteredInvisibleIds: ID[] = []
       for (const tab of tabs) {
         if (Search.check(tab.title) || Search.check(tab.customTitle) || Search.check(tab.url)) {
-          if (!tab.invisible) {
-            filtered.push(tab)
-            filteredIds.push(tab.id)
-          } else {
-            filteredInvisible.push(tab)
-            filteredInvisibleIds.push(tab.id)
-          }
+          filtered.push(tab)
+          filteredIds.push(tab.id)
         }
       }
-      activePanel.filteredTabs = filtered.concat(filteredInvisible)
+      activePanel.filteredTabs = filtered
       activePanel.reactive.filteredLen = activePanel.filteredTabs.length
-      activePanel.reactive.visibleTabIds = filteredIds.concat(filteredInvisibleIds)
+      activePanel.reactive.visibleTabIds = filteredIds
     } else {
       activePanel.filteredTabs = undefined
       activePanel.reactive.filteredLen = undefined

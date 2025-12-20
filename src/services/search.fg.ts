@@ -84,7 +84,7 @@ export function onOutsideSearchExit(): void {
 
   const sidebarFocused = document.hasFocus()
   if (!sidebarFocused) {
-    if (!Settings.state.searchTabSwitch) Search.close()
+    if (!Settings.state.searchTabSwitch || !rawValue) Search.close()
     else IPC.sendToSearchPopup(Windows.id, 'closePopup')
   } else if (inputEl && inputEl !== document.activeElement) {
     Search.reactive.barIsActive = false

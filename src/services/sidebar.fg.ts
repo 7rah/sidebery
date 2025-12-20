@@ -2779,7 +2779,9 @@ export function attachSelLenBadgeToTab(id?: ID | null) {
     return
   }
 
-  if (tab?.invisible) tab = Tabs.findAncestor(tab, p => !p.invisible)
+  if (tab?.invisible && !Search.rawValue) {
+    tab = Tabs.findAncestor(tab, p => !p.invisible)
+  }
 
   if (tab) reactive.selLenBadgeTarget = document.getElementById('tab' + tab.id)
   else reactive.selLenBadgeTarget = null

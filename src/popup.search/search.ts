@@ -109,7 +109,5 @@ void (async () => {
 
   // Check if input is not focused and focus it if needed.
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1918031
-  Utils.untilElGetFocus(el, el => {
-    el.focus()
-  })
+  Utils.untilElGetFocus(el, e => e.focus())
 })()

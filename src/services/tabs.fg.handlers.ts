@@ -883,7 +883,7 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
 
     // Update filtered results
     if (Search.rawValue && Sidebar.activePanelId === tab.panelId && !Sidebar.subPanelActive) {
-      Search.searchDebounced(500, undefined, true)
+      Search.searchDebounced(500, undefined)
     }
   }
 
@@ -945,7 +945,7 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
 
     // Update filtered results
     if (Search.rawValue && Sidebar.activePanelId === tab.panelId && !Sidebar.subPanelActive) {
-      Search.searchDebounced(500, undefined, true)
+      Search.searchDebounced(500, undefined)
     }
   }
 

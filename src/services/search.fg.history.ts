@@ -6,7 +6,7 @@ import * as Utils from 'src/utils'
 import * as Logs from 'src/services/logs'
 import { Visit } from 'src/types'
 
-export async function onHistorySearch(noSel?: boolean): Promise<void> {
+export async function onHistorySearch(): Promise<void> {
   History.setReadyState(false)
   History.setAllLoadedState(false)
   History.reactive.loading = true
@@ -30,7 +30,7 @@ export async function onHistorySearch(noSel?: boolean): Promise<void> {
 
     History.reactive.days = History.recalcDays()
 
-    if (first && !noSel) {
+    if (first) {
       if (Search.reactive.barIsFocused) {
         Selection.resetSelection()
       }

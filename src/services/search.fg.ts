@@ -322,14 +322,14 @@ export function menu(): void {
 }
 
 let searchTimeout: number | undefined
-export function searchDebounced(delay: number, value?: string, noSel?: boolean) {
+export function searchDebounced(delay: number, value?: string) {
   clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => search(value, noSel), delay)
+  searchTimeout = setTimeout(() => search(value), delay)
 }
 
 let query = ''
 let beforeSwitchingPanelId: ID | undefined
-export function search(value?: string, noSel?: boolean): void {
+export function search(value?: string): void {
   if (value !== undefined) {
     const regexCJK = /[\u4E00-\u9FFF,\u3400-\u4DBF,\u3040-\u312F,\uAC00-\uD7A3]/g
     //CJK Unified Ideographs
@@ -368,19 +368,19 @@ export function search(value?: string, noSel?: boolean): void {
     if (Sidebar.subPanelActive) {
       if (Sidebar.subPanelType === SubPanelType.Bookmarks && Sidebar.subPanels.bookmarks) {
         targetPanelId = Sidebar.subPanels.bookmarks.id
-        SearchBookmarks.onBookmarksSearch(actPanel, Sidebar.subPanels.bookmarks, noSel)
+        SearchBookmarks.onBookmarksSearch(actPanel, Sidebar.subPanels.bookmarks)
       } else if (Sidebar.subPanelType === SubPanelType.History) {
         targetPanelId = NOID
-        SearchHistory.onHistorySearch(noSel)
+        SearchHistory.onHistorySearch()
       }
     } else {
-      SearchTabs.onTabsSearch(actPanel, noSel)
+      SearchTabs.onTabsSearch(actPanel)
     }
   } else if (Utils.isBookmarksPanel(actPanel)) {
-    SearchBookmarks.onBookmarksSearch(actPanel, undefined, noSel)
+    SearchBookmarks.onBookmarksSearch(actPanel, undefined)
   } else if (Utils.isHistoryPanel(actPanel)) {
     targetPanelId = NOID
-    SearchHistory.onHistorySearch(noSel)
+    SearchHistory.onHistorySearch()
   }
 
   if (value === '') {

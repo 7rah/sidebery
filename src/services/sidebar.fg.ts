@@ -482,7 +482,7 @@ export function addToVisibleTabs(panelId: ID, tab: T.Tab) {
   if (!Utils.isTabsPanel(panel)) return
 
   // Trigger search, which will update visibleTabIds list
-  if (panel.filteredTabs) return Search.search(undefined, true)
+  if (panel.filteredTabs) return Search.search(undefined)
 
   if (tab.index === panel.endTabIndex) {
     panel.reactive.visibleTabIds.push(tab.id)

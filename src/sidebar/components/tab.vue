@@ -686,13 +686,9 @@ let activating = false
 function activate(): void {
   if (Mouse.longClickApplied) return
 
-  if (Search.rawValue) {
-    if (Settings.state.searchTabSwitch) {
-      Search.focus()
-    } else {
-      Search.stop()
-      Selection.resetSelection()
-    }
+  if (Search.rawValue && !Settings.state.searchTabSwitch) {
+    Search.stop()
+    Selection.resetSelection()
   }
 
   if (tab.id !== Tabs.activeId) {

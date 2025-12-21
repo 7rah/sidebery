@@ -419,12 +419,12 @@ export function reset(panel?: Panel): void {
   }
 }
 
-export function stop(): void {
+export function stop(keepSearchBar?: boolean): void {
   if (searchPrevPanelId !== undefined) {
     Sidebar.activatePanel(searchPrevPanelId, true, true)
     searchPrevPanelId = undefined
   }
-  if (Settings.state.searchBarMode === 'dynamic') hideBar()
+  if (Settings.state.searchBarMode === 'dynamic' && !keepSearchBar) hideBar()
   reactive.rawValue = rawValue = ''
   search('')
   subPanelOpenBySearch = false

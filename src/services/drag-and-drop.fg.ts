@@ -14,6 +14,7 @@ import * as Logs from 'src/services/logs'
 import * as IPC from 'src/services/ipc'
 import * as TabsSync from 'src/services/tabs.fg.sync'
 import * as Permissions from 'src/services/permissions.fg'
+import * as Search from 'src/services/search.fg'
 
 import * as DnD from 'src/services/drag-and-drop.fg'
 
@@ -81,6 +82,7 @@ export let dragEndedRecently = false
 export let droppedRecently = false
 export let dragInfo: T.DragInfo | null = null
 
+let currentSearchRawValue = ''
 let lastDragStartTime = 0
 
 export function reactivate(r: T.Reactivator<DragAndDropState>) {
@@ -129,6 +131,14 @@ export function start(info: T.DragInfo, dstType?: E.DropType, dstPanelId?: ID): 
   updateTooltip(info)
 
   DnD.reactive.isStarted = true
+
+  currentSearchRawValue = Search.rawValue
+  if (Search.rawValue) {
+    requestAnimationFrame(() => {
+      Search.stop(true)
+      Sidebar.updateBounds()
+    })
+  }
 }
 
 function updateTooltip(info: T.DragInfo): void {
@@ -203,6 +213,14 @@ export function reset(): void {
   resetTabActivateTimeout()
   resetPanelSwitchTimeout()
   resetSubPanelOpenTimeout()
+
+  if (currentSearchRawValue) {
+    requestAnimationFrame(() => {
+      Search.reactive.rawValue = currentSearchRawValue
+      Search.setRawValue(currentSearchRawValue)
+      Search.search(currentSearchRawValue)
+    })
+  }
 }
 
 function resetDragPointer(): void {

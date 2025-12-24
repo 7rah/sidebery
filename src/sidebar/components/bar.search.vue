@@ -41,7 +41,7 @@ onMounted(() => {
 })
 
 function onClearBtnMouseDown(e: MouseEvent): void {
-  if (Search.rawValue) Search.onOutsideSearchInput('')
+  if (Search.rawValue) Search.stop(true)
   else {
     Search.hideBar()
     e.preventDefault()

@@ -7,6 +7,7 @@ import * as Sidebar from 'src/services/sidebar.fg'
 import * as Tabs from 'src/services/tabs.fg'
 import * as DnD from 'src/services/drag-and-drop.fg'
 import * as Preview from 'src/services/tabs.fg.preview'
+import * as Search from 'src/services/search.fg'
 
 import * as Mouse from 'src/services/mouse.fg'
 
@@ -124,8 +125,11 @@ export function onMouseMove(e: MouseEvent): void {
     Selection.resetSelection()
     multiSelectionMode = true
     const tab = Tabs.byId[multiSelectionStartId]
-    if (tab && !tab.pinned && tab.isParent && tab.folded) Selection.selectTabsBranch(tab)
-    else Selection.select(multiSelectionStartId)
+    if (tab && !tab.pinned && tab.isParent && tab.folded && !Search.rawValue) {
+      Selection.selectTabsBranch(tab)
+    } else {
+      Selection.select(multiSelectionStartId)
+    }
     Sidebar.updateBounds()
     stopLongClick()
 
@@ -164,8 +168,11 @@ export function onMouseMove(e: MouseEvent): void {
         if (!Selection.includes(slot.id)) {
           if (slot.type === ItemBoundsType.Tab) {
             const tab = Tabs.byId[slot.id]
-            if (tab && !tab.pinned && tab.isParent && tab.folded) Selection.selectTabsBranch(tab)
-            else Selection.selectTab(slot.id)
+            if (tab && !tab.pinned && tab.isParent && tab.folded && !Search.rawValue) {
+              Selection.selectTabsBranch(tab)
+            } else {
+              Selection.selectTab(slot.id)
+            }
           }
           if (slot.type === ItemBoundsType.Bookmarks) Selection.selectBookmark(slot.id)
         }
@@ -174,8 +181,11 @@ export function onMouseMove(e: MouseEvent): void {
         if (Selection.includes(slot.id)) {
           if (slot.type === ItemBoundsType.Tab) {
             const tab = Tabs.byId[slot.id]
-            if (tab && !tab.pinned && tab.isParent && tab.folded) Selection.deselectTabsBranch(tab)
-            else Selection.deselectTab(slot.id)
+            if (tab && !tab.pinned && tab.isParent && tab.folded && !Search.rawValue) {
+              Selection.deselectTabsBranch(tab)
+            } else {
+              Selection.deselectTab(slot.id)
+            }
           }
           if (slot.type === ItemBoundsType.Bookmarks) Selection.deselectBookmark(slot.id)
         }

@@ -66,10 +66,14 @@ export function onOutsideSearchInput(value: string): void {
 
   reactive.rawValue = rawValue = value
 
-  clearTimeout(inputTimeout)
-  inputTimeout = setTimeout(() => {
+  if (Settings.state.searchInputTimeout > 0) {
+    clearTimeout(inputTimeout)
+    inputTimeout = setTimeout(() => {
+      Search.search(Search.rawValue)
+    }, Settings.state.searchInputTimeout)
+  } else {
     Search.search(Search.rawValue)
-  }, Settings.state.searchInputTimeout)
+  }
 }
 
 export function onOutsideSearchExit(): void {

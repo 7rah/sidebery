@@ -116,10 +116,14 @@ let inputTimeout: number | undefined
 function onInput(e: Event) {
   Search.setRawValue((e.target as HTMLInputElement | null)?.value ?? '')
 
-  clearTimeout(inputTimeout)
-  inputTimeout = setTimeout(() => {
+  if (Settings.state.searchInputTimeout > 0) {
+    clearTimeout(inputTimeout)
+    inputTimeout = setTimeout(() => {
+      Search.search((e.target as HTMLInputElement | null)?.value)
+    }, Settings.state.searchInputTimeout)
+  } else {
     Search.search((e.target as HTMLInputElement | null)?.value)
-  }, Settings.state.searchInputTimeout)
+  }
 }
 
 function onChange(e: Event): void {

@@ -91,7 +91,7 @@ async function onMouseDown(e: MouseEvent): Promise<void> {
     e.preventDefault()
     if (Selection.isBookmarks()) {
       Selection.resetSelection()
-      if (!Search.rawValue) return
+      if (!Search.active) return
     }
 
     const action = Settings.state.bookmarksMidClickAction

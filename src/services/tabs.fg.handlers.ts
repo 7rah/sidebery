@@ -486,7 +486,7 @@ async function onTabCreated(nativeTab: NativeTab, attached?: boolean) {
   Tabs.reactivateTab(tab)
   Sidebar.recalcTabsPanels()
   if (!tab.invisible) Sidebar.addToVisibleTabs(panel.id, tab)
-  else if (Search.rawValue && Sidebar.activePanelId === tab.panelId && !Sidebar.subPanelActive) {
+  else if (Search.active && Sidebar.activePanelId === tab.panelId && !Sidebar.subPanelActive) {
     Search.searchDebounced(300)
   }
   Tabs.updateUrlCounter(tab.url, 1)
@@ -885,8 +885,8 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
     }
 
     // Update filtered results
-    if (Search.rawValue && Sidebar.activePanelId === tab.panelId && !Sidebar.subPanelActive) {
-      Search.searchDebounced(500, undefined)
+    if (Search.active && Sidebar.activePanelId === tab.panelId && !Sidebar.subPanelActive) {
+      Search.searchDebounced(500)
     }
   }
 
@@ -947,8 +947,8 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
     }
 
     // Update filtered results
-    if (Search.rawValue && Sidebar.activePanelId === tab.panelId && !Sidebar.subPanelActive) {
-      Search.searchDebounced(500, undefined)
+    if (Search.active && Sidebar.activePanelId === tab.panelId && !Sidebar.subPanelActive) {
+      Search.searchDebounced(500)
     }
   }
 
@@ -1015,7 +1015,7 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
     }
 
     // Update filtered results
-    if (Search.rawValue) Search.searchDebounced(300)
+    if (Search.active) Search.searchDebounced(300)
   }
 
   // Handle pinned tab
@@ -1058,7 +1058,7 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
     }
 
     // Update filtered results
-    if (Search.rawValue) Search.searchDebounced(300)
+    if (Search.active) Search.searchDebounced(300)
   }
 
   // Colorize branch
@@ -1213,8 +1213,8 @@ function onTabRemoved(tabId: ID, info: browser.tabs.RemoveInfo, detached?: boole
     const toRemove = []
     const outdentOnlyFirstChild = !autoGroup && Settings.state.treeRmOutdent === 'first_child'
     const firstChild = nextTab
-    const rmFoldedChildTabs = Settings.rmChildTabsFolded && !Search.rawValue
-    const rmAllChildTabs = Settings.rmChildTabsAll && !Search.rawValue
+    const rmFoldedChildTabs = Settings.rmChildTabsFolded && !Search.active
+    const rmAllChildTabs = Settings.rmChildTabsAll && !Search.active
 
     // Handle reopening tab in different container
     if (tab.reopening && tab.reopening.id !== D.NOID) {
@@ -1401,7 +1401,7 @@ function onTabRemoved(tabId: ID, info: browser.tabs.RemoveInfo, detached?: boole
     }
 
     // Update filtered results
-    if (Search.rawValue) Search.search()
+    if (Search.active) Search.search()
   }
 
   // Update bookmarks marks
@@ -1564,7 +1564,7 @@ function onTabMoved(id: ID, info: browser.tabs.MoveInfo): void {
   if (nativeTabsVisibilityUpdateNeeded) Tabs.updateNativeTabsVisibility()
 
   // Update filtered results
-  if (Search.rawValue) Search.searchDebounced(300)
+  if (Search.active) Search.searchDebounced(300)
 }
 
 const ignoreMoveEventsReasons = new Set<string>()

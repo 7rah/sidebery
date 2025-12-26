@@ -314,7 +314,7 @@ export async function loadMore(): Promise<void> {
 
   let result = await browser.history
     .search({
-      text: Search.reactive.value,
+      text: Search.query,
       maxResults: UNLIMITED,
       startTime: after,
       endTime: before,
@@ -336,7 +336,7 @@ export async function loadMore(): Promise<void> {
   // If got nothing, try to get next 100 items
   result = await browser.history
     .search({
-      text: Search.reactive.value,
+      text: Search.query,
       maxResults: 100,
       startTime: 0,
       endTime: before,
@@ -384,7 +384,7 @@ function onVisit(item: T.NativeHistoryItem): void {
     History.visits.sort((a, b) => b.time - a.time)
   }
 
-  if (visit.noTitle || Search.rawValue) return
+  if (visit.noTitle || Search.active) return
 
   if (sortNeeded) {
     History.reactive.days = History.recalcDays()
@@ -405,7 +405,7 @@ function onRemoved(info: browser.history.RemoveDetails): void {
       cachedVisits[url] = []
     }
   }
-  if (!Search.rawValue) reactive.days = History.recalcDays()
+  if (!Search.active) reactive.days = History.recalcDays()
 }
 
 function onTitleChange(info: browser.history.TitleChangeDetails): void {
@@ -415,7 +415,7 @@ function onTitleChange(info: browser.history.TitleChangeDetails): void {
     visit.reactive.tooltip = visit.tooltip = visit.title + '\n---\n' + visit.decodedUrl
     if (visit.noTitle) {
       visit.noTitle = false
-      if (!Search.rawValue) recalcToday()
+      if (!Search.active) recalcToday()
     }
   }
 }

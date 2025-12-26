@@ -80,7 +80,7 @@ const state = reactive({
 })
 
 const isActive = computed<boolean>(() => props.panel.id === Sidebar.reactive.activePanelId)
-const isFiltering = computed<boolean>(() => !!Search.reactive.value)
+const isFiltering = computed<boolean>(() => Search.reactive.active)
 const tree = computed(
   () => props.panel.reactive.filteredBookmarks ?? props.panel.reactive.bookmarks ?? []
 )

@@ -82,7 +82,7 @@ export let dragEndedRecently = false
 export let droppedRecently = false
 export let dragInfo: T.DragInfo | null = null
 
-let currentSearchRawValue = ''
+let currentSearchQuery = ''
 let lastDragStartTime = 0
 
 export function reactivate(r: T.Reactivator<DragAndDropState>) {
@@ -132,10 +132,12 @@ export function start(info: T.DragInfo, dstType?: E.DropType, dstPanelId?: ID): 
 
   DnD.reactive.isStarted = true
 
-  currentSearchRawValue = Search.rawValue
-  if (Search.rawValue) {
+  currentSearchQuery = Search.query
+  if (Search.active) {
     requestAnimationFrame(() => {
+      Selection.preserveSelection()
       Search.stop(true)
+      Selection.allowSelectionReset()
       Sidebar.updateBounds()
     })
   }
@@ -214,11 +216,11 @@ export function reset(): void {
   resetPanelSwitchTimeout()
   resetSubPanelOpenTimeout()
 
-  if (currentSearchRawValue) {
+  if (currentSearchQuery) {
     requestAnimationFrame(() => {
-      Search.reactive.rawValue = currentSearchRawValue
-      Search.setRawValue(currentSearchRawValue)
-      Search.search(currentSearchRawValue)
+      Search.reactive.rawQuery = currentSearchQuery
+      Search.search(currentSearchQuery)
+      currentSearchQuery = ''
     })
   }
 }

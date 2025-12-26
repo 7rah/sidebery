@@ -15,7 +15,7 @@
   :data-lvl="tab.reactive.lvl"
   :data-group="tab.reactive.isGroup"
   :data-parent="tab.reactive.isParent"
-  :data-folded="tab.reactive.folded && !Search.reactive.value"
+  :data-folded="tab.reactive.folded"
   :data-color="tab.reactive.containerColor"
   :data-colorized="!!tabColor"
   :data-unread="tab.reactive.unread"
@@ -675,7 +675,7 @@ function discardOrCloseTabs(selectedTabs: ID[]): void {
  * Select this tab
  */
 function select(): void {
-  if (!tab.pinned && tab.isParent && tab.folded && !Search.rawValue) {
+  if (!tab.pinned && tab.isParent && tab.folded && !Search.active) {
     Selection.selectTabsBranch(tab)
   } else {
     Selection.selectTab(tab.id)
@@ -686,7 +686,7 @@ let activating = false
 function activate(): void {
   if (Mouse.longClickApplied) return
 
-  if (Search.rawValue && !Settings.state.searchTabSwitch) {
+  if (Search.active && !Settings.state.searchTabSwitch) {
     Search.stop()
     Selection.resetSelection()
   }

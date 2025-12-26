@@ -357,12 +357,12 @@
 .Tab[data-active="true"] .fav-icon
   fill: var(--tabs-activated-fg)
 
-.Tab[data-parent="true"] .fav:hover svg.fav-icon
-.Tab[data-parent="true"][data-folded="true"] .fav svg.fav-icon
+#root[data-search="false"] .Tab[data-parent="true"] .fav:hover svg.fav-icon
+#root[data-search="false"] .Tab[data-parent="true"][data-folded="true"] .fav svg.fav-icon
   opacity: .2
 
-.Tab[data-parent="true"] .fav:hover img
-.Tab[data-parent="true"][data-folded="true"] .fav img
+#root[data-search="false"] .Tab[data-parent="true"] .fav:hover img
+#root[data-search="false"] .Tab[data-parent="true"][data-folded="true"] .fav img
   opacity: .2
 
 .Tab[data-updated="true"] .fav-icon
@@ -413,7 +413,7 @@
   z-index: 1
   opacity: 1
 
-.Tab[data-parent="true"][data-folded="true"] .fav .exp
+#root[data-search="false"] .Tab[data-parent="true"][data-folded="true"] .fav .exp
   z-index: 1
   opacity: 1
   transform: rotateZ(-90deg)

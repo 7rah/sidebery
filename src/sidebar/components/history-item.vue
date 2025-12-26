@@ -111,7 +111,7 @@ function onMouseUp(e: MouseEvent, visit: Visit): void {
 
     let conf = History.getMouseOpeningConf(e.button)
     // Reset search input, if navigating away from the history panel
-    if (Search.rawValue && conf.activateFirstTab) {
+    if (Search.active && conf.activateFirstTab) {
       Search.stop()
       Selection.resetSelection()
     }

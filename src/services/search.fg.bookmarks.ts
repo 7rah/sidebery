@@ -56,13 +56,13 @@ export function onBookmarksSearch(activePanel: Panel, panel?: Panel): void {
   const samePanel = prevActivePanelId === panel.id
   prevActivePanelId = panel.id
 
-  if (Search.reactive.value) {
-    const value = Search.reactive.value
-    const prevValue = Search.prevValue
+  if (Search.query) {
+    const query = Search.query
+    const prevQuery = Search.prevQuery
     const rootBookmark = Bookmarks.reactive.byId[panel.rootId]
 
     let bookmarks: Bookmark[] | undefined
-    if (value.length > prevValue.length && value.startsWith(prevValue) && samePanel) {
+    if (query.length > prevQuery.length && query.startsWith(prevQuery) && samePanel) {
       bookmarks = panel.reactive.filteredBookmarks
     }
     if (!bookmarks) {
@@ -109,7 +109,7 @@ export function onBookmarksSearch(activePanel: Panel, panel?: Panel): void {
     expandedBookmarks = {}
     panel.reactive.filteredBookmarks = undefined
     panel.reactive.filteredLen = undefined
-    if (Search.prevValue) Selection.resetSelection()
+    if (Search.prevQuery) Selection.resetSelection()
   }
 }
 
@@ -190,7 +190,7 @@ export function onBookmarksSearchEnter(actPanel: Panel, panel?: Panel) {
   if (!Utils.isBookmarksPanel(panel) || !panel.reactive.filteredBookmarks) return
 
   // Try to find in another panel
-  if (Search.reactive.value && !panel.reactive.filteredBookmarks?.length) {
+  if (Search.query && !panel.reactive.filteredBookmarks?.length) {
     return findInAnotherPanel()
   }
 

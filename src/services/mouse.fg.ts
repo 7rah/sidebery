@@ -125,7 +125,7 @@ export function onMouseMove(e: MouseEvent): void {
     Selection.resetSelection()
     multiSelectionMode = true
     const tab = Tabs.byId[multiSelectionStartId]
-    if (tab && !tab.pinned && tab.isParent && tab.folded && !Search.rawValue) {
+    if (tab && !tab.pinned && tab.isParent && tab.folded && !Search.active) {
       Selection.selectTabsBranch(tab)
     } else {
       Selection.select(multiSelectionStartId)
@@ -168,7 +168,7 @@ export function onMouseMove(e: MouseEvent): void {
         if (!Selection.includes(slot.id)) {
           if (slot.type === ItemBoundsType.Tab) {
             const tab = Tabs.byId[slot.id]
-            if (tab && !tab.pinned && tab.isParent && tab.folded && !Search.rawValue) {
+            if (tab && !tab.pinned && tab.isParent && tab.folded && !Search.active) {
               Selection.selectTabsBranch(tab)
             } else {
               Selection.selectTab(slot.id)
@@ -181,7 +181,7 @@ export function onMouseMove(e: MouseEvent): void {
         if (Selection.includes(slot.id)) {
           if (slot.type === ItemBoundsType.Tab) {
             const tab = Tabs.byId[slot.id]
-            if (tab && !tab.pinned && tab.isParent && tab.folded && !Search.rawValue) {
+            if (tab && !tab.pinned && tab.isParent && tab.folded && !Search.active) {
               Selection.deselectTabsBranch(tab)
             } else {
               Selection.deselectTab(slot.id)

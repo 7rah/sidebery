@@ -37,7 +37,7 @@
   .bottom-bar-space(v-if="bottomBarSpaceNeeded")
 
   PanelPlaceholder(
-    :isMsg="!!Search.reactive.rawValue && panel.reactive.filteredLen === 0"
+    :isMsg="Search.reactive.active && panel.reactive.filteredLen === 0"
     :msg="translate('panel.nothing_found')")
 </template>
 

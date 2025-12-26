@@ -363,7 +363,7 @@ export async function move(
   }
 
   // Update filtered results
-  if (Search.rawValue) Search.search()
+  if (Search.active) Search.search()
 }
 
 /**
@@ -691,7 +691,7 @@ export function detachTabs(tabIds: ID[]): DetachedTabsInfo | undefined {
   Tabs.updateSuccessionDebounced(0)
 
   // Update filtered results
-  if (Search.rawValue) Search.search()
+  if (Search.active) Search.search()
 
   // Update media badges
   if (updMediaBadges) {

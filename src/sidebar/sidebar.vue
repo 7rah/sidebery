@@ -19,7 +19,7 @@
   :data-drag="DnD.reactive.isStarted"
   :data-nav-inline="Settings.state.navBarInline"
   :data-nav-layout="navBarLayout"
-  :data-search="!!Search.reactive.value"
+  :data-search="Search.reactive.active"
   :data-sticky-bookmarks="Settings.state.pinOpenedBookmarksFolder"
   :data-colorized-branches="Settings.state.colorizeTabsBranches"
   :data-syncing="Sync.reactive.syncing"
@@ -337,7 +337,7 @@ function onMouseLeave(): void {
   Mouse.stopResizing()
 
   const activePanel = Sidebar.panelsById[Sidebar.activePanelId]
-  if (!Utils.isTabsPanel(activePanel) && activePanel?.tempMode && !Search.rawValue) {
+  if (!Utils.isTabsPanel(activePanel) && activePanel?.tempMode && !Search.active) {
     Sidebar.switchPanelBack(300)
   }
 
@@ -349,7 +349,7 @@ function onMouseLeave(): void {
     }, 250)
   }
 
-  if (Sidebar.subPanelActive && !Search.rawValue && !Menu.isOpen && !DnD.items.length) {
+  if (Sidebar.subPanelActive && !Search.active && !Menu.isOpen && !DnD.items.length) {
     Sidebar.closeSubPanel()
   }
 

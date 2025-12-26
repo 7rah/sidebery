@@ -600,7 +600,7 @@ function onKeySelect(dir: number): void {
     return
   }
 
-  if (Search.rawValue) {
+  if (Search.active) {
     if (dir > 0) Search.next()
     else Search.prev()
     return

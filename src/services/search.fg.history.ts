@@ -13,11 +13,11 @@ export async function onHistorySearch(): Promise<void> {
 
   await Utils.sleep(250)
 
-  if (Search.reactive.value) {
+  if (Search.active) {
     let first
     try {
       const result = await browser.history.search({
-        text: Search.reactive.value,
+        text: Search.query,
         maxResults: 100,
         startTime: 0,
       })
@@ -39,7 +39,7 @@ export async function onHistorySearch(): Promise<void> {
   } else {
     History.clearFiltered()
     History.reactive.days = History.recalcDays()
-    if (Search.prevValue) Selection.resetSelection()
+    if (Search.prevQuery) Selection.resetSelection()
   }
 
   History.setReadyState(true)

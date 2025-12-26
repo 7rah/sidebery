@@ -208,8 +208,8 @@ export async function removeTabs(
 
   Tabs.sortTabIds(tabIds)
 
-  const rmChildTabsFolded = Settings.rmChildTabsFolded && !Search.rawValue
-  const rmChildTabsAll = Settings.rmChildTabsAll && !Search.rawValue
+  const rmChildTabsFolded = Settings.rmChildTabsFolded && !Search.active
+  const rmChildTabsAll = Settings.rmChildTabsAll && !Search.active
   const tabsMap: Record<ID, Tab> = {}
   const tabs: Tab[] = []
   const toRemove: ID[] = []

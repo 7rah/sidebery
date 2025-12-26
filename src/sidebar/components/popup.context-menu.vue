@@ -311,7 +311,7 @@ function activateOption(opt?: T.MenuOption, altMode?: boolean): boolean | undefi
   }
   Menu.close()
   Selection.resetSelection()
-  if (!opt.keepSearching && Search.rawValue && !Settings.state.searchMenuTrig) {
+  if (!opt.keepSearching && Search.active && !Settings.state.searchMenuTrig) {
     Search.stop()
   }
   return true

@@ -219,7 +219,7 @@ let saveBookmarksTreeTimeout: number | undefined
 export function saveBookmarksTree(delay = 128): void {
   if (!Windows.focused) return
   if (Bookmarks.reactive.popup) return
-  if (Search.rawValue) return
+  if (Search.active) return
 
   clearTimeout(saveBookmarksTreeTimeout)
   saveBookmarksTreeTimeout = setTimeout(() => {

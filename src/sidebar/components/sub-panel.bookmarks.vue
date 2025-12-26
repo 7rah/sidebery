@@ -98,7 +98,7 @@ function open() {
       checkRootFolder()
       setPanelEls()
       updateRootTree()
-      if (Search.rawValue) Search.search()
+      if (Search.active) Search.search()
     })
   } else {
     state.active = !state.active

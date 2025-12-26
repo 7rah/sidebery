@@ -28,6 +28,6 @@ function switchViewMode(mode: string): void {
   else props.panel.viewMode = mode
   Sidebar.saveSidebar()
 
-  if (Search.reactive.value) Search.search()
+  if (Search.active) Search.search()
 }
 </script>

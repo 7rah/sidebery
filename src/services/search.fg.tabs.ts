@@ -11,18 +11,18 @@ let prevActivePanelId: ID | undefined
 export function onTabsSearch(activePanel: Panel): void {
   if (!Utils.isTabsPanel(activePanel)) return
 
-  const value = Search.reactive.value
+  const query = Search.query
   const samePanel = prevActivePanelId === activePanel.id
   prevActivePanelId = activePanel.id
 
   if (activePanel.tabs.length) {
     // Filter tabs
-    if (value) {
-      const prevValue = Search.prevValue
-      const moreSpecific = value.length > prevValue.length
+    if (query) {
+      const prevQuery = Search.prevQuery
+      const moreSpecific = query.length > prevQuery.length
 
       let tabs: Tab[] | undefined
-      if (prevValue && moreSpecific && value.startsWith(prevValue) && samePanel) {
+      if (prevQuery && moreSpecific && query.startsWith(prevQuery) && samePanel) {
         tabs = activePanel.filteredTabs
       }
       if (!tabs) tabs = activePanel.tabs
@@ -45,14 +45,14 @@ export function onTabsSearch(activePanel: Panel): void {
     }
 
     // Scroll to the first target
-    if (value) {
+    if (query) {
       Selection.resetSelection()
       const firstTab = activePanel.filteredTabs?.[0]
       if (firstTab) Tabs.scrollToTab(firstTab.id)
     }
 
     // Search end
-    if (Search.prevValue && !value) {
+    if (Search.prevQuery && !query) {
       Selection.resetSelection()
     }
   } else {
@@ -104,7 +104,7 @@ export function onTabsSearchEnter(panel?: Panel): void {
   if (!Utils.isTabsPanel(panel)) return
 
   // Try to find in another panel
-  if (Search.reactive.value && !panel.filteredTabs?.length) return findInAnotherPanel()
+  if (Search.query && !panel.filteredTabs?.length) return findInAnotherPanel()
 
   const selId = Selection.getFirst()
   const tab = Tabs.byId[selId]

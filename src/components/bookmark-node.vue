@@ -133,7 +133,7 @@ async function onMouseDown(e: MouseEvent): Promise<void> {
     e.preventDefault()
     if (Selection.isBookmarks()) {
       Selection.resetSelection()
-      if (!Search.rawValue) return
+      if (!Search.active) return
     }
 
     // Visualize clicking
@@ -204,12 +204,12 @@ async function onMouseUp(e: MouseEvent): Promise<void> {
     if (Bookmarks.reactive.popup) return
     if (e.ctrlKey || e.shiftKey) return
 
-    if (Search.rawValue && !isFolder) {
+    if (Search.active && !isFolder) {
       Search.stop()
       Selection.resetSelection()
     }
 
-    if (Selection.isBookmarks() && !Search.rawValue) {
+    if (Selection.isBookmarks() && !Search.active) {
       return Selection.resetSelection()
     }
 

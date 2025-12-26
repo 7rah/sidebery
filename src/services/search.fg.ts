@@ -18,11 +18,11 @@ import * as Selection from './selection.fg'
 import * as Search from 'src/services/search.fg'
 
 export interface SearchState {
+  popupIsShowed: boolean
   barIsShowed: boolean
-  barIsActive: boolean
   barIsFocused: boolean
-  value: string
-  rawValue: string
+  active: boolean
+  rawQuery: string
 }
 
 export interface SearchShortcut {
@@ -38,15 +38,16 @@ interface SearchShortcuts {
 }
 
 export let reactive: SearchState = {
+  popupIsShowed: false,
   barIsShowed: false,
-  barIsActive: false,
   barIsFocused: false,
-  value: '',
-  rawValue: '',
+  active: false,
+  rawQuery: '',
 }
-export let rawValue = ''
-export const setRawValue = (s: string) => (rawValue = s)
-export let prevValue = ''
+
+export let active = false
+export let query = ''
+export let prevQuery = ''
 export let prevExpandedBookmarks: ExpandedBookmarks | undefined = undefined
 export const setPrevExpandedBookmarks = (b: ExpandedBookmarks) => (prevExpandedBookmarks = b)
 export const shortcuts: SearchShortcuts = {}
@@ -59,20 +60,16 @@ export function init(): void {
   if (Settings.state.searchBarMode === 'static') Search.reactive.barIsShowed = true
 }
 
-let inputTimeout: number | undefined
-export function onOutsideSearchInput(value: string): void {
+export function onOutsideSearchInput(q: string): void {
   if (!Windows.focused) return
-  if (!Search.reactive.barIsShowed && Search.rawValue) Search.toggleBar()
+  if (!Search.reactive.barIsShowed && Search.query) Search.toggleBar()
 
-  reactive.rawValue = rawValue = value
+  reactive.rawQuery = q
 
   if (Settings.state.searchInputTimeout > 0) {
-    clearTimeout(inputTimeout)
-    inputTimeout = setTimeout(() => {
-      Search.search(Search.rawValue)
-    }, Settings.state.searchInputTimeout)
+    searchDebounced(Settings.state.searchInputTimeout, q)
   } else {
-    Search.search(Search.rawValue)
+    search(q)
   }
 }
 
@@ -88,10 +85,10 @@ export function onOutsideSearchExit(): void {
 
   const sidebarFocused = document.hasFocus()
   if (!sidebarFocused) {
-    if (!Settings.state.searchTabSwitch || !rawValue) Search.close()
+    if (!Settings.state.searchTabSwitch || !query) Search.close()
     else IPC.sendToSearchPopup(Windows.id, 'closePopup')
   } else if (inputEl && inputEl !== document.activeElement) {
-    Search.reactive.barIsActive = false
+    Search.reactive.popupIsShowed = false
   }
 }
 
@@ -149,7 +146,7 @@ export function enter(): void {
   const actPanel = Sidebar.panelsById[Sidebar.activePanelId]
   if (!actPanel) return
 
-  if (query.startsWith('. ')) {
+  if (lowerCaseQuery.startsWith('. ')) {
     Search.stop()
     Sidebar.switchToPanel(actPanel.id)
     return
@@ -325,29 +322,34 @@ export function menu(): void {
   }
 }
 
-let searchTimeout: number | undefined
-export function searchDebounced(delay: number, value?: string) {
+export let searchTimeout: number | undefined
+export function searchDebounced(delay: number, q?: string) {
   clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => search(value), delay)
+  searchTimeout = setTimeout(() => search(q), delay)
 }
 
-let query = ''
+let lowerCaseQuery = ''
 let beforeSwitchingPanelId: ID | undefined
 const regexCJK = /[\u4E00-\u9FFF,\u3400-\u4DBF,\u3040-\u312F,\uAC00-\uD7A3]/g
-export function search(value?: string): void {
-  if (value !== undefined) {
-    if (value.length < MIN_SEARCH_QUERY_LEN && !regexCJK.test(value)) value = ''
-    if (Search.reactive.value === value) return
+export function search(q?: string): void {
+  // const ts = performance.now()
 
-    prevValue = reactive.value
-    reactive.value = value
-    query = value.toLowerCase()
+  // Update query
+  if (q !== undefined) {
+    if (q.length < MIN_SEARCH_QUERY_LEN && !regexCJK.test(q)) q = ''
+    if (query === q) return
+    prevQuery = query
+    query = q
+    lowerCaseQuery = q.toLowerCase()
+
+    const v = !!q
+    if (active !== v) reactive.active = active = v
   }
 
   if (Menu.isOpen) Menu.close()
 
-  if (query.startsWith('. ')) {
-    const val = query.slice(2)
+  if (lowerCaseQuery.startsWith('. ')) {
+    const val = lowerCaseQuery.slice(2)
     if (!val) return
 
     const panel = Sidebar.panels.find(p => p.name.toLowerCase().includes(val))
@@ -383,7 +385,7 @@ export function search(value?: string): void {
     SearchHistory.onHistorySearch()
   }
 
-  if (value === '') {
+  if (query === '') {
     for (const panel of Sidebar.panels) {
       if (panel.id === targetPanelId) continue
       reset(panel)
@@ -406,6 +408,8 @@ export function search(value?: string): void {
       beforeSwitchingPanelId = undefined
     }
   }
+
+  // Logs.info('Search:', performance.now() - ts, query)
 }
 
 export function reset(panel?: Panel): void {
@@ -425,7 +429,7 @@ export function stop(keepSearchBar?: boolean): void {
     searchPrevPanelId = undefined
   }
   if (Settings.state.searchBarMode === 'dynamic' && !keepSearchBar) hideBar()
-  reactive.rawValue = rawValue = ''
+  reactive.rawQuery = ''
   search('')
   subPanelOpenBySearch = false
   blur()
@@ -436,7 +440,7 @@ export function check(str?: string): boolean {
     return false
   }
   str = str.toLowerCase()
-  return str.includes(query)
+  return str.includes(lowerCaseQuery)
 }
 
 let inputEl: HTMLInputElement | undefined
@@ -454,7 +458,7 @@ function blur() {
 
 export function toggleBar(): void {
   if (Search.reactive.barIsShowed) {
-    if (Search.rawValue) stop()
+    if (Search.active) stop()
     else hideBar()
   } else showBar()
 }
@@ -478,7 +482,7 @@ export function start(): void {
   if (!hasFocus) {
     browser.browserAction.setPopup({ popup: SEARCH_URL })
     browser.browserAction.openPopup()
-    Search.reactive.barIsActive = true
+    Search.reactive.popupIsShowed = true
 
     // Reset browser action
     setTimeout(() => browser.browserAction.setPopup({ popup: null }), 500)
@@ -488,8 +492,8 @@ export function start(): void {
 }
 
 export function close(): void {
-  reactive.barIsActive = false
-  reactive.rawValue = rawValue = ''
+  reactive.popupIsShowed = false
+  reactive.rawQuery = ''
   search('')
   hideBar()
   subPanelOpenBySearch = false
@@ -533,5 +537,5 @@ function parseShortcut(shortcut: string): SearchShortcut | undefined {
 }
 
 export function getSearchQuery(): string {
-  return Search.rawValue
+  return Search.reactive.rawQuery
 }

@@ -1,7 +1,6 @@
 <template lang="pug">
 .SubPanel(
   :data-active="Sidebar.reactive.subPanelActive"
-  :data-search-active="Search.reactive.barIsActive"
   @wheel.stop=""
   @mousedown.stop=""
   @mouseup.stop="onMouseUp"
@@ -60,12 +59,12 @@ function onDrop(): void {
 }
 
 function onDragEnter(): void {
-  if (Search.rawValue) Search.stop()
+  if (Search.active) Search.stop()
   Sidebar.closeSubPanel()
 }
 
 function onOverlayClick() {
-  if (Search.rawValue) Search.stop()
+  if (Search.active) Search.stop()
   Sidebar.closeSubPanel()
 }
 

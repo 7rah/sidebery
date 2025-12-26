@@ -1174,12 +1174,12 @@ export function activatePanel(panelId: ID, loadPanels = true, keepSearching?: bo
   if (prevPanel) prevActivePanelId = activePanelId
   reactive.activePanelId = activePanelId = panelId
 
-  if (Search.rawValue && prevPanel) {
+  if (Search.active && prevPanel) {
     if (
       keepSearching ||
       Settings.state.searchPanelSwitch === 'any' ||
       (Settings.state.searchPanelSwitch === 'same_type' && prevPanel.type === panel.type) ||
-      Search.rawValue.startsWith('. ')
+      Search.query.startsWith('. ')
     ) {
       if (loading) loading.then(() => Search.search())
       else Search.search()
@@ -1196,7 +1196,7 @@ export function activatePanel(panelId: ID, loadPanels = true, keepSearching?: bo
 
   if (Settings.state.updateSidebarTitle) updateSidebarTitle(0)
 
-  if (!DnD.reactive.isStarted && !Search.rawValue) saveActivePanelDebounced(1000)
+  if (!DnD.reactive.isStarted && !Search.active) saveActivePanelDebounced(1000)
 
   if (subPanelActive) closeSubPanel()
 
@@ -1263,7 +1263,7 @@ export function switchToPanel(
     Utils.isTabsPanel(panel) &&
     Settings.state.activateLastTabOnPanelSwitching &&
     !withoutTabActivation &&
-    !Search.reactive.value
+    !Search.active
   ) {
     // Do not switch tab if the current active tab is globally pinned
     const actTab = Tabs.byId[Tabs.activeId]
@@ -2591,7 +2591,7 @@ export function openSubPanel(type: E.SubPanelType, hostPanel?: T.Panel) {
 
   if (Menu.isOpen) Menu.close()
   if (Selection.isSet()) Selection.resetSelection()
-  if (Search.rawValue) Search.search()
+  if (Search.active) Search.search()
 
   closeSubPanelLock = setTimeout(() => {
     closeSubPanelLock = undefined
@@ -2614,7 +2614,7 @@ export function closeSubPanel() {
 
   if (Selection.isSet()) Selection.resetSelection()
   if (Menu.isOpen) Menu.close()
-  if (Search.rawValue) Search.search()
+  if (Search.active) Search.search()
   if (DnD.items.length) updateBounds()
 
   clearTimeout(subPanelTypeResetTimeout)
@@ -2773,7 +2773,7 @@ export function attachSelLenBadgeToTab(id?: ID | null) {
     return
   }
 
-  if (tab?.invisible && !Search.rawValue) {
+  if (tab?.invisible && !Search.active) {
     tab = Tabs.findAncestor(tab, p => !p.invisible)
   }
 
@@ -2810,7 +2810,7 @@ export function resetOrCancelInteraction() {
   // Searching
   if (
     (Search.reactive.barIsShowed && Settings.state.searchBarMode === 'dynamic') ||
-    Search.rawValue
+    Search.active
   ) {
     Search.stop()
     return

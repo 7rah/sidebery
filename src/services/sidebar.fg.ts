@@ -554,46 +554,48 @@ export function recalcBookmarksPanels(): void {
   for (const panel of panels) {
     if (!Utils.isBookmarksPanel(panel)) continue
 
-    const rootFolder = Bookmarks.reactive.byId[panel.rootId]
-    let rootContent: T.Bookmark[]
+    const rootFolder = Bookmarks.byId.get(panel.rootId)
+    let rootContent: Bookmarks.BkmNode[]
     let count = 0
     if (!panel.rootId || panel.rootId === D.BKM_ROOT_ID || panel.rootId === D.NOID) {
-      rootContent = Bookmarks.reactive.tree
+      rootContent = Bookmarks.tree
       count = Bookmarks.overallCount
     } else {
-      rootContent = Bookmarks.reactive.byId[panel.rootId]?.children || []
+      rootContent = Bookmarks.byId.get(panel.rootId)?.children || []
       count = rootFolder?.len ?? 0
     }
 
-    panel.reactive.bookmarks = rootContent
+    panel.bookmarks = rootContent
+    panel.reactive.bookmarkIds = Bookmarks.getIds(rootContent)
     panel.reactive.len = count
   }
 
   if (subPanels.bookmarks) {
     const panel = subPanels.bookmarks
 
-    let rootContent: T.Bookmark[]
+    let rootContent: Bookmarks.BkmNode[]
     if (!panel.rootId || panel.rootId === D.BKM_ROOT_ID || panel.rootId === D.NOID) {
-      rootContent = Bookmarks.reactive.tree
+      rootContent = Bookmarks.tree
     } else {
       if (panel.reactive.rootOffset > 0) {
-        let folder = Bookmarks.reactive.byId[panel.rootId] as T.Bookmark | undefined
+        let folder = Bookmarks.byId.get(panel.rootId)
         if (folder) {
           for (let i = panel.reactive.rootOffset; i-- && folder; ) {
             if (folder.parentId === D.BKM_ROOT_ID) {
               folder = undefined
               break
             }
-            folder = Bookmarks.reactive.byId[folder.parentId]
+            folder = Bookmarks.byId.get(folder.parentId)
           }
         }
-        rootContent = folder?.children ?? Bookmarks.reactive.tree
+        rootContent = folder?.children ?? Bookmarks.tree
       } else {
-        rootContent = Bookmarks.reactive.byId[panel.rootId]?.children ?? []
+        rootContent = Bookmarks.byId.get(panel.rootId)?.children ?? []
       }
     }
 
-    panel.reactive.bookmarks = rootContent
+    panel.bookmarks = rootContent
+    panel.reactive.bookmarkIds = Bookmarks.getIds(rootContent)
   }
 }
 
@@ -708,7 +710,7 @@ function calcTabsBounds(panel: T.TabsPanel): T.ItemBounds[] {
  */
 function calcBookmarksTreeBounds(panel: T.BookmarksPanel, hostPanel?: T.TabsPanel): T.ItemBounds[] {
   const result: T.ItemBounds[] = []
-  if (!Utils.isBookmarksPanel(panel)) return []
+  if (!Utils.isBookmarksPanel(panel)) return result
 
   const expPanelId = hostPanel?.id || panel.id
   const expandedBookmarks = Bookmarks.reactive.expanded[expPanelId] ?? {}
@@ -727,16 +729,16 @@ function calcBookmarksTreeBounds(panel: T.BookmarksPanel, hostPanel?: T.TabsPane
   let overallHeight = -marginA
   let lvl = 0
   let height: number, half: number, quarter: number
-  const walker = (nodes: T.Bookmark[]) => {
+  const walker = (nodes: Bookmarks.BkmNode[]) => {
     for (let i = 0; i < nodes.length; i++) {
-      const n = nodes[i] as T.Bookmark
-      const isFolder = n.type === 'folder'
+      const n = nodes[i] as Bookmarks.BkmNode
+      const isFolder = n.type === E.BkmType.Folder
 
       if (isFolder) {
         height = folderHeight
         half = folderHalf
         quarter = folderQuarter
-      } else if (n.type === 'bookmark') {
+      } else if (n.type === E.BkmType.Bookmark) {
         height = bookmarkHeight
         half = bookmarkHalf
         quarter = bookmarkQuarter
@@ -770,7 +772,7 @@ function calcBookmarksTreeBounds(panel: T.BookmarksPanel, hostPanel?: T.TabsPane
       }
     }
   }
-  walker(panel.reactive.filteredBookmarks ?? panel.reactive.bookmarks)
+  walker(panel.filteredBookmarks ?? panel.bookmarks)
 
   return result
 }
@@ -1871,12 +1873,12 @@ export async function bookmarkTabsPanel(
     const result = await Permissions.request('bookmarks')
     if (!result) return
   }
-  if (!Bookmarks.reactive.tree.length) await Bookmarks.load()
+  if (!Bookmarks.tree.length) await Bookmarks.load()
 
   const oldFolderId = panel.bookmarksFolderId
-  const oldFolder = Bookmarks.reactive.byId[oldFolderId]
+  const oldFolder = Bookmarks.byId.get(oldFolderId)
   let parentId = parentFolderId ?? oldFolder?.parentId
-  let parent = Bookmarks.reactive.byId[parentId ?? D.NOID] as T.Bookmark | undefined
+  let parent = Bookmarks.byId.get(parentId ?? D.NOID)
   let isTopLvl = parentId === D.BKM_ROOT_ID
   let index = oldFolder?.index ?? -1
   let folderName = panel.name
@@ -1905,12 +1907,12 @@ export async function bookmarkTabsPanel(
     if (!result?.location || result?.location === D.NOID) throw E.Err.Canceled
 
     parentId = result.location ?? D.NOID
-    parent = Bookmarks.reactive.byId[parentId]
+    parent = Bookmarks.byId.get(parentId)
 
     // If selected parent is prev panel folder use prev parent folder (update mode)
     if (parent && oldFolder && parent?.id === oldFolderId) {
       parentId = oldFolder.parentId
-      parent = Bookmarks.reactive.byId[parentId ?? D.NOID]
+      parent = Bookmarks.byId.get(parentId ?? D.NOID)
       update = true
       index = oldFolder.index
     }
@@ -1934,7 +1936,7 @@ export async function bookmarkTabsPanel(
   }
 
   // Create/Update panel folder
-  let panelFolder: T.Bookmark | undefined
+  let panelFolder: Bookmarks.BkmNode | undefined
 
   // If panel folder is exists, update its name
   if (oldFolder) {
@@ -1958,7 +1960,9 @@ export async function bookmarkTabsPanel(
 
     const parentConf = { title: folderName, index, parentId: parent.id }
     try {
-      panelFolder = (await browser.bookmarks.create(parentConf)) as T.Bookmark
+      const nativePanelFolder = await browser.bookmarks.create(parentConf)
+      panelFolder = Bookmarks.byId.get(nativePanelFolder.id)
+      if (!panelFolder) throw 'No panelFolder'
     } catch (err) {
       if (!silent) {
         Logs.err('Sidebar.bookmarkTabsPanel: Cannot create panel folder')
@@ -2030,7 +2034,7 @@ export async function bookmarkTabsPanel(
     const bookmarkId = idsMap[tabId]
     if (bookmarkId === undefined) continue
 
-    const bookmark = Bookmarks.reactive.byId[bookmarkId]
+    const bookmark = Bookmarks.byId.get(bookmarkId)
     if (!bookmark) continue
 
     if (tab.folded) Bookmarks.foldBookmark(bookmark.id, panel.id)
@@ -2063,9 +2067,9 @@ export async function restoreFromBookmarks(panel: T.TabsPanel, silent?: boolean)
     if (!result) return
   }
 
-  if (!Bookmarks.reactive.tree.length) await Bookmarks.load()
+  if (!Bookmarks.tree.length) await Bookmarks.load()
 
-  let panelFolder = Bookmarks.reactive.byId[panel.bookmarksFolderId]
+  let panelFolder = Bookmarks.byId.get(panel.bookmarksFolderId)
   if (!panelFolder) {
     const result = await Bookmarks.openBookmarksPopup({
       title: translate('popup.bookmarks.restore'),
@@ -2076,7 +2080,7 @@ export async function restoreFromBookmarks(panel: T.TabsPanel, silent?: boolean)
       controls: [{ label: 'btn.restore' }],
     })
     if (!result?.location || result?.location === D.NOID) throw E.Err.Canceled
-    panelFolder = Bookmarks.reactive.byId[result.location]
+    panelFolder = Bookmarks.byId.get(result.location)
   }
   if (!panelFolder) {
     const title = translate('notif.restore_from_bookmarks_err')
@@ -2098,16 +2102,16 @@ export async function restoreFromBookmarks(panel: T.TabsPanel, silent?: boolean)
   let indexPinned = 0
   for (const node of Bookmarks.listBookmarks(panelFolder.children)) {
     if (usedAsParent[node.id]) continue
-    if (node.type === 'separator') continue
+    if (node.type === E.BkmType.Separator) continue
 
     const info: T.ItemInfo = { id: node.id, title: node.title, parentId: node.parentId }
     let rawUrl = node.url
 
     // Get target lvl
     let lvl = 0
-    let parent = Bookmarks.reactive.byId[node.parentId]
+    let parent = Bookmarks.byId.get(node.parentId)
     while (parent && parent.id !== panelFolder.id) {
-      parent = Bookmarks.reactive.byId[parent.parentId]
+      parent = Bookmarks.byId.get(parent.parentId)
       lvl++
     }
 
@@ -2256,7 +2260,7 @@ export async function restoreFromBookmarks(panel: T.TabsPanel, silent?: boolean)
   const expandedFoldersMap = Bookmarks.reactive.expanded[panel.srcPanelConfig?.id ?? panel.id]
   if (expandedFoldersMap) {
     for (const bookmarkId of Object.keys(idsMap)) {
-      const bookmark = Bookmarks.reactive.byId[bookmarkId]
+      const bookmark = Bookmarks.byId.get(bookmarkId)
       if (!bookmark) continue
 
       const tabId = idsMap[bookmarkId]
@@ -2318,10 +2322,10 @@ export async function convertToBookmarksPanel(
   })
 
   // Load bookmarks if needed
-  if (!Bookmarks.reactive.tree.length) await Bookmarks.load()
+  if (!Bookmarks.tree.length) await Bookmarks.load()
 
   const oldFolderId = panel.bookmarksFolderId
-  const oldFolder = Bookmarks.reactive.byId[oldFolderId]
+  const oldFolder = Bookmarks.byId.get(oldFolderId)
 
   // Ask where to store
   let targetFolderId: ID | undefined
@@ -2423,7 +2427,7 @@ export async function convertToBookmarksPanel(
     switchingLock = false
 
     // Mark bookmarks panel as ready
-    if (Bookmarks.reactive.tree.length) bookmarksPanel.reactive.ready = bookmarksPanel.ready = true
+    if (Bookmarks.tree.length) bookmarksPanel.reactive.ready = bookmarksPanel.ready = true
   }, 200)
 
   Notifications.finishProgress(notif, 2000)
@@ -2456,10 +2460,10 @@ export async function convertToTabsPanel(
   })
 
   // Load bookmarks if needed
-  if (!Bookmarks.reactive.tree.length) await Bookmarks.load()
+  if (!Bookmarks.tree.length) await Bookmarks.load()
 
   // Check if root folder exists
-  const rootFolder = Bookmarks.reactive.byId[bookmarksPanel.rootId]
+  const rootFolder = Bookmarks.byId.get(bookmarksPanel.rootId)
   if (!rootFolder) {
     Notifications.finishProgress(notif)
     convertingPanelLock = false
@@ -2577,7 +2581,7 @@ export function openSubPanel(type: E.SubPanelType, hostPanel?: T.Panel) {
     } else {
       panel.rootId = hostPanel.bookmarksFolderId
     }
-    if (Bookmarks.overallCount) panel.ready = true
+    if (Bookmarks.tree.length) panel.ready = true
   }
 
   clearTimeout(subPanelTypeResetTimeout)
@@ -2621,8 +2625,9 @@ export function closeSubPanel() {
   subPanelTypeResetTimeout = setTimeout(() => {
     reactive.subPanelType = E.SubPanelType.Null
     if (subPanels.bookmarks) {
+      subPanels.bookmarks.filteredBookmarks = undefined
       subPanels.bookmarks.reactive.rootOffset = 0
-      subPanels.bookmarks.reactive.filteredBookmarks = undefined
+      subPanels.bookmarks.reactive.filteredBookmarkIds = undefined
       subPanels.bookmarks.reactive.filteredLen = undefined
     }
   }, 500)

@@ -12,6 +12,7 @@ import * as IPC from 'src/services/ipc'
 import * as Popups from 'src/services/popups.fg'
 import * as Logs from 'src/services/logs'
 import * as Utils from 'src/utils'
+import * as Links from 'src/services/links'
 
 export let movingTabs: ID[] = []
 export const setMovingTabs = (ids: ID[]) => (movingTabs = ids)
@@ -647,12 +648,7 @@ export function detachTabs(tabIds: ID[]): DetachedTabsInfo | undefined {
     }
 
     // Update url counter
-    const urlCount = Tabs.updateUrlCounter(tab.url, -1)
-
-    // Update bookmarks marks
-    if (Settings.state.highlightOpenBookmarks && !urlCount) {
-      Bookmarks.unmarkOpenBookmarksDebounced(tab.url)
-    }
+    Links.rmTab(tab)
 
     // Reload related group for pinned tab
     const pinGroupTab = Tabs.byId[tab.relGroupId]

@@ -1,15 +1,15 @@
-export interface Bookmark extends browser.bookmarks.TreeNode {
-  parentId: ID // Required since I'm not using Root node
-  index: number
-  children?: Bookmark[]
-  sel?: boolean
-  selLock?: boolean
-  isOpen?: boolean
-  isParent?: boolean
-  len?: number
-  parsedTitle?: string
+export type NativeBkmNode = browser.bookmarks.TreeNode
+
+export interface ReactiveBkmProps {
+  title: string
+  url?: string
+  sel: boolean
+  selLock: boolean
+  hasOpenTabs: boolean
+  len: number
   customColor?: string
   containerColor?: string
+  children?: ID[]
 }
 
 export type BookmarksSortType = 'name' | 'link' | 'time'

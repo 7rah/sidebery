@@ -5,9 +5,9 @@
       .bookmarks-tree
         DragAndDropPointer(:panelId="bookmarksPanel.id" :subPanel="true")
         BookmarkNode.root-node(
-          v-for="node in tree"
-          :key="node.id"
-          :node="node"
+          v-for="nodeId in tree"
+          :key="nodeId"
+          :nodeId="nodeId"
           :panelId="hostPanel.id")
     .loading-screen(v-else-if="state.loading")
       LoadingDots
@@ -16,7 +16,7 @@
       :isNotPerm="!Permissions.reactive.bookmarks"
       :permMsg="translate('panel.bookmarks.req_perm')"
       perm="bookmarks"
-      :isMsg="!tree.length && !!Bookmarks.reactive.tree.length"
+      :isMsg="!tree.length && !!Bookmarks.reactive.root.length"
       :msg="translate('panel.nothing')")
 
   .nav(
@@ -33,7 +33,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Bookmark, BookmarksPanel, ScrollBoxComponent } from 'src/types'
+import type { BookmarksPanel, ScrollBoxComponent } from 'src/types'
 import { reactive, computed, onMounted, ref, nextTick } from 'vue'
 import { DropType } from 'src/enums'
 import { translate } from 'src/dict'
@@ -81,7 +81,8 @@ onMounted(() => {
 
 const tree = computed(() => {
   const panel = props.bookmarksPanel
-  const r = panel.reactive.filteredBookmarks ?? panel.reactive.bookmarks ?? Bookmarks.reactive.tree
+  const r =
+    panel.reactive.filteredBookmarkIds ?? panel.reactive.bookmarkIds ?? Bookmarks.reactive.root
   return r
 })
 
@@ -89,7 +90,7 @@ let bookmarksLoading = false
 function open() {
   if (bookmarksLoading) return
 
-  if (!Bookmarks.reactive.tree.length) {
+  if (!Bookmarks.tree.length) {
     state.active = true
     bookmarksLoading = true
     loadBookmarks().then(() => {
@@ -118,27 +119,27 @@ function checkRootFolder() {
   const id = props.bookmarksPanel.rootId
   if (id === undefined || id === NOID || id === BKM_ROOT_ID) return
 
-  const node = Bookmarks.reactive.byId[id]
+  const node = Bookmarks.byId.get(id)
   if (!node) props.bookmarksPanel.rootId = BKM_ROOT_ID
 }
 
 function updateRootTree() {
   const panel = props.bookmarksPanel
-  let folder = Bookmarks.reactive.byId[panel.rootId] as Bookmark | undefined
+  let folder = Bookmarks.byId.get(panel.rootId)
   if (folder) {
     for (let i = panel.reactive.rootOffset; i-- && folder; ) {
       if (folder.parentId === BKM_ROOT_ID) {
         folder = undefined
         break
       }
-      folder = Bookmarks.reactive.byId[folder.parentId]
+      folder = Bookmarks.byId.get(folder.parentId)
     }
   }
 
   state.rootFolderId = folder?.id ?? BKM_ROOT_ID
   state.rootFolderTitle = folder?.title ?? rootTitle
 
-  panel.reactive.bookmarks = folder?.children ?? Bookmarks.reactive.tree
+  panel.reactive.bookmarkIds = folder?.getChildrenIds() ?? Bookmarks.reactive.root
 }
 
 function setPanelEls() {

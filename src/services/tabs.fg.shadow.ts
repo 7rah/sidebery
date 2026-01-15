@@ -1,9 +1,8 @@
 import { Tab } from 'src/types'
 import * as Logs from 'src/services/logs'
 import * as Tabs from 'src/services/tabs.fg'
-import * as Bookmarks from 'src/services/bookmarks.fg'
-import * as Settings from 'src/services/settings'
 import * as Windows from 'src/services/windows.fg'
+import * as Links from 'src/services/links'
 
 export let shadowMode = false
 export const setShadowMode = (s: boolean) => (shadowMode = s)
@@ -18,7 +17,7 @@ export async function loadInShadowMode(): Promise<void> {
   Tabs.setList(tabs)
   for (const tab of tabs) {
     Tabs.byId[tab.id] = tab
-    Tabs.updateUrlCounter(tab.url, 1)
+    Links.addTab(tab)
   }
 
   shadowReady = true
@@ -35,10 +34,11 @@ export function unloadShadowed(): void {
   Tabs.resetShadowListeners()
 
   Tabs.setById({})
-  Tabs.setUrlsInUse({})
   Tabs.setList([])
   shadowMode = false
   shadowReady = false
+
+  Links.rmAllTabs()
 }
 
 export function setupShadowListeners(): void {
@@ -76,9 +76,7 @@ function onShadowTabCreated(tab: browser.tabs.Tab): void {
     Tabs.list[i].index = i
   }
 
-  Tabs.updateUrlCounter(tab.url, 1)
-
-  if (Settings.state.highlightOpenBookmarks) Bookmarks.markOpenBookmarksDebounced(tab.url)
+  Links.addTab(tab)
 }
 
 function onShadowTabUpdated(
@@ -94,15 +92,8 @@ function onShadowTabUpdated(
   const targetTab = Tabs.byId[tabId]
   if (!targetTab) return
 
-  if (change.url) {
-    const oldUrlCount = Tabs.updateUrlCounter(targetTab.url, -1)
-    Tabs.updateUrlCounter(change.url, 1)
-
-    // Mark/Unmark open bookmarks
-    if (Settings.state.highlightOpenBookmarks) {
-      if (!oldUrlCount) Bookmarks.unmarkOpenBookmarksDebounced(targetTab.url)
-      Bookmarks.markOpenBookmarksDebounced(change.url)
-    }
+  if (change.url !== undefined && targetTab.url !== change.url) {
+    Links.updTab(targetTab, change.url)
   }
 
   Object.assign(targetTab, change)
@@ -129,11 +120,7 @@ function onShadowTabRemoved(tabId: ID, info: browser.tabs.RemoveInfo): void {
 
   delete Tabs.byId[tabId]
 
-  const urlCount = Tabs.updateUrlCounter(targetTab.url, -1)
-
-  if (Settings.state.highlightOpenBookmarks && !urlCount) {
-    Bookmarks.unmarkOpenBookmarksDebounced(targetTab.url)
-  }
+  Links.rmTab(targetTab)
 }
 
 function onShadowTabMoved(id: ID, info: browser.tabs.MoveInfo): void {

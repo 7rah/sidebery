@@ -439,13 +439,13 @@ export async function getDbgDetails(): Promise<T.DbgInfo> {
   }
 
   try {
-    const bookmarks = (await browser.bookmarks.getTree()) as T.Bookmark[]
+    const nativeBookmarks = await browser.bookmarks.getTree()
     let bookmarksCount = 0
     let foldersCount = 0
     let separatorsCount = 0
-    let lvl = 0,
-      maxDepth = 0
-    const walker = (nodes: T.Bookmark[]) => {
+    let lvl = 0
+    let maxDepth = 0
+    const walker = (nodes: T.NativeBkmNode[]) => {
       if (lvl > maxDepth) maxDepth = lvl
       for (const node of nodes) {
         if (node.type === 'bookmark') bookmarksCount++
@@ -458,7 +458,7 @@ export async function getDbgDetails(): Promise<T.DbgInfo> {
         }
       }
     }
-    if (bookmarks[0]?.children) walker(bookmarks[0].children)
+    if (nativeBookmarks[0]?.children) walker(nativeBookmarks[0].children)
 
     dbg.bookmarks = {
       bookmarksCount,

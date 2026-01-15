@@ -70,7 +70,7 @@ section(ref="el")
 <script lang="ts" setup>
 import type { CSSProperties } from 'vue'
 import { ref, reactive, onMounted, computed } from 'vue'
-import type { Bookmark, Stored } from 'src/types'
+import type { NativeBkmNode, Stored } from 'src/types'
 import { InstanceType } from 'src/enums'
 import { translate } from 'src/dict'
 import * as Utils from 'src/utils'
@@ -102,9 +102,9 @@ const progressBarStyle = computed<CSSProperties>(() => {
  * Returns array of urls of all bookmarks
  */
 async function getBookmarkedUrls(): Promise<string[]> {
-  const bookmarksRoot = (await browser.bookmarks.getTree()) as Bookmark[]
+  const bookmarksRoot = await browser.bookmarks.getTree()
   const bookmarksUrls: string[] = []
-  const hWalk = (nodes: Bookmark[]) => {
+  const hWalk = (nodes: NativeBkmNode[]) => {
     for (let n of nodes) {
       if (n.url) bookmarksUrls.push(n.url)
       if (n.children) hWalk(n.children)

@@ -32,6 +32,7 @@ export const BOOKMARKS_PANEL_STATE: T.BookmarksPanel = {
   bounds: [],
   hidden: false,
   ready: false,
+  bookmarks: [],
 
   reactive: {
     name: '',
@@ -45,8 +46,8 @@ export const BOOKMARKS_PANEL_STATE: T.BookmarksPanel = {
     filteredLen: undefined,
     ready: false,
 
-    bookmarks: [],
-    filteredBookmarks: undefined,
+    bookmarkIds: [],
+    filteredBookmarkIds: undefined,
     viewMode: 'tree',
     rootOffset: 0,
   },

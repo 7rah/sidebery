@@ -273,9 +273,9 @@ function onDocumentKeydown(e: KeyboardEvent): void {
       }
     } else if (Utils.isBookmarksPanel(actPanel)) {
       if (Selection.isBookmarks()) {
-        const target = Bookmarks.reactive.byId[Selection.getLast()]
+        const target = Bookmarks.byId.get(Selection.getLast())
         if (!target) return Logs.warn('Sidebar.onDocumentKeyup: Paste bkm: No sel target')
-        if (target.type === 'folder') Bookmarks.pasteIn(target.id)
+        if (target.type === E.BkmType.Folder) Bookmarks.pasteIn(target.id)
         else Bookmarks.pasteAfter(target.id)
       } else {
         Bookmarks.pasteIn(actPanel.rootId)

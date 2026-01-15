@@ -1,6 +1,6 @@
 import { BookmarksPanelComponent, ScrollBoxComponent } from '../types'
 import { Tab } from './tabs'
-import { Bookmark } from './bookmarks'
+import type * as Bookmarks from 'src/services/bookmarks.fg'
 import * as E from 'src/enums'
 
 export interface NavBtn {
@@ -172,6 +172,8 @@ export interface BookmarksPanelConfig extends PanelConfigCommonProps {
 export interface BookmarksPanel extends PanelCommonProps, BookmarksPanelConfig {
   type: E.PanelType.bookmarks
   component?: BookmarksPanelComponent
+  bookmarks: Bookmarks.BkmNode[]
+  filteredBookmarks?: Bookmarks.BkmNode[]
 
   reactive: BookmarksPanelReactiveProps
 
@@ -180,8 +182,8 @@ export interface BookmarksPanel extends PanelCommonProps, BookmarksPanelConfig {
 }
 
 export interface BookmarksPanelReactiveProps extends PanelCommonReactiveProps {
-  bookmarks: Bookmark[]
-  filteredBookmarks?: Bookmark[]
+  bookmarkIds: ID[]
+  filteredBookmarkIds?: ID[]
   viewMode: string
   rootOffset: number
 }

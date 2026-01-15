@@ -363,7 +363,7 @@ function getDstIndexInside(dstType: E.DropType, dst: T.DstPlaceInfo): number {
     dstType === E.DropType.BookmarksPanel ||
     dstType === E.DropType.BookmarksSubPanelBtn
   ) {
-    const parent = Bookmarks.reactive.byId[dst.parentId ?? D.NOID]
+    const parent = Bookmarks.byId.get(dst.parentId ?? D.NOID)
     return parent?.children?.length || 0
   }
   return 0
@@ -415,9 +415,9 @@ function applyLvlOffset(lvl: number, dst: T.DstPlaceInfo): void {
         if (panel.rootId !== D.NOID && panel.rootId !== D.BKM_ROOT_ID) {
           let offset = panel.reactive.rootOffset
           if (offset > 0) {
-            let parent = Bookmarks.reactive.byId[panel.rootId]
+            let parent = Bookmarks.byId.get(panel.rootId)
             while (parent && offset--) {
-              parent = Bookmarks.reactive.byId[parent.parentId]
+              parent = Bookmarks.byId.get(parent.parentId)
             }
             dst.parentId = parent?.id ?? D.BKM_OTHER_ID
           } else {
@@ -426,7 +426,7 @@ function applyLvlOffset(lvl: number, dst: T.DstPlaceInfo): void {
         } else {
           dst.parentId = D.BKM_OTHER_ID
         }
-        const dstParent = Bookmarks.reactive.byId[dst.parentId]
+        const dstParent = Bookmarks.byId.get(dst.parentId)
         if (dstParent) dst.index = dstParent.children?.length ?? -1
       }
     } else {
@@ -678,7 +678,7 @@ export function onDragEnter(e: DragEvent): void {
 
   if (type === 'bookmark' && id) {
     if (Sidebar.reactive.hiddenPanelsPopup) Sidebar.reactive.hiddenPanelsPopup = false
-    const bookmark = Bookmarks.reactive.byId[id]
+    const bookmark = Bookmarks.byId.get(id)
     if (!bookmark) return
 
     let dstPanel
@@ -732,7 +732,7 @@ function onPointerEnter(e: DragEvent): void {
   if (isBookmarks) {
     if (Settings.state.dndExp === 'pointer') {
       const delay = assertExpandMod(e) ? 0 : Settings.state.dndExpDelay
-      const bookmark = Bookmarks.reactive.byId[DnD.reactive.dstParentId]
+      const bookmark = Bookmarks.byId.get(DnD.reactive.dstParentId)
       const isParent = !!bookmark?.children?.length
       if (!bookmark || !isParent) return
       if (delay !== 0) DnD.reactive.pointerHover = true
@@ -936,8 +936,8 @@ export function onDragMove(e: DragEvent): void {
 
         const slotIsTab = slot.type === E.ItemBoundsType.Tab
 
-        const node = slotIsTab ? Tabs.byId[slot.id] : Bookmarks.reactive.byId[slot.id]
-        const prevNode = slotIsTab ? Tabs.byId[prevSlot.id] : Bookmarks.reactive.byId[prevSlot.id]
+        const node = slotIsTab ? Tabs.byId[slot.id] : Bookmarks.byId.get(slot.id)
+        const prevNode = slotIsTab ? Tabs.byId[prevSlot.id] : Bookmarks.byId.get(prevSlot.id)
 
         if (prevNode?.sel && node?.sel) DnD.reactive.pointerMode = DndPointerMode.None
         else DnD.reactive.pointerMode = DndPointerMode.Between
@@ -1013,7 +1013,7 @@ export function onDragMove(e: DragEvent): void {
         // Pointer inside bookmark - expand
         if (DnD.reactive.dstType === E.DropType.Bookmarks) {
           const targetId = slot.id
-          const bookmark = Bookmarks.reactive.byId[targetId]
+          const bookmark = Bookmarks.byId.get(targetId)
           const isParent = !!bookmark?.children?.length
           if (isParent && Settings.state.dndExp === 'hover') {
             const delay = assertExpandMod(e) ? 0 : Settings.state.dndExpDelay
@@ -1092,7 +1092,7 @@ export async function onDrop(e: DragEvent): Promise<void> {
   let toNav = dstT === E.DropType.NavItem
   const fromNewTabBar = srcT === E.DragType.NewTab
   const fromHistory = srcT === E.DragType.History
-  const bookmarksWasUnloaded = !Bookmarks.reactive.tree.length
+  const bookmarksWasUnloaded = !Bookmarks.tree.length
 
   const dndItems = DnD.items
   const src = getSrcInfo()
@@ -1173,7 +1173,7 @@ export async function onDrop(e: DragEvent): Promise<void> {
     dst.inside = true
 
     if (Utils.isBookmarksPanel(dstPanel)) {
-      const existedFolder = Bookmarks.reactive.byId[dstPanel.rootId]
+      const existedFolder = Bookmarks.byId.get(dstPanel.rootId)
       dst.parentId = existedFolder ? dstPanel.rootId : D.BKM_OTHER_ID
       dst.index = getDstIndexInside(dstT, dst)
     } else if (Utils.isTabsPanel(dstPanel)) {
@@ -1181,7 +1181,7 @@ export async function onDrop(e: DragEvent): Promise<void> {
       if (
         dstPanel.bookmarksFolderId !== D.NOID &&
         dstPanel.bookmarksFolderId !== D.BKM_ROOT_ID &&
-        Bookmarks.reactive.byId[dstPanel.bookmarksFolderId]
+        Bookmarks.byId.has(dstPanel.bookmarksFolderId)
       ) {
         parentId = dstPanel.bookmarksFolderId
       } else {
@@ -1225,7 +1225,7 @@ export async function onDrop(e: DragEvent): Promise<void> {
 
     // Recheck dst index if bookmarks was unloaded
     if (dst.index === 0 && bookmarksWasUnloaded && toBookmarksPanel) {
-      const parent = Bookmarks.reactive.byId[dst.parentId ?? D.NOID]
+      const parent = Bookmarks.byId.get(dst.parentId ?? D.NOID)
       if (parent?.children?.length) dst.index = parent.children.length
     }
 
@@ -1348,10 +1348,10 @@ async function extractBookmarksFromNativeEvent(
       return false
     }
 
-    if (!Bookmarks.reactive.tree.length) await Bookmarks.load()
+    if (!Bookmarks.tree.length) await Bookmarks.load()
 
     if (placeInfo.type === 'text/x-moz-place-container') {
-      const folder = Bookmarks.reactive.byId[placeInfo.itemGuid]
+      const folder = Bookmarks.byId.get(placeInfo.itemGuid)
       if (!folder) return false
 
       items.push({ id: folder.id, title: folder.title, parentId: folder.parentId })
@@ -1372,7 +1372,7 @@ async function extractBookmarksFromNativeEvent(
 
 async function setFolderForTabsPanel(panel: T.Panel, dst: T.DstPlaceInfo) {
   if (!Utils.isTabsPanel(panel)) return true
-  if (Bookmarks.reactive.byId[panel.bookmarksFolderId]) return true
+  if (Bookmarks.byId.has(panel.bookmarksFolderId)) return true
 
   const result = await Bookmarks.openBookmarksPopup({
     title: translate('popup.bookmarks.set_folder_for_tabs_panel'),
@@ -1384,10 +1384,10 @@ async function setFolderForTabsPanel(panel: T.Panel, dst: T.DstPlaceInfo) {
     controls: [{ label: 'btn.save' }],
   })
 
-  if (result && Bookmarks.reactive.byId[result.location ?? D.NOID]) {
+  if (result && Bookmarks.byId.has(result.location ?? D.NOID)) {
     const parentId = result.location ?? D.NOID
-    const parent = Bookmarks.reactive.byId[parentId]
-    const index = parent.children?.length ?? 0
+    const parent = Bookmarks.byId.get(parentId)
+    const index = parent?.children?.length ?? 0
     if (parent && result.name) {
       let rootFolder
       try {
@@ -1489,9 +1489,9 @@ export async function onDragEnd(e: DragEvent): Promise<void> {
       const panel = Sidebar.panelsById[panelId]
       if (!Utils.isBookmarksPanel(panel)) break drop_new_win
 
-      if (!Bookmarks.reactive.tree.length) await Bookmarks.load()
+      if (!Bookmarks.tree.length) await Bookmarks.load()
 
-      const rootFolder = Bookmarks.reactive.byId[panel.rootId]
+      const rootFolder = Bookmarks.byId.get(panel.rootId)
       if (!rootFolder || !rootFolder.children?.length) break drop_new_win
 
       Bookmarks.openInNewWindow(rootFolder.children.map(n => n.id))

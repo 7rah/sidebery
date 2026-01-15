@@ -184,7 +184,7 @@ export function bookmarks() {
       const panel = Sidebar.subPanels.bookmarks
       const isRoot = panel.rootId === BKM_ROOT_ID || panel.rootId === NOID
       if (!isRoot && panel.reactive.rootOffset === 0) {
-        const folder = Bookmarks.reactive.byId[panel.rootId]
+        const folder = Bookmarks.byId.get(panel.rootId)
         if (folder) {
           const path = Bookmarks.getPath(folder)
           panel.reactive.rootOffset = path.length + 1
@@ -332,7 +332,7 @@ let lowerCaseQuery = ''
 let beforeSwitchingPanelId: ID | undefined
 const regexCJK = /[\u4E00-\u9FFF,\u3400-\u4DBF,\u3040-\u312F,\uAC00-\uD7A3]/g
 export function search(q?: string): void {
-  // const ts = performance.now()
+  const ts = performance.now()
 
   // Update query
   if (q !== undefined) {
@@ -409,7 +409,7 @@ export function search(q?: string): void {
     }
   }
 
-  // Logs.info('Search:', performance.now() - ts, query)
+  Logs.info('Search:', performance.now() - ts, query)
 }
 
 export function reset(panel?: Panel): void {
@@ -418,7 +418,7 @@ export function reset(panel?: Panel): void {
     panel.reactive.filteredLen = panel.filteredTabs = undefined
     if (wasFiltered) Sidebar.recalcVisibleTabs(panel.id)
   } else if (Utils.isBookmarksPanel(panel)) {
-    panel.reactive.filteredBookmarks = undefined
+    panel.reactive.filteredBookmarkIds = undefined
     panel.reactive.filteredLen = undefined
   }
 }

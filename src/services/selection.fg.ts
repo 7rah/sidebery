@@ -1,6 +1,6 @@
 import * as Utils from 'src/utils'
 import * as Logs from 'src/services/logs'
-import { Tab, Bookmark, ItemInfo } from 'src/types'
+import { Tab, ItemInfo } from 'src/types'
 import { SelectionType } from 'src/enums'
 import * as Settings from 'src/services/settings.fg'
 import * as Windows from 'src/services/windows.fg'
@@ -90,13 +90,13 @@ export function toggleLocked() {
       if (tab) tab.reactive.selLock = tab.selLock = !isSelLocked
     }
   } else if (normType === SelectionType.Bookmarks) {
-    const firstItem = Bookmarks.reactive.byId[normal[0]]
+    const firstItem = Bookmarks.byId.get(normal[0])
     if (!firstItem) return
 
     isSelLocked = firstItem.selLock
     for (const id of normal) {
-      const bkmNode = Bookmarks.reactive.byId[id]
-      if (bkmNode) bkmNode.selLock = bkmNode.selLock = !isSelLocked
+      const bkmNode = Bookmarks.byId.get(id)
+      if (bkmNode) bkmNode.reactive.selLock = bkmNode.selLock = !isSelLocked
     }
   } else {
     return
@@ -123,8 +123,8 @@ function resetLocked() {
     }
   } else if (lockType === SelectionType.Bookmarks) {
     for (const id of locked) {
-      const bkmNode = Bookmarks.reactive.byId[id]
-      if (bkmNode) bkmNode.selLock = false
+      const bkmNode = Bookmarks.byId.get(id)
+      if (bkmNode) bkmNode.reactive.selLock = bkmNode.selLock = false
     }
   }
 
@@ -137,7 +137,7 @@ function resetLocked() {
 export function select(id: ID, type?: SelectionType): void {
   if (!type) {
     if (Tabs.byId[id]) type = SelectionType.Tabs
-    else if (Bookmarks.reactive.byId[id]) type = SelectionType.Bookmarks
+    else if (Bookmarks.byId.has(id)) type = SelectionType.Bookmarks
     else if (Sidebar.panelsById[id]) type = SelectionType.NavItem
     if (!type) return
   }
@@ -297,10 +297,10 @@ export function selectTabsBranch(parentTab: Tab): void {
 }
 
 export function selectBookmark(bookmarkId: ID): void {
-  const target = Bookmarks.reactive.byId[bookmarkId]
+  const target = Bookmarks.byId.get(bookmarkId)
   if (!target) return
 
-  target.sel = true
+  target.reactive.sel = target.sel = true
 
   handleSelection(bookmarkId, SelectionType.Bookmarks)
 
@@ -312,10 +312,10 @@ export function selectBookmark(bookmarkId: ID): void {
 
 export function selectBookmarks(ids: ID[]): void {
   for (const id of ids) {
-    const target = Bookmarks.reactive.byId[id]
+    const target = Bookmarks.byId.get(id)
     if (!target) continue
 
-    target.sel = true
+    target.reactive.sel = target.sel = true
     normal.push(id)
     selected.add(id)
   }
@@ -330,10 +330,13 @@ export function selectBookmarks(ids: ID[]): void {
   }
 }
 
-export function selectBookmarksRange(aBookmark: Bookmark, bBookmark?: Bookmark): void {
+export function selectBookmarksRange(
+  aBookmark: Bookmarks.BkmNode,
+  bBookmark?: Bookmarks.BkmNode
+): void {
   if (!bBookmark && normFirst !== null) {
     bBookmark = aBookmark
-    const firstBmkNode = Bookmarks.reactive.byId[normFirst]
+    const firstBmkNode = Bookmarks.byId.get(normFirst)
     if (!firstBmkNode) return
     aBookmark = firstBmkNode
   }
@@ -343,8 +346,8 @@ export function selectBookmarksRange(aBookmark: Bookmark, bBookmark?: Bookmark):
 
   if (normal.length) {
     normal.forEach(id => {
-      const bkm = Bookmarks.reactive.byId[id]
-      if (bkm) bkm.sel = false
+      const bkm = Bookmarks.byId.get(id)
+      if (bkm) bkm.reactive.sel = bkm.sel = false
     })
     normal = []
   }
@@ -355,19 +358,19 @@ export function selectBookmarksRange(aBookmark: Bookmark, bBookmark?: Bookmark):
   else activePanel = Sidebar.panelsById[Sidebar.activePanelId]
   if (activePanel) {
     for (const bound of activePanel.bounds) {
-      const bkm = Bookmarks.reactive.byId[bound.id]
+      const bkm = Bookmarks.byId.get(bound.id)
       if (!bkm) continue
 
       if (bound.id === aBookmark.id || bound.id === bBookmark.id) {
         if (!inside) inside = true
         else {
-          bkm.sel = true
+          bkm.reactive.sel = bkm.sel = true
           normal.push(bound.id)
           break
         }
       }
       if (inside) {
-        bkm.sel = true
+        bkm.reactive.sel = bkm.sel = true
         normal.push(bound.id)
         if (aBookmark.id === bBookmark.id) break
       }
@@ -482,9 +485,9 @@ export function deselectTabsBranch(parentTab: Tab, preserveLocked?: boolean): vo
 export function deselectBookmark(id: ID, preserveLocked?: boolean): void {
   handleDeselection(id, preserveLocked)
 
-  const target = Bookmarks.reactive.byId[id]
+  const target = Bookmarks.byId.get(id)
   if (target) {
-    target.sel = false
+    target.reactive.sel = target.sel = false
     if (!preserveLocked) target.selLock = false
   }
 
@@ -533,8 +536,8 @@ export function resetSelection(forced?: boolean, preserveLocked?: boolean): void
 
   if (normType === SelectionType.Bookmarks) {
     for (const id of normal) {
-      const target = Bookmarks.reactive.byId[id]
-      if (target) target.sel = false
+      const target = Bookmarks.byId.get(id)
+      if (target) target.reactive.sel = target.sel = false
     }
   }
 

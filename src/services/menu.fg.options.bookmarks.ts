@@ -1,6 +1,7 @@
 import { isBookmarksPanel, isTabsPanel } from 'src/utils'
 import { BKM_OTHER_ID, BKM_ROOT_ID, CONTAINER_ID, NOID } from 'src/defaults'
 import { MenuOption } from 'src/types'
+import { BkmType } from 'src/enums'
 import { translate } from 'src/dict'
 import * as Settings from 'src/services/settings'
 import * as Windows from 'src/services/windows.fg'
@@ -15,7 +16,7 @@ import * as Logs from 'src/services/logs'
 export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[] | undefined> = {
   openInNewWin: () => {
     const allSeparators = Selection.ids().every(id => {
-      return Bookmarks.reactive.byId[id]?.type === 'separator'
+      return Bookmarks.byId.get(id)?.type === BkmType.Separator
     })
     const option: MenuOption = {
       label: translate('menu.bookmark.open_in_new_window'),
@@ -29,7 +30,7 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
 
   openInNewPrivWin: () => {
     const allSeparators = Selection.ids().every(id => {
-      return Bookmarks.reactive.byId[id]?.type === 'separator'
+      return Bookmarks.byId.get(id)?.type === BkmType.Separator
     })
     const option: MenuOption = {
       label: translate('menu.bookmark.open_in_new_priv_window'),
@@ -42,11 +43,11 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
   },
 
   openInNewPanel: () => {
-    const node = Bookmarks.reactive.byId[Selection.getFirst()]
+    const node = Bookmarks.byId.get(Selection.getFirst())
     if (!node) return
 
     const allSeparators = Selection.ids().every(id => {
-      return Bookmarks.reactive.byId[id]?.type === 'separator'
+      return Bookmarks.byId.get(id)?.type === BkmType.Separator
     })
     const option: MenuOption = {
       label: translate('menu.bookmark.open_in_new_panel'),
@@ -60,10 +61,10 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
   },
 
   openInPanel: () => {
-    const node = Bookmarks.reactive.byId[Selection.getFirst()]
+    const node = Bookmarks.byId.get(Selection.getFirst())
     if (!node) return
     const allSeparators = Selection.ids().every(id => {
-      return Bookmarks.reactive.byId[id]?.type === 'separator'
+      return Bookmarks.byId.get(id)?.type === BkmType.Separator
     })
     if (allSeparators && !Settings.state.ctxMenuRenderInact) return
     const opts: MenuOption[] = []
@@ -84,15 +85,15 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
   },
 
   openInCtr: () => {
-    const node = Bookmarks.reactive.byId[Selection.getFirst()]
+    const node = Bookmarks.byId.get(Selection.getFirst())
     if (!node) return
     const allSeparators = Selection.ids().every(id => {
-      return Bookmarks.reactive.byId[id]?.type === 'separator'
+      return Bookmarks.byId.get(id)?.type === BkmType.Separator
     })
     if (allSeparators && !Settings.state.ctxMenuRenderInact) return
     const opts: MenuOption[] = []
 
-    if (node.type === 'folder' || Selection.getLength() > 1) {
+    if (node.type === BkmType.Folder || Selection.getLength() > 1) {
       opts.push({
         label: translate('menu.bookmark.open_in_default_ctr'),
         icon: 'icon_ffm',
@@ -119,7 +120,7 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
   },
 
   createBookmark: () => {
-    const node = Bookmarks.reactive.byId[Selection.getFirst()]
+    const node = Bookmarks.byId.get(Selection.getFirst())
     if (!node) return
     const option: MenuOption = {
       label: translate('menu.bookmark.create_bookmark'),
@@ -131,7 +132,7 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
   },
 
   createFolder: () => {
-    const node = Bookmarks.reactive.byId[Selection.getFirst()]
+    const node = Bookmarks.byId.get(Selection.getFirst())
     if (!node) return
     const option: MenuOption = {
       label: translate('menu.bookmark.create_folder'),
@@ -143,7 +144,7 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
   },
 
   createSeparator: () => {
-    const node = Bookmarks.reactive.byId[Selection.getFirst()]
+    const node = Bookmarks.byId.get(Selection.getFirst())
     if (!node) return
     const option: MenuOption = {
       label: translate('menu.bookmark.create_separator'),
@@ -155,7 +156,7 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
   },
 
   sortByNameAscending: () => {
-    const node = Bookmarks.reactive.byId[Selection.getFirst()]
+    const node = Bookmarks.byId.get(Selection.getFirst())
     if (!node) return
 
     const option: MenuOption = {
@@ -163,14 +164,14 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
       icon: 'icon_sort_name_asc',
       onClick: () => Bookmarks.sortBookmarks('name', Selection.ids(), 1),
     }
-    if (Selection.getLength() === 1 && node.type !== 'folder') option.inactive = true
+    if (Selection.getLength() === 1 && node.type !== BkmType.Folder) option.inactive = true
     if (Search.active) option.inactive = true
     if (!Settings.state.ctxMenuRenderInact && option.inactive) return
     return option
   },
 
   sortByNameDescending: () => {
-    const node = Bookmarks.reactive.byId[Selection.getFirst()]
+    const node = Bookmarks.byId.get(Selection.getFirst())
     if (!node) return
 
     const option: MenuOption = {
@@ -178,21 +179,21 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
       icon: 'icon_sort_name_des',
       onClick: () => Bookmarks.sortBookmarks('name', Selection.ids(), -1),
     }
-    if (Selection.getLength() === 1 && node.type !== 'folder') option.inactive = true
+    if (Selection.getLength() === 1 && node.type !== BkmType.Folder) option.inactive = true
     if (Search.active) option.inactive = true
     if (!Settings.state.ctxMenuRenderInact && option.inactive) return
     return option
   },
 
   sortByLinkAscending: () => {
-    const node = Bookmarks.reactive.byId[Selection.getFirst()]
+    const node = Bookmarks.byId.get(Selection.getFirst())
     if (!node) return
     const option: MenuOption = {
       label: translate('menu.bookmark.sort_by_link_asc'),
       icon: 'icon_sort_url_asc',
       onClick: () => Bookmarks.sortBookmarks('link', Selection.ids(), 1),
     }
-    if (Selection.getLength() === 1 && node.type !== 'folder') {
+    if (Selection.getLength() === 1 && node.type !== BkmType.Folder) {
       option.inactive = true
     }
     if (Search.active) option.inactive = true
@@ -201,14 +202,14 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
   },
 
   sortByLinkDescending: () => {
-    const node = Bookmarks.reactive.byId[Selection.getFirst()]
+    const node = Bookmarks.byId.get(Selection.getFirst())
     if (!node) return
     const option: MenuOption = {
       label: translate('menu.bookmark.sort_by_link_des'),
       icon: 'icon_sort_url_des',
       onClick: () => Bookmarks.sortBookmarks('link', Selection.ids(), -1),
     }
-    if (Selection.getLength() === 1 && node.type !== 'folder') {
+    if (Selection.getLength() === 1 && node.type !== BkmType.Folder) {
       option.inactive = true
     }
     if (Search.active) option.inactive = true
@@ -217,14 +218,14 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
   },
 
   sortByTimeAscending: () => {
-    const node = Bookmarks.reactive.byId[Selection.getFirst()]
+    const node = Bookmarks.byId.get(Selection.getFirst())
     if (!node) return
     const option: MenuOption = {
       label: translate('menu.bookmark.sort_by_time_asc'),
       icon: 'icon_sort_time_asc',
       onClick: () => Bookmarks.sortBookmarks('time', Selection.ids(), 1),
     }
-    if (Selection.getLength() === 1 && node.type !== 'folder') {
+    if (Selection.getLength() === 1 && node.type !== BkmType.Folder) {
       option.inactive = true
     }
     if (Search.active) option.inactive = true
@@ -233,14 +234,14 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
   },
 
   sortByTimeDescending: () => {
-    const node = Bookmarks.reactive.byId[Selection.getFirst()]
+    const node = Bookmarks.byId.get(Selection.getFirst())
     if (!node) return
     const option: MenuOption = {
       label: translate('menu.bookmark.sort_by_time_des'),
       icon: 'icon_sort_time_des',
       onClick: () => Bookmarks.sortBookmarks('time', Selection.ids(), -1),
     }
-    if (Selection.getLength() === 1 && node.type !== 'folder') {
+    if (Selection.getLength() === 1 && node.type !== BkmType.Folder) {
       option.inactive = true
     }
     if (Search.active) option.inactive = true
@@ -249,7 +250,7 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
   },
 
   edit: () => {
-    const node = Bookmarks.reactive.byId[Selection.getFirst()]
+    const node = Bookmarks.byId.get(Selection.getFirst())
     if (!node) return
     const option: MenuOption = {
       label: translate('menu.bookmark.edit_bookmark'),
@@ -257,14 +258,14 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
       onClick: () => Bookmarks.editBookmarkNode(node),
     }
     if (Selection.getLength() > 1) option.inactive = true
-    if (node.type === 'separator') option.inactive = true
+    if (node.type === BkmType.Separator) option.inactive = true
     if (node.parentId === 'root________') option.inactive = true
     if (!Settings.state.ctxMenuRenderInact && option.inactive) return
     return option
   },
 
   delete: () => {
-    const node = Bookmarks.reactive.byId[Selection.getFirst()]
+    const node = Bookmarks.byId.get(Selection.getFirst())
     if (!node) return
     const option: MenuOption = {
       label: translate('menu.bookmark.delete_bookmark'),
@@ -277,7 +278,7 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
   },
 
   openAsBookmarksPanel: () => {
-    const node = Bookmarks.reactive.byId[Selection.getFirst()]
+    const node = Bookmarks.byId.get(Selection.getFirst())
     if (!node) return
 
     const option: MenuOption = {
@@ -286,13 +287,13 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
       onClick: () => Bookmarks.openAsBookmarksPanel(node),
     }
 
-    if (node.type !== 'folder') option.inactive = true
+    if (node.type !== BkmType.Folder) option.inactive = true
     if (!Settings.state.ctxMenuRenderInact && option.inactive) return
     return option
   },
 
   openAsTabsPanel: () => {
-    const node = Bookmarks.reactive.byId[Selection.getFirst()]
+    const node = Bookmarks.byId.get(Selection.getFirst())
     if (!node) return
 
     const option: MenuOption = {
@@ -301,16 +302,16 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
       onClick: () => Bookmarks.openAsTabsPanel(node, true),
     }
 
-    if (node.type !== 'folder') option.inactive = true
+    if (node.type !== BkmType.Folder) option.inactive = true
     if (!Settings.state.ctxMenuRenderInact && option.inactive) return
     return option
   },
 
   copyBookmarksUrls: () => {
     const selected = Selection.ids()
-    const firstNode = Bookmarks.reactive.byId[selected[0]]
+    const firstNode = Bookmarks.byId.get(selected[0])
     let len = selected.length
-    if (firstNode.children?.length) len += firstNode.children.length
+    if (firstNode?.children?.length) len += firstNode.children.length
     const option: MenuOption = {
       label: translate('menu.copy_urls', len),
       icon: 'icon_link',
@@ -318,16 +319,16 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
       onClick: () => Bookmarks.copy(selected, { str: '%B%U', hasU: true, hasB: true }),
     }
 
-    if (selected.length === 1 && firstNode?.type === 'separator') option.inactive = true
+    if (selected.length === 1 && firstNode?.type === BkmType.Separator) option.inactive = true
     if (!Settings.state.ctxMenuRenderInact && option.inactive) return
     return option
   },
 
   copyBookmarksTitles: () => {
     const selected = Selection.ids()
-    const firstNode = Bookmarks.reactive.byId[selected[0]]
+    const firstNode = Bookmarks.byId.get(selected[0])
     let len = selected.length
-    if (firstNode.children?.length) len += firstNode.children.length
+    if (firstNode?.children?.length) len += firstNode.children.length
     const option: MenuOption = {
       label: translate('menu.copy_titles', len),
       icon: 'icon_title',
@@ -335,7 +336,7 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
       onClick: () => Bookmarks.copy(selected, { str: '%B%CT', hasCT: true, hasB: true }),
     }
 
-    if (selected.length === 1 && firstNode?.type === 'separator') option.inactive = true
+    if (selected.length === 1 && firstNode?.type === BkmType.Separator) option.inactive = true
     if (!Settings.state.ctxMenuRenderInact && option.inactive) return
     return option
   },
@@ -343,8 +344,8 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
   copyBookmarksByTemplates: () => {
     const opts: MenuOption[] = []
     const selected = Selection.ids()
-    const firstNode = Bookmarks.reactive.byId[selected[0]]
-    const inactive = selected.length === 1 && firstNode?.type === 'separator'
+    const firstNode = Bookmarks.byId.get(selected[0])
+    const inactive = selected.length === 1 && firstNode?.type === BkmType.Separator
     if (!Settings.state.ctxMenuRenderInact && inactive) return
 
     for (const t of Settings.copyTemplates) {
@@ -377,7 +378,7 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
       onClick: () => Bookmarks.move(ids, {}),
     }
 
-    if (ids.some(id => Bookmarks.reactive.byId[id]?.parentId === BKM_ROOT_ID)) {
+    if (ids.some(id => Bookmarks.byId.get(id)?.parentId === BKM_ROOT_ID)) {
       option.inactive = true
     }
     if (!Settings.state.ctxMenuRenderInact && option.inactive) return
@@ -390,7 +391,7 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
 
   collapseAllFolders: () => {
     const panel = Sidebar.panelsById[Selection.getFirst()]
-    if (!panel || !Bookmarks.reactive.tree.length) return
+    if (!panel || !Bookmarks.tree.length) return
 
     const option: MenuOption = {
       label: translate('menu.bookmark.collapse_all'),
@@ -404,7 +405,7 @@ export const bookmarksMenuOptions: Record<string, () => MenuOption | MenuOption[
 
   switchViewMode: () => {
     const panel = Sidebar.panelsById[Selection.getFirst()]
-    if (!isBookmarksPanel(panel) || !Bookmarks.reactive.tree.length) return
+    if (!isBookmarksPanel(panel) || !Bookmarks.tree.length) return
 
     const isTree = panel.viewMode === 'tree'
     let label: string

@@ -2,35 +2,35 @@
 .BookmarkNode(
   ref="rootEl"
   :id="'bookmark' + panelId + node.id"
-  :data-type="node.type"
+  :data-type="Bookmarks.typeName[node.type]"
   :data-expanded="expanded"
   :data-parent="!!children?.length"
-  :data-selected="node.sel"
-  :data-locked-selection="node.selLock"
-  :data-open="node.isOpen")
+  :data-selected="node.reactive.sel"
+  :data-locked-selection="node.reactive.selLock"
+  :data-open="node.reactive.hasOpenTabs")
   .body(
     :title="tooltip"
-    :data-color="node.containerColor"
+    :data-color="node.reactive.containerColor"
     @mousedown.stop="onMouseDown"
     @mouseup.stop="onMouseUp"
     @contextmenu.stop="onCtxMenu")
     .dnd-layer(draggable="true" data-dnd-type="bookmark" :data-dnd-id="node.id" @dragstart="onDragStart")
-    .color-layer(v-if="node.customColor" :style="{ '--bkm-color': RGB_COLORS[node.customColor as browser.ColorName] }")
-    .fav(v-if="node.url")
+    .color-layer(v-if="node.reactive.customColor" :style="{ '--bkm-color': RGB_COLORS[node.customColor as browser.ColorName] }")
+    .fav(v-if="node.type === BkmType.Bookmark")
       svg(v-if="!favicon")
         use(href="#icon_ff")
       img(v-else :src="favicon")
-    .fav(v-else-if="node.type === 'folder'" @mousedown="onFolderFavMouseDown")
+    .fav(v-else-if="node.type === BkmType.Folder" @mousedown="onFolderFavMouseDown")
       svg(v-if="expanded")
         use(href="#icon_folder_open")
       svg(v-else)
         use(href="#icon_folder")
-    .title(v-if="node.children || node.url") {{node.parsedTitle || node.title || node.url}}
-    .len(v-if="Settings.state.showBookmarkLen && node.len") {{node.len}}
-    .container-mark(v-if="node.containerColor")
+    .title(v-if="node.children || node.url") {{node.reactive.title || node.reactive.url}}
+    .len(v-if="Settings.state.showBookmarkLen && node.type === BkmType.Folder") {{node.reactive.len}}
+    .container-mark(v-if="node.reactive.containerColor")
   
-  .children(v-if="(expanded) && children?.length" :title="node.title")
-    BookmarkNode(v-for="node in children" :key="node.id" :node="node" :filter="props.filter" :panelId="panelId")
+  .children(v-if="expanded && children?.length" :title="node.reactive.title")
+    BookmarkNode(v-for="nodeId in children" :key="nodeId" :nodeId="nodeId" :filter="props.filter" :panelId="panelId")
 </template>
 
 <script lang="ts">
@@ -39,8 +39,8 @@ export default { name: 'BookmarkNode' }
 
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
-import type { Bookmark, DragInfo } from 'src/types'
-import { MenuType, DragType, DropType } from 'src/enums'
+import type { DragInfo } from 'src/types'
+import { MenuType, DragType, DropType, BkmType } from 'src/enums'
 import * as Settings from 'src/services/settings.fg'
 import * as Windows from 'src/services/windows.fg'
 import * as Selection from 'src/services/selection.fg'
@@ -57,52 +57,60 @@ import * as Utils from 'src/utils'
 import * as Logs from 'src/services/logs'
 
 const props = defineProps<{
-  node: Bookmark
+  nodeId: ID
   panelId: ID
-  filter?: (n: Bookmark) => boolean
+  filter?: (n: Bookmarks.BkmNode) => boolean
 }>()
+
+const node = Bookmarks.byId.get(props.nodeId) as Bookmarks.BkmNode
+if (!node) throw `bookmark-node.vue: No such node: ${props.nodeId}`
 
 const rootEl = ref<HTMLElement | null>(null)
 
 const favicon = computed((): string => {
-  if (!props.node.url) return ''
-  return Favicons.getFavicon(props.node.url)
+  if (node.type !== BkmType.Bookmark) return ''
+  const url = node.reactive.url
+  return url ? Favicons.getFavicon(url) : ''
 })
 const tooltip = computed((): string => {
-  const title = props.node.parsedTitle || props.node.title
-  if (title && props.node.url) return `${title}\n---\n${props.node.url}`
-  else if (props.node.url) return props.node.url
+  const title = node.reactive.title
+  const url = node.reactive.url
+  if (title && url) return `${title}\n---\n${url}`
+  else if (url) return url
   else if (title) return title
   else return ''
 })
-const children = computed<Bookmark[] | undefined>(() => {
-  if (!props.node.children) return
-  if (props.filter) return props.node.children.filter(props.filter)
-  else return props.node.children
+const children = computed<ID[] | undefined>(() => {
+  const children = node.reactive.children
+  if (props.filter && node.children) {
+    return node.children.reduce<ID[]>((a, v) => (props.filter?.(v) && a.push(v.id), a), [])
+  } else {
+    return children
+  }
 })
 const expanded = computed<boolean>(() => {
-  if (!props.node.children) return false
+  if (!node.children) return false
   if (!props.panelId) return false
-  return !!Bookmarks.reactive.expanded[props.panelId]?.[props.node.id]
+  return !!Bookmarks.reactive.expanded[props.panelId]?.[node.id]
 })
 
 let middleClickReactionTimeout: number | undefined
 
 async function onMouseDown(e: MouseEvent): Promise<void> {
-  Mouse.setTarget('bookmark', props.node.id)
+  Mouse.setTarget('bookmark', node.id)
   Menu.close()
 
   // Left
   if (e.button === 0) {
-    if (Bookmarks.reactive.popup && props.node.type === 'folder') {
-      if (!props.node.sel) {
+    if (Bookmarks.reactive.popup && node.type === BkmType.Folder) {
+      if (!node.sel) {
         Selection.resetSelection()
-        Selection.selectBookmark(props.node.id)
+        Selection.selectBookmark(node.id)
       } else {
-        if (!expanded.value) Bookmarks.expandBookmark(props.node.id, props.panelId)
-        else Bookmarks.foldBookmark(props.node.id, props.panelId)
+        if (!expanded.value) Bookmarks.expandBookmark(node.id, props.panelId)
+        else Bookmarks.foldBookmark(node.id, props.panelId)
       }
-      Bookmarks.reactive.popup.location = props.node.id
+      Bookmarks.reactive.popup.location = node.id
       if (Bookmarks.reactive.popup.validate) {
         Bookmarks.reactive.popup.validate(Bookmarks.reactive.popup)
       }
@@ -110,20 +118,20 @@ async function onMouseDown(e: MouseEvent): Promise<void> {
     }
 
     if (e.ctrlKey) {
-      if (!props.node.sel) Selection.selectBookmark(props.node.id)
+      if (!node.sel) Selection.selectBookmark(node.id)
       else {
-        Selection.deselectBookmark(props.node.id)
+        Selection.deselectBookmark(node.id)
         if (children.value && children.value.length > 0) {
-          if (!expanded.value) Bookmarks.expandBookmark(props.node.id, props.panelId)
-          else Bookmarks.foldBookmark(props.node.id, props.panelId)
+          if (!expanded.value) Bookmarks.expandBookmark(node.id, props.panelId)
+          else Bookmarks.foldBookmark(node.id, props.panelId)
         }
       }
       return
     }
 
     if (e.shiftKey) {
-      if (!Selection.isSet()) Selection.selectBookmark(props.node.id)
-      else Selection.selectBookmarksRange(props.node)
+      if (!Selection.isSet()) Selection.selectBookmark(node.id)
+      else Selection.selectBookmarksRange(node)
       return
     }
   }
@@ -146,28 +154,28 @@ async function onMouseDown(e: MouseEvent): Promise<void> {
     }
 
     // Bookmark
-    if (props.node.type === 'bookmark' && props.node.url) {
+    if (node.type === BkmType.Bookmark && node.url) {
       const action = Settings.state.bookmarksMidClickAction
       if (action === 'open_in_new') {
         const conf = Bookmarks.getMouseOpeningConf(e.button)
-        await Bookmarks.open([props.node.id], conf.dst, conf.useActiveTab, conf.activateFirstTab)
-        if (conf.removeBookmark) Bookmarks.removeBookmarks([props.node.id], { noNotif: true })
-      } else if (action === 'edit') Bookmarks.editBookmarkNode(props.node)
-      else if (action === 'delete') Bookmarks.removeBookmarks([props.node.id])
+        await Bookmarks.open([node.id], conf.dst, conf.useActiveTab, conf.activateFirstTab)
+        if (conf.removeBookmark) Bookmarks.removeBookmarks([node.id], { noNotif: true })
+      } else if (action === 'edit') Bookmarks.editBookmarkNode(node)
+      else if (action === 'delete') Bookmarks.removeBookmarks([node.id])
     }
 
     // Folder
-    else if (props.node.type === 'folder') {
+    else if (node.type === BkmType.Folder) {
       const panelId = Sidebar.getRecentTabsPanelId()
-      await Bookmarks.open([props.node.id], { panelId }, false, true)
+      await Bookmarks.open([node.id], { panelId }, false, true)
     }
   }
 
   // Right
   else if (e.button === 2) {
-    if (!Settings.state.ctxMenuNative && !props.node.sel && !Bookmarks.reactive.popup) {
+    if (!Settings.state.ctxMenuNative && !node.sel && !Bookmarks.reactive.popup) {
       Selection.resetSelection()
-      Mouse.startMultiSelection(e, props.node.id)
+      Mouse.startMultiSelection(e, node.id)
     }
   }
 }
@@ -177,15 +185,15 @@ function onFolderFavMouseDown(e: MouseEvent): void {
   e.stopPropagation()
   Menu.close()
 
-  if (!props.node.sel) {
+  if (!node.sel) {
     Selection.resetSelection()
-    Selection.selectBookmark(props.node.id)
+    Selection.selectBookmark(node.id)
   }
 
-  if (!expanded.value) Bookmarks.expandBookmark(props.node.id, props.panelId)
-  else Bookmarks.foldBookmark(props.node.id, props.panelId)
+  if (!expanded.value) Bookmarks.expandBookmark(node.id, props.panelId)
+  else Bookmarks.foldBookmark(node.id, props.panelId)
 
-  Bookmarks.reactive.popup.location = props.node.id
+  Bookmarks.reactive.popup.location = node.id
   if (Bookmarks.reactive.popup.validate) Bookmarks.reactive.popup.validate(Bookmarks.reactive.popup)
 }
 
@@ -193,10 +201,10 @@ function onFolderFavMouseDown(e: MouseEvent): void {
  * Handle mouseup event
  */
 async function onMouseUp(e: MouseEvent): Promise<void> {
-  const sameTarget = Mouse.isTarget('bookmark', props.node.id)
+  const sameTarget = Mouse.isTarget('bookmark', node.id)
   Mouse.resetTarget()
 
-  const isFolder = props.node.type === 'folder'
+  const isFolder = node.type === BkmType.Folder
 
   // Left button
   if (e.button === 0) {
@@ -215,7 +223,7 @@ async function onMouseUp(e: MouseEvent): Promise<void> {
 
     // Scroll to sticked opened folder
     if (Settings.state.pinOpenedBookmarksFolder && isFolder && expanded.value) {
-      const bookmarkEl = document.getElementById(`bookmark${props.panelId}${props.node.id}`)
+      const bookmarkEl = document.getElementById(`bookmark${props.panelId}${node.id}`)
       const bookmarkBounds = bookmarkEl?.getBoundingClientRect()
       const bookmarkBodyEl = bookmarkEl?.children[0]
       const bookmarkBodyBounds = bookmarkBodyEl?.getBoundingClientRect()
@@ -227,7 +235,7 @@ async function onMouseUp(e: MouseEvent): Promise<void> {
     }
 
     // Bookmark
-    if (props.node.type === 'bookmark' && props.node.url) {
+    if (node.type === BkmType.Bookmark && node.url) {
       // Auto convert bookmarks panel to source tabs panel
       const actPanel = Sidebar.panelsById[Sidebar.activePanelId]
       if (Utils.isBookmarksPanel(actPanel) && actPanel.autoConvert) {
@@ -237,7 +245,7 @@ async function onMouseUp(e: MouseEvent): Promise<void> {
           if (tabsPanelId === NOID) return Logs.err('BookmarkNode.onMouseUp: cannot convert panel')
 
           // Open tab
-          const info = { id: 1, url: props.node.url, title: props.node.title, active: true }
+          const info = { id: 1, url: node.url, title: node.title, active: true }
           await Tabs.open([info], { panelId: tabsPanelId })
           return
         } catch (err) {
@@ -247,13 +255,13 @@ async function onMouseUp(e: MouseEvent): Promise<void> {
 
       // Activate tab if bookmark is opened
       let newTabNeededInActPanel = false
-      if (Settings.state.activateOpenBookmarkTab && props.node.isOpen) {
+      if (Settings.state.activateOpenBookmarkTab && node.hasOpenTabs) {
         let tab
         if (Utils.isTabsPanel(actPanel)) {
-          tab = Tabs.list.find(t => t.url === props.node.url && t.panelId === actPanel.id)
+          tab = Tabs.list.find(t => t.url === node.url && t.panelId === actPanel.id)
           newTabNeededInActPanel = !tab
         } else if (Utils.isBookmarksPanel(actPanel)) {
-          tab = Tabs.list.find(t => t.url === props.node.url)
+          tab = Tabs.list.find(t => t.url === node.url)
         }
         if (tab) {
           browser.tabs.update(tab.id, { active: true })
@@ -274,16 +282,16 @@ async function onMouseUp(e: MouseEvent): Promise<void> {
       let conf = Bookmarks.getMouseOpeningConf(e.button)
       const useActiveTab = !newTabNeededInActPanel && conf.useActiveTab
       const activateFirstTab = newTabNeededInActPanel || conf.activateFirstTab
-      Bookmarks.open([props.node.id], conf.dst, useActiveTab, activateFirstTab)
-      if (conf.removeBookmark) Bookmarks.removeBookmarks([props.node.id], { noNotif: true })
+      Bookmarks.open([node.id], conf.dst, useActiveTab, activateFirstTab)
+      if (conf.removeBookmark) Bookmarks.removeBookmarks([node.id], { noNotif: true })
     }
 
     // Folder
     else if (isFolder) {
       if (!expanded.value) {
-        Bookmarks.expandBookmark(props.node.id, props.panelId)
+        Bookmarks.expandBookmark(node.id, props.panelId)
       } else {
-        Bookmarks.foldBookmark(props.node.id, props.panelId)
+        Bookmarks.foldBookmark(node.id, props.panelId)
       }
     }
   }
@@ -295,7 +303,7 @@ async function onMouseUp(e: MouseEvent): Promise<void> {
 
     Mouse.stopMultiSelection()
     if (!Settings.state.ctxMenuNative) {
-      if (!Selection.isSet()) Selection.selectBookmark(props.node.id)
+      if (!Selection.isSet()) Selection.selectBookmark(node.id)
       Menu.open(MenuType.Bookmarks, e.clientX, e.clientY)
     }
   }
@@ -311,14 +319,14 @@ function onCtxMenu(e: MouseEvent): void {
     return
   }
 
-  if (!e.ctrlKey && !e.shiftKey && !props.node.sel) {
+  if (!e.ctrlKey && !e.shiftKey && !node.sel) {
     Selection.resetSelection()
   }
 
-  let nativeCtx = { context: 'bookmark', bookmarkId: props.node.id } as const
+  let nativeCtx = { context: 'bookmark', bookmarkId: node.id } as const
   browser.menus.overrideContext(nativeCtx)
 
-  if (!Selection.isBookmarks()) Selection.selectBookmark(props.node.id)
+  if (!Selection.isBookmarks()) Selection.selectBookmark(node.id)
 
   Menu.open(MenuType.Bookmarks)
 }
@@ -328,11 +336,11 @@ function onCtxMenu(e: MouseEvent): void {
  */
 function onDragStart(e: DragEvent): void {
   Menu.close()
-  if (!Selection.isSet()) Selection.selectBookmark(props.node.id)
+  if (!Selection.isSet()) Selection.selectBookmark(node.id)
   Sidebar.updateBounds()
 
   // Check what to drag
-  const dragItems = Bookmarks.convertTreeToDragItems(props.node.id)
+  const dragItems = Bookmarks.convertTreeToDragItems(node.id)
   const dragInfo: DragInfo = {
     type: DragType.Bookmarks,
     items: dragItems,
@@ -348,7 +356,7 @@ function onDragStart(e: DragEvent): void {
 
   // Set native drag info
   if (e.dataTransfer) {
-    const url = props.node.url ?? ''
+    const url = node.url ?? ''
     const dragImgEl = document.getElementById('drag_image')
     e.dataTransfer.setData('application/x-sidebery-dnd', JSON.stringify(dragInfo))
     if (Settings.state.dndOutside === 'data' ? !e.altKey : e.altKey) {

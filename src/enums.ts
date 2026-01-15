@@ -18,6 +18,12 @@ export const enum Err {
   Canceled = 2,
 }
 
+export const enum BkmType {
+  Bookmark = 1,
+  Folder = 2,
+  Separator = 3,
+}
+
 // ---
 // -- Popups
 // -

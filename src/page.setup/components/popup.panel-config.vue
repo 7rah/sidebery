@@ -349,7 +349,7 @@ const rootPath = computed<string>(() => {
   if (!props.conf.rootId) return '/'
   if (props.conf.rootId === D.BKM_ROOT_ID) return '/'
 
-  let parent = Bookmarks.reactive.byId[props.conf.rootId]
+  let parent = Bookmarks.byId.get(props.conf.rootId)
   if (!parent) return translate('panel.root_id_wrong')
 
   const path: string[] = []
@@ -357,7 +357,7 @@ const rootPath = computed<string>(() => {
     const titleExec = D.FOLDER_NAME_DATA_RE.exec(parent.title)
     if (titleExec) path.push(titleExec[1])
     else path.push(parent.title)
-    parent = Bookmarks.reactive.byId[parent.parentId]
+    parent = Bookmarks.byId.get(parent.parentId)
   }
 
   return '/' + path.reverse().join('/')
@@ -370,7 +370,7 @@ const rootDirIsFF = computed<boolean>(() => {
 onMounted(() => {
   init()
 
-  if (!Bookmarks.reactive.tree.length) Bookmarks.load()
+  if (!Bookmarks.tree.length) Bookmarks.load()
 
   rootEl.value?.addEventListener('keydown', onDocumentKeydown)
 })

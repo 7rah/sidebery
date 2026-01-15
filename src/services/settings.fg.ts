@@ -181,9 +181,8 @@ export function updateSettings(settings?: SettingsState | null): void {
     Tabs.updateNativeTabsVisibility()
   }
 
-  if (highlightOpenBookmarks && Bookmarks.reactive.byId) {
-    if (Settings.state.highlightOpenBookmarks) Bookmarks.markOpenBookmarksForAllTabs()
-    else Bookmarks.unmarkAllOpenBookmarks()
+  if (highlightOpenBookmarks && Bookmarks.tree.length) {
+    Bookmarks.recalcOpenTabs()
   }
 
   if (theme) {

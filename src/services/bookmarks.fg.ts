@@ -12,18 +12,17 @@ import * as Selection from 'src/services/selection.fg'
 import * as Tabs from 'src/services/tabs.fg'
 import * as Store from 'src/services/storage.fg'
 import * as Notifications from 'src/services/notifications.fg'
-import * as Info from 'src/services/info'
 import * as IPC from 'src/services/ipc'
 import * as Permissions from 'src/services/permissions.fg'
 import * as Containers from 'src/services/containers'
 import * as DnD from 'src/services/drag-and-drop.fg'
 import * as Search from 'src/services/search.fg'
+import * as Links from 'src/services/links'
 
 import * as Bookmarks from './bookmarks.fg'
 
-export interface BookmarksState {
-  tree: T.Bookmark[]
-  byId: Record<ID, T.Bookmark>
+export interface BookmarksReactiveState {
+  root: ID[]
   popup: BookmarksPopupState | null
   expanded: T.ExpandedBookmarks
 }
@@ -45,7 +44,7 @@ export interface BookmarksPopupConfig {
   recentLocations?: boolean
   recentLocationAsDefault?: boolean
   newFolderPosition?: [parentId: ID, index: number]
-  target?: T.Bookmark
+  target?: BkmNode
   controls?: BookmarksPopupControlConfig[]
   validate?: (popupState: BookmarksPopupState) => void
 }
@@ -65,23 +64,288 @@ export interface BookmarksPopupResult {
   controlIndex: number
 }
 
-export let byUrl: Record<string, T.Bookmark[]> = {}
-export let markedFolders: Record<ID, number> = {}
+export type { BkmNode }
+
+class BkmNode {
+  id: ID
+  type: E.BkmType
+  index: number
+  parentId: ID
+  children?: BkmNode[]
+  dateAdded?: number
+  dateModified?: number
+  unmodifiable?: 'managed'
+
+  title: string
+  url?: string
+
+  len: number
+  sel: boolean
+  selLock: boolean
+  hasOpenTabs: boolean
+
+  // Parsed from title
+  parsedTitle?: string
+  customColor?: string
+  containerColor?: string
+
+  reactive: T.ReactiveBkmProps
+
+  constructor(nativeBkm: T.NativeBkmNode) {
+    this.id = nativeBkm.id ?? D.NOID
+    if (nativeBkm.type === 'bookmark') this.type = E.BkmType.Bookmark
+    else if (nativeBkm.type === 'folder') this.type = E.BkmType.Folder
+    else this.type = E.BkmType.Separator
+    this.index = nativeBkm.index ?? -1
+    this.parentId = nativeBkm.parentId ?? D.NOID
+    this.dateAdded = nativeBkm.dateAdded
+    this.dateModified = nativeBkm.dateGroupModified
+    this.unmodifiable = nativeBkm.unmodifiable
+    this.len = 0
+
+    this.title = nativeBkm.title
+    if (this.type === E.BkmType.Bookmark) {
+      this.len = 1
+      this.url = nativeBkm.url
+    }
+
+    this.sel = false
+    this.selLock = false
+    this.hasOpenTabs = false
+
+    const link = this.url ? Links.addBkm(this) : undefined
+
+    if (Settings.state.highlightOpenBookmarks && link) {
+      this.hasOpenTabs = !!link.tabs.size
+    } else {
+      this.hasOpenTabs = false
+    }
+
+    if (this.type === E.BkmType.Folder) {
+      this.children = nativeBkm.children?.map(nbn => new BkmNode(nbn)) ?? []
+
+      for (const childNode of this.children) {
+        if (childNode.type === E.BkmType.Bookmark) this.len++
+        else if (childNode.type === E.BkmType.Folder) this.len += childNode.len
+
+        if (!this.hasOpenTabs && childNode.hasOpenTabs) this.hasOpenTabs = true
+      }
+    }
+
+    this.reactive = {
+      title: this.title,
+      url: this.url,
+      len: this.len,
+      sel: this.sel,
+      selLock: this.selLock,
+      hasOpenTabs: this.hasOpenTabs,
+      children: this.children?.map(n => n.id),
+    }
+
+    this.#parseTitle()
+
+    if (reactFn) this.reactive = reactFn(this.reactive)
+
+    byId.set(this.id, this)
+  }
+
+  #parseTitle() {
+    if (!this.title) return
+
+    let parsedTitle = this.title
+
+    const pinIndex = parsedTitle.indexOf(' ' + D.PIN_MARK)
+    if (pinIndex !== -1) {
+      parsedTitle =
+        parsedTitle.slice(0, pinIndex) + parsedTitle.slice(pinIndex + 1 + D.PIN_MARK.length)
+    }
+
+    delete this.containerColor
+    delete this.reactive.containerColor
+    parsedTitle = parsedTitle.replace(D.CONTAINER_IN_BOOKMARK_RE, (match, cpid) => {
+      if (typeof cpid !== 'string') return match
+      const info = Containers.parseCPID(cpid)
+      const container = Containers.findUnique(info)
+      if (!container) return match
+      this.reactive.containerColor = this.containerColor = container.color
+      return ''
+    })
+
+    delete this.customColor
+    delete this.reactive.customColor
+    parsedTitle = parsedTitle.replace(D.COLOR_IN_BOOKMARK_RE, (match, colorId) => {
+      const color = D.BOOKMARK_TAB_COLOR[colorId as string]
+      if (!color) return match
+      this.reactive.customColor = this.customColor = color
+      return ''
+    })
+
+    parsedTitle = parsedTitle.replace(D.TITLE_IN_BOOKMARK_RE, '')
+
+    this.reactive.title = this.parsedTitle = parsedTitle
+  }
+
+  forEachAncestor(cb: (n: BkmNode, i: number) => void) {
+    let parent = Bookmarks.byId.get(this.parentId)
+    let i = 0
+    while (parent) {
+      cb(parent, i++)
+      parent = Bookmarks.byId.get(parent.parentId)
+    }
+  }
+
+  *descendants(): IterableIterator<BkmNode> {
+    if (!this.children) return
+
+    for (const n of this.children) {
+      yield n
+      if (n.children) yield* n.descendants()
+    }
+  }
+
+  setTitle(t: string) {
+    this.title = t
+    this.#parseTitle()
+  }
+
+  setUrl(u: string) {
+    if (this.url === undefined) return
+
+    const link = Links.updBkm(this, u)
+
+    this.url = u
+    this.recalcOpenTabs(link)
+  }
+
+  recalcOpenTabs(link?: Links.Link) {
+    const hadOpenTabs = this.hasOpenTabs
+
+    if (!link) link = Links.byBkm.get(this)
+
+    if (Settings.state.highlightOpenBookmarks && link) {
+      this.hasOpenTabs = !!link.tabs.size
+    } else {
+      this.hasOpenTabs = false
+    }
+
+    if (hadOpenTabs !== this.hasOpenTabs) {
+      ancestorsUpdBuffer.add(this)
+      this.reactive.hasOpenTabs = this.hasOpenTabs
+    }
+  }
+
+  addBkm(bkm: BkmNode, index?: number) {
+    if (!this.children) return
+
+    if (index === undefined || index < 0 || index > this.children.length) {
+      index = this.children.length
+    }
+
+    bkm.parentId = this.id
+    bkm.index = index
+
+    this.children.splice(index, 0, bkm)
+    this.reactive.children?.splice(index, 0, bkm.id)
+  }
+
+  rmChildByIndex(index: number): BkmNode | undefined {
+    if (!this.children) {
+      Logs.warn('BkmNode.rmChildByIndex: childfree:', this.id)
+      return
+    }
+    if (index < 0 || index > this.children.length) {
+      Logs.warn('BkmNode.rmChildByIndex: incorrect index:', index)
+      return
+    }
+    const removed = this.children.splice(index, 1)[0]
+    const chLen = this.children.length
+    for (let i = index; i < chLen; i++) {
+      this.children[i].index = i
+    }
+    this.reactive.children?.splice(index, 1)
+    return removed
+  }
+
+  /**
+   * Update len and hasOpenTabs
+   */
+  updFolderInfo() {
+    if (!this.children) {
+      Logs.warn('BkmNode.updFolderInfo: childfree:', this.id)
+      return
+    }
+    const prevLen = this.len
+    const prevHasOpenTabs = !!this.hasOpenTabs
+    this.len = 0
+    this.hasOpenTabs = false
+    for (const childNode of this.children) {
+      // Calc len
+      this.len += childNode.len
+      // Set hasOpenTabs
+      if (!this.hasOpenTabs && childNode.hasOpenTabs) this.hasOpenTabs = true
+    }
+    if (prevLen !== this.len) this.reactive.len = this.len
+    if (prevHasOpenTabs !== !!this.hasOpenTabs) this.reactive.hasOpenTabs = !!this.hasOpenTabs
+  }
+
+  getChildrenIds() {
+    if (!this.children) return
+    return this.children.map(n => n.id)
+  }
+}
+
+class ancestorsUpdBuffer {
+  static #delay = 100
+  static #timeout: number | undefined
+  static #byTreeLvl: Partial<Set<BkmNode>[]> = []
+
+  static add(node: BkmNode) {
+    const path: BkmNode[] = []
+    node.forEachAncestor(n => path.push(n))
+
+    for (let lvl = 0, i = path.length; i--; lvl++) {
+      let foldersOfLvl = this.#byTreeLvl[lvl]
+      if (!foldersOfLvl) this.#byTreeLvl[lvl] = foldersOfLvl = new Set()
+      foldersOfLvl.add(path[i])
+    }
+
+    clearTimeout(this.#timeout)
+    this.#timeout = setTimeout(() => {
+      for (let i = this.#byTreeLvl.length; i--; ) {
+        const foldersOfLvl = this.#byTreeLvl[i]
+        if (!foldersOfLvl || !foldersOfLvl.size) continue
+
+        for (const f of foldersOfLvl) {
+          f.updFolderInfo()
+        }
+
+        foldersOfLvl.clear()
+      }
+      overallCount = tree.reduce((a, v) => a + v.len, 0)
+      Sidebar.recalcBookmarksPanels()
+    }, this.#delay)
+  }
+}
+
+export const typeName = {
+  [E.BkmType.Bookmark]: 'bookmark',
+  [E.BkmType.Folder]: 'folder',
+  [E.BkmType.Separator]: 'separator',
+} as const
+
+export const byId = new Map<ID, BkmNode>()
+export let tree: BkmNode[] = []
 export let overallCount = 0
-export let reactive: BookmarksState = {
-  tree: [],
-  byId: {},
+export let reactive: BookmarksReactiveState = {
+  root: [],
   popup: null,
   expanded: {},
 }
 
-export function reactivate(r: T.Reactivator<BookmarksState>) {
+let reactFn: (<T extends object>(rObj: T) => T) | undefined
+export function reactivate(r: T.Reactivator<any>) {
   reactive = r(reactive)
-}
-
-export async function load(): Promise<void> {
-  if (!browser.bookmarks) return
-  if (!Info.isBg) return loadInFg()
+  reactFn = r
 }
 
 let loading = false
@@ -92,57 +356,35 @@ function finishLoading() {
   onLoaded = []
 }
 
-async function loadInFg(): Promise<void> {
+export async function load(): Promise<void> {
+  if (!browser.bookmarks) return
+
   // Check if the process is already started
   if (loading) return new Promise(ok => onLoaded.push(ok))
 
   loading = true
 
-  let bookmarks
+  let nativeBookmarks
   try {
-    bookmarks = (await browser.bookmarks.getTree()) as T.Bookmark[]
+    nativeBookmarks = await browser.bookmarks.getTree()
   } catch {
     finishLoading()
     return
   }
-  if (!bookmarks[0].children) {
+  if (!nativeBookmarks[0].children) {
     finishLoading()
     return
   }
 
-  // Normalize objects before vue
-  reactive.byId = {}
-  byUrl = {}
-  const list: T.Bookmark[] = []
-  const walker = (nodes: T.Bookmark[], count: number): number => {
-    for (const n of nodes) {
-      Bookmarks.reactive.byId[n.id] = n
-      n.sel = false
-      n.isOpen = false
-      parseTitle(n)
-      if (n.type === 'separator') n.url = undefined
-      else if (n.url) {
-        count++
-        list.push(n)
-        const rBookmark = Bookmarks.reactive.byId[n.id]
-        if (Bookmarks.byUrl[n.url]) Bookmarks.byUrl[n.url].push(rBookmark)
-        else Bookmarks.byUrl[n.url] = [rBookmark]
-      }
-      if (n.children) {
-        n.len = walker(n.children, 0)
-        count += n.len
-      }
-    }
-    return count
-  }
-  overallCount = walker(bookmarks[0].children, 0)
-  Bookmarks.reactive.tree = bookmarks[0].children
+  byId.clear()
+
+  tree = nativeBookmarks[0].children.map(nb => new BkmNode(nb))
+  overallCount = tree.reduce((a, v) => a + v.len, 0)
+  Bookmarks.reactive.root = tree.map(n => n.id)
 
   Sidebar.recalcBookmarksPanels()
 
   Bookmarks.setupBookmarksListeners()
-
-  if (Settings.state.highlightOpenBookmarks) Bookmarks.markOpenBookmarksForAllTabs()
 
   if (!Windows.incognito) await restoreTree()
 
@@ -158,6 +400,20 @@ async function loadInFg(): Promise<void> {
   finishLoading()
 }
 
+export function getIds(nodes: BkmNode[]) {
+  if (!nodes) nodes = tree
+  return nodes.map(n => n.id)
+}
+
+export function get(ids: ID[]) {
+  const bookmarks = []
+  for (const id of ids) {
+    const b = byId.get(id)
+    if (b) bookmarks.push(b)
+  }
+  return bookmarks
+}
+
 export async function restoreTree(): Promise<void> {
   const stored = await browser.storage.local.get<T.Stored>('expandedBookmarkFolders')
   const expandedBookmarkFolders = stored.expandedBookmarkFolders
@@ -171,24 +427,16 @@ export async function restoreTree(): Promise<void> {
   Bookmarks.reactive.expanded = expandedBookmarkFolders ?? {}
 }
 
-export function convertOldTreeStruct(struct?: ID[][]): T.ExpandedBookmarks {
-  if (!struct) return {}
-
-  const output: Record<ID, boolean> = {}
-  for (const path of struct) {
-    const id = path.pop?.()
-    if (id) output[id] = true
-  }
-
-  return { bookmarks: output }
-}
-
 export function unload(): void {
   Bookmarks.resetBookmarksListeners()
 
-  reactive.tree = []
-  reactive.byId = {}
-  byUrl = {}
+  tree = []
+  byId.clear()
+  Links.rmAllBkms()
+
+  reactive.root = []
+  reactive.popup = null
+  reactive.expanded = {}
 
   for (const panel of Sidebar.panels) {
     if (Utils.isBookmarksPanel(panel)) {
@@ -197,19 +445,6 @@ export function unload(): void {
       panel.reactive.len = 0
     }
   }
-}
-
-export function countBookmarks(nodes: T.Bookmark[]): number {
-  let count = 0
-  const walker = (nodes: T.Bookmark[]) => {
-    for (const n of nodes) {
-      if (n.type === 'bookmark') count++
-      if (n.children) walker(n.children)
-    }
-  }
-  walker(nodes)
-
-  return count
 }
 
 let saveBookmarksTreeTimeout: number | undefined
@@ -237,7 +472,7 @@ export function expandBookmark(
   noRecursive?: boolean,
   noAutoClose?: boolean
 ): void {
-  const node = Bookmarks.reactive.byId[nodeId]
+  const node = Bookmarks.byId.get(nodeId)
   if (!node) return
 
   const isEmpty = !node.children?.length
@@ -252,10 +487,10 @@ export function expandBookmark(
     expandedInPanel[nodeId] = true
   } else {
     const expandPath: ID[] = [nodeId]
-    let parent = Bookmarks.reactive.byId[node.parentId]
+    let parent = Bookmarks.byId.get(node.parentId)
     while (parent) {
       expandPath.push(parent.id)
-      parent = Bookmarks.reactive.byId[parent.parentId]
+      parent = Bookmarks.byId.get(parent.parentId)
     }
 
     for (const id of expandPath) {
@@ -277,7 +512,7 @@ export function foldBookmark(nodeId: ID, panelId: ID): void {
 }
 
 export function toggleBranch(nodeId: ID, panelId: ID): void {
-  const node = Bookmarks.reactive.byId[nodeId]
+  const node = Bookmarks.byId.get(nodeId)
   if (!node) return
 
   const isExpanded = Bookmarks.reactive.expanded[panelId]?.[nodeId]
@@ -286,12 +521,12 @@ export function toggleBranch(nodeId: ID, panelId: ID): void {
 }
 
 export function openInNewWindow(ids: ID[], incognito?: boolean): void {
-  const toOpen: T.Bookmark[] = []
+  const toOpen: BkmNode[] = []
 
   // Get ordered list of nodes
-  const walker = (nodes: T.Bookmark[]) => {
+  const walker = (nodes: BkmNode[]) => {
     for (const node of nodes) {
-      if (node.type === 'separator') continue
+      if (node.type === E.BkmType.Separator) continue
       if (ids.includes(node.parentId)) {
         toOpen.push(node)
         ids.push(node.id)
@@ -301,7 +536,7 @@ export function openInNewWindow(ids: ID[], incognito?: boolean): void {
       if (node.children) walker(node.children)
     }
   }
-  walker(Bookmarks.reactive.tree)
+  walker(Bookmarks.tree)
 
   // Create items info
   const itemsInfo: T.ItemInfo[] = []
@@ -310,8 +545,8 @@ export function openInNewWindow(ids: ID[], incognito?: boolean): void {
 
     if (itemsInfo.find(i => i.id === bookmark.parentId)) info.parentId = bookmark.parentId
 
-    if (bookmark.type === 'bookmark') info.url = bookmark.url
-    if (bookmark.type === 'folder' && Settings.state.tabsTree) {
+    if (bookmark.type === E.BkmType.Bookmark) info.url = bookmark.url
+    if (bookmark.type === E.BkmType.Folder && Settings.state.tabsTree) {
       info.url = Utils.createGroupUrl(bookmark.title)
     }
 
@@ -405,8 +640,8 @@ export async function open(
   useActiveTab?: boolean,
   activateFirstTab?: boolean
 ): Promise<void> {
-  const firstBookmark = Bookmarks.reactive.byId[ids[0]]
-  if (ids.length === 1 && firstBookmark?.type === 'separator') return
+  const firstBookmark = Bookmarks.byId.get(ids[0])
+  if (ids.length === 1 && firstBookmark?.type === E.BkmType.Separator) return
 
   const dstContainerId = dst.containerId ?? D.CONTAINER_ID
   let dstPanel: T.Panel | undefined
@@ -446,9 +681,9 @@ export async function open(
 
   const toOpen: T.ItemInfo[] = []
   const toRemove: ID[] = []
-  const walker = (nodes: T.Bookmark[]) => {
+  const walker = (nodes: BkmNode[]) => {
     for (const node of nodes) {
-      if (node.type === 'separator') continue
+      if (node.type === E.BkmType.Separator) continue
 
       const isDirectTarget = ids.includes(node.id)
       const isIndirectTarget = ids.includes(node.parentId)
@@ -466,12 +701,12 @@ export async function open(
           continue
         }
 
-        if (isIndirectTarget && node.type === 'folder') ids.push(node.id)
+        if (isIndirectTarget && node.type === E.BkmType.Folder) ids.push(node.id)
 
         if (
           Settings.state.autoRemoveOther &&
           node.parentId === D.BKM_OTHER_ID &&
-          node.type === 'bookmark'
+          node.type === E.BkmType.Bookmark
         ) {
           toRemove.push(info.id)
         }
@@ -483,7 +718,7 @@ export async function open(
     }
   }
 
-  if (ids.length === 1 && firstBookmark?.type === 'bookmark') {
+  if (ids.length === 1 && firstBookmark?.type === E.BkmType.Bookmark) {
     const info: T.ItemInfo = {
       id: firstBookmark.id,
       url: firstBookmark.url,
@@ -509,7 +744,7 @@ export async function open(
 
     toOpen.push(info)
   } else {
-    walker(Bookmarks.reactive.tree)
+    walker(Bookmarks.tree)
   }
 
   if (!toOpen.length) return
@@ -525,18 +760,20 @@ export async function open(
 
 export async function createBookmarkNode(
   type: browser.bookmarks.TreeNodeType,
-  target: T.Bookmark
+  target: BkmNode
 ): Promise<void> {
   const expandedBookmarks = Bookmarks.reactive.expanded[Sidebar.activePanelId]
   let parentId: ID | undefined
   let index = 0
 
   // Create bookmark node inside the target folder only if it's open
-  if (target.type === 'folder' && (!expandedBookmarks || expandedBookmarks[target.id])) {
+  if (target.type === E.BkmType.Folder && (!expandedBookmarks || expandedBookmarks[target.id])) {
     parentId = target.id
     if (type === 'folder') {
       // New folder - after the last one or at the start of the list
-      const lastFolderIndex = (target.children ?? []).findLastIndex(n => n.type === 'folder')
+      const lastFolderIndex = (target.children ?? []).findLastIndex(
+        n => n.type === E.BkmType.Folder
+      )
       if (lastFolderIndex !== -1) index = lastFolderIndex + 1
       else index = 0
     } else {
@@ -553,7 +790,7 @@ export async function createBookmarkNode(
   if (!parentId) parentId = D.BKM_OTHER_ID
 
   if (type === 'separator') {
-    browser.bookmarks.create({ parentId, type: 'separator', index })
+    await browser.bookmarks.create({ parentId, type: 'separator', index })
   } else {
     const isBookmark = type === 'bookmark'
     const result = await openBookmarksPopup({
@@ -591,10 +828,10 @@ export async function createBookmarkNode(
   }
 }
 
-export async function editBookmarkNode(target: T.Bookmark): Promise<void> {
-  if (target.type === 'separator') return
+export async function editBookmarkNode(target: BkmNode): Promise<void> {
+  if (target.type === E.BkmType.Separator) return
 
-  const isBookmark = target.type === 'bookmark'
+  const isBookmark = target.type === E.BkmType.Bookmark
   const result = await openBookmarksPopup({
     target,
     title: translate(isBookmark ? 'popup.bookmarks.edit_bookmark' : 'popup.bookmarks.edit_folder'),
@@ -657,10 +894,10 @@ export async function removeBookmarks(ids: ID[], conf?: RemovingBookmarksConf): 
   let hasCollapsed = false
 
   const expandedBookmarks = Bookmarks.reactive.expanded[Sidebar.activePanelId]
-  const deleted: T.Bookmark[] = []
+  const deleted: BkmNode[] = []
   const idsToRemove = []
 
-  const walker = (nodes: T.Bookmark[]) => {
+  const walker = (nodes: BkmNode[]) => {
     for (const n of nodes) {
       count++
       deleted.push(n)
@@ -673,7 +910,7 @@ export async function removeBookmarks(ids: ID[], conf?: RemovingBookmarksConf): 
   }
 
   for (const id of ids) {
-    const n = Bookmarks.reactive.byId[id]
+    const n = Bookmarks.byId.get(id)
     if (!n) continue
     if (ids.includes(n.parentId)) continue
     count++
@@ -708,17 +945,20 @@ export async function removeBookmarks(ids: ID[], conf?: RemovingBookmarksConf): 
   }
 }
 
-async function undoRemove(deleted: T.Bookmark[]): Promise<void> {
+async function undoRemove(deleted: BkmNode[]): Promise<void> {
   const oldNewIds: Record<ID, ID> = {}
   let offset = 0
   let prevParent
   for (const n of deleted) {
     if (prevParent !== n.parentId) offset = 0
-    const conf: browser.bookmarks.CreateDetails = { type: n.type, index: n.index + offset }
-    if (Bookmarks.reactive.byId[n.parentId]) conf.parentId = n.parentId
+    const conf: browser.bookmarks.CreateDetails = {
+      type: typeName[n.type],
+      index: n.index + offset,
+    }
+    if (Bookmarks.byId.has(n.parentId)) conf.parentId = n.parentId
     if (oldNewIds[n.parentId]) conf.parentId = oldNewIds[n.parentId]
-    if (n.type !== 'separator') conf.title = n.title
-    if (n.type === 'bookmark') conf.url = n.url
+    if (n.type !== E.BkmType.Separator) conf.title = n.title
+    if (n.type === E.BkmType.Bookmark) conf.url = n.url
     const newNode = await browser.bookmarks.create(conf)
     prevParent = n.parentId
     oldNewIds[n.id] = newNode.id
@@ -761,11 +1001,11 @@ export async function sortBookmarks(
   const expandedBookmarks = Bookmarks.reactive.expanded[Sidebar.activePanelId]
 
   // Separate nodes by groups (bookmarks with the same parentId)
-  const groups: Record<string, T.Bookmark[]> = {}
+  const groups: Record<string, BkmNode[]> = {}
   let count = 0
-  const walker = (nodes: T.Bookmark[]) => {
+  const walker = (nodes: BkmNode[]) => {
     for (const node of nodes) {
-      if (node.type === 'separator') continue
+      if (node.type === E.BkmType.Separator) continue
       if (type !== 'link' || node.url) {
         if (!groups[node.parentId]) groups[node.parentId] = []
         groups[node.parentId].push(node)
@@ -775,9 +1015,9 @@ export async function sortBookmarks(
     }
   }
   for (const nodeId of nodeIds) {
-    const node = Bookmarks.reactive.byId[nodeId]
+    const node = Bookmarks.byId.get(nodeId)
     if (!node) continue
-    if (node.type === 'separator') continue
+    if (node.type === E.BkmType.Separator) continue
     if (type !== 'link' || node.url) {
       if (!groups[node.parentId]) groups[node.parentId] = []
       groups[node.parentId].push(node)
@@ -831,8 +1071,8 @@ export async function sortBookmarks(
 
     nodes.sort((aa, bb) => {
       if (aa.type !== bb.type) {
-        if (aa.type === 'folder') return -1
-        if (aa.type === 'bookmark') return 1
+        if (aa.type === E.BkmType.Folder) return -1
+        if (aa.type === E.BkmType.Bookmark) return 1
       }
 
       const a = dir > 0 ? aa : bb
@@ -867,111 +1107,14 @@ export async function sortBookmarks(
   if (progressNotification) Notifications.finishProgress(progressNotification)
 }
 
-const unmarkOpenBookmarksTimeout: Record<string, number> = {}
-
-export function unmarkOpenBookmarksDebounced(url: string, delay = 500): void {
-  clearTimeout(unmarkOpenBookmarksTimeout[url])
-  unmarkOpenBookmarksTimeout[url] = setTimeout(() => {
-    delete unmarkOpenBookmarksTimeout[url]
-    unmarkOpenBookmarks(url)
-  }, delay)
-}
-
-export function unmarkOpenBookmarks(url: string): void {
-  clearTimeout(unmarkOpenBookmarksTimeout[url])
-  unmarkOpenBookmarksTimeout[url] = setTimeout(() => {
-    delete unmarkOpenBookmarksTimeout[url]
-
-    const bookmarks = Bookmarks.byUrl[url]
-    if (!bookmarks) return
-
-    for (const b of bookmarks) {
-      b.isOpen = false
-      Bookmarks.unmarkParents(b)
-    }
-  }, 500)
-}
-
-export function reMarkOpenBookmark(bookmark: T.Bookmark): void {
-  if (!bookmark.url) return
-
-  const tabIsOpen = !!Tabs.urlsInUse[bookmark.url]
-  const bookmarkIsMarked = bookmark.isOpen ?? false
-  if (tabIsOpen === bookmarkIsMarked) return
-
-  // Unmark
-  if (bookmarkIsMarked) {
-    bookmark.isOpen = false
-    Bookmarks.unmarkParents(bookmark)
-  }
-
-  // Mark
-  else {
-    bookmark.isOpen = true
-    Bookmarks.markParents(bookmark)
-  }
-}
-
-const markOpenBookmarksTimeout: Record<string, number> = {}
-
-export function markOpenBookmarksDebounced(url: string, delay = 500): void {
-  clearTimeout(markOpenBookmarksTimeout[url])
-  markOpenBookmarksTimeout[url] = setTimeout(() => {
-    delete markOpenBookmarksTimeout[url]
-    markOpenBookmarks(url)
-  }, delay)
-}
-
-export function markOpenBookmarks(url: string): void {
-  const bookmarks = Bookmarks.byUrl[url]
-  if (!bookmarks) return
-
-  for (const b of bookmarks) {
-    b.isOpen = true
-    Bookmarks.markParents(b)
-  }
-}
-
-export function unmarkAllOpenBookmarks(nodes?: T.Bookmark[]): void {
-  if (!nodes) {
-    nodes = Bookmarks.reactive.tree
-    markedFolders = {}
-  }
-
-  for (const node of nodes) {
-    if (node.children?.length && node.isOpen) unmarkAllOpenBookmarks(node.children)
-    node.isOpen = false
-  }
-}
-
-export function markOpenBookmarksForAllTabs(): void {
-  for (const url of Object.keys(Tabs.urlsInUse)) {
-    markOpenBookmarks(url)
-  }
-}
-
-export function markParents(node: T.Bookmark): void {
-  let parent = Bookmarks.reactive.byId[node.parentId]
-  while (parent) {
-    Bookmarks.markedFolders[parent.id] = (Bookmarks.markedFolders[parent.id] ?? 0) + 1
-    if (!parent.isOpen) parent.isOpen = true
-    else break
-    parent = Bookmarks.reactive.byId[parent.parentId]
-  }
-}
-
-export function unmarkParents(node: T.Bookmark): void {
-  let parent = Bookmarks.reactive.byId[node.parentId]
-  while (parent) {
-    Bookmarks.markedFolders[parent.id] = (Bookmarks.markedFolders[parent.id] ?? 1) - 1
-    if (!Bookmarks.markedFolders[parent.id] && parent.isOpen) parent.isOpen = false
-    else break
-    parent = Bookmarks.reactive.byId[parent.parentId]
+export function recalcOpenTabs() {
+  for (const [_, link] of Links.byUrl) {
+    if (link.bkms.size) link.bkms.forEach(b => b.recalcOpenTabs(link))
   }
 }
 
 export async function createFromDragEvent(e: DragEvent, dst: T.DstPlaceInfo): Promise<void> {
-  if (!dst.parentId || !Bookmarks.reactive.byId[dst.parentId]) return
+  if (!dst.parentId || !Bookmarks.byId.has(dst.parentId)) return
 
   // Handle sidebery dnd info from another firefox profile
   const dndInfo = e.dataTransfer?.getData('application/x-sidebery-dnd')
@@ -1016,7 +1159,7 @@ export async function createFromDragEvent(e: DragEvent, dst: T.DstPlaceInfo): Pr
 
 export async function move(ids: ID[], dst: T.DstPlaceInfo): Promise<void> {
   if (!dst.parentId) {
-    const firstNode = Bookmarks.reactive.byId[ids[0]]
+    const firstNode = Bookmarks.byId.get(ids[0])
     if (!firstNode) return Logs.warn('Bookmarks: Cannot move bookmarks: No first node')
 
     const result = await Bookmarks.openBookmarksPopup({
@@ -1037,12 +1180,12 @@ export async function move(ids: ID[], dst: T.DstPlaceInfo): Promise<void> {
 
   let dstIndex = dst.index
   if (dstIndex === undefined || dstIndex < 0) {
-    const parent = Bookmarks.reactive.byId[dst.parentId]
+    const parent = Bookmarks.byId.get(dst.parentId)
     dstIndex = parent?.children?.length ?? 0
   }
 
   for (const id of ids) {
-    const bookmark = Bookmarks.reactive.byId[id]
+    const bookmark = Bookmarks.byId.get(id)
     if (!bookmark) continue
     if (ids.includes(bookmark.parentId)) continue
     if (bookmark.parentId === dst.parentId && bookmark.index < dstIndex) dstIndex--
@@ -1062,40 +1205,6 @@ export function attachTabInfoToTitle(item: T.ItemInfo) {
   if (item.customTitle) {
     item.title += ' [*]'
   }
-}
-
-export function parseTitle(node: T.Bookmark) {
-  if (!node.title) return
-
-  let parsedTitle = node.title
-
-  const pinIndex = parsedTitle.indexOf(' ' + D.PIN_MARK)
-  if (pinIndex !== -1) {
-    parsedTitle =
-      parsedTitle.slice(0, pinIndex) + parsedTitle.slice(pinIndex + 1 + D.PIN_MARK.length)
-  }
-
-  delete node.containerColor
-  parsedTitle = parsedTitle.replace(D.CONTAINER_IN_BOOKMARK_RE, (match, cpid) => {
-    if (typeof cpid !== 'string') return match
-    const info = Containers.parseCPID(cpid)
-    const container = Containers.findUnique(info)
-    if (!container) return match
-    node.containerColor = container.color
-    return ''
-  })
-
-  delete node.customColor
-  parsedTitle = parsedTitle.replace(D.COLOR_IN_BOOKMARK_RE, (match, colorId) => {
-    const color = D.BOOKMARK_TAB_COLOR[colorId as string]
-    if (!color) return match
-    node.customColor = color
-    return ''
-  })
-
-  parsedTitle = parsedTitle.replace(D.TITLE_IN_BOOKMARK_RE, '')
-
-  node.parsedTitle = parsedTitle
 }
 
 export function extractTabInfoFromTitle(item: T.ItemInfo, updateTitleOnly?: boolean) {
@@ -1144,7 +1253,7 @@ export async function createFrom(
   let n = 0
 
   if (dstIndex === undefined || dstIndex < 0) {
-    const parent = Bookmarks.reactive.byId[dst.parentId]
+    const parent = Bookmarks.byId.get(dst.parentId)
     dstIndex = parent?.children?.length ?? 0
   }
 
@@ -1162,7 +1271,7 @@ export async function createFrom(
       // Create folder
       if (children.length) {
         const folderConf = { title: item.title, parentId, index }
-        const folder = (await browser.bookmarks.create(folderConf)) as T.Bookmark
+        const folder = await browser.bookmarks.create(folderConf)
         idsMap[item.id] = folder.id
 
         if (progress) Notifications.updateProgress(progress, n++, items.length)
@@ -1206,10 +1315,10 @@ export async function saveToFolder(
   removeOld: boolean,
   progress?: T.Notification,
   idsMap?: Partial<Record<ID, ID>>
-): Promise<T.Bookmark[] | void> {
+): Promise<BkmNode[] | void> {
   if (!dst.parentId) return Logs.warn('Bookmarks.saveToFolder: No dst parentId')
 
-  const dstFolder = Bookmarks.reactive.byId[dst.parentId]
+  const dstFolder = Bookmarks.byId.get(dst.parentId)
   if (!dstFolder) return Logs.warn('Bookmarks.saveToFolder: No dst parent folder')
 
   const panelFolderId = dstFolder.id
@@ -1241,7 +1350,7 @@ export async function saveToFolder(
 
       // Separator
       if (!item.url && !item.title) {
-        const sepIndex = bookmarksList.findIndex(n => n.type === 'separator')
+        const sepIndex = bookmarksList.findIndex(n => n.type === E.BkmType.Separator)
         const separator = bookmarksList[sepIndex]
         // Separator exists
         if (separator) {
@@ -1262,9 +1371,9 @@ export async function saveToFolder(
       if (nextItem?.parentId === item.id || !item.url) {
         attachTabInfoToTitle(item)
         const folderIndex = bookmarksList.findIndex(n => {
-          return n.type === 'folder' && n.title === item.title
+          return n.type === E.BkmType.Folder && n.title === item.title
         })
-        let folder = bookmarksList[folderIndex]
+        let folder: BkmNode | undefined = bookmarksList[folderIndex]
         // Folder exists
         if (folder) {
           bookmarksList.splice(folderIndex, 1)
@@ -1276,8 +1385,10 @@ export async function saveToFolder(
         // Create folder
         else {
           const createConf = { title: item.title, index, parentId: parentFolderId }
-          folder = (await browser.bookmarks.create(createConf)) as T.Bookmark
+          const nFolder = await browser.bookmarks.create(createConf)
+          folder = byId.get(nFolder.id)
         }
+        if (!folder) throw 'Bookmarks.saveToFolder: No folder'
 
         indexes[folder.id] = 0
         idsMap[item.id] = folder.id
@@ -1287,9 +1398,9 @@ export async function saveToFolder(
         // Bookmark of the parent item
         if (item.url && !D.GROUP_RE.test(item.url)) {
           const bookmarkIndex = bookmarksList.findIndex(n => {
-            return n.type === 'bookmark' && n.title === item.title && n.url === item.url
+            return n.type === E.BkmType.Bookmark && n.title === item.title && n.url === item.url
           })
-          let bookmark = bookmarksList[bookmarkIndex]
+          let bookmark: BkmNode | undefined = bookmarksList[bookmarkIndex]
           // Bookmark exists
           if (bookmark) {
             bookmarksList.splice(bookmarkIndex, 1)
@@ -1301,7 +1412,8 @@ export async function saveToFolder(
           else {
             const url = Utils.denormalizeUrl(item.url)
             const createConf = { title: item.title, url, index: 0, parentId: folder.id }
-            bookmark = (await browser.bookmarks.create(createConf)) as T.Bookmark
+            const nBookmark = await browser.bookmarks.create(createConf)
+            bookmark = byId.get(nBookmark.id)
           }
           indexes[folder.id]++
         }
@@ -1312,9 +1424,9 @@ export async function saveToFolder(
       attachTabInfoToTitle(item)
       const url = Utils.denormalizeUrl(item.url)
       const bookmarkIndex = bookmarksList.findIndex(n => {
-        return n.type === 'bookmark' && n.title === item.title && n.url === url
+        return n.type === E.BkmType.Bookmark && n.title === item.title && n.url === url
       })
-      let bookmark = bookmarksList[bookmarkIndex]
+      let bookmark: BkmNode | undefined = bookmarksList[bookmarkIndex]
       // Bookmark exists
       if (bookmark) {
         bookmarksList.splice(bookmarkIndex, 1)
@@ -1325,7 +1437,8 @@ export async function saveToFolder(
       // Create bookmark
       else {
         const createConf = { title: item.title, url, index, parentId: parentFolderId }
-        bookmark = (await browser.bookmarks.create(createConf)) as T.Bookmark
+        const nBookmark = await browser.bookmarks.create(createConf)
+        bookmark = byId.get(nBookmark.id)
       }
 
       if (progress) Notifications.updateProgress(progress, n++, items.length)
@@ -1341,9 +1454,9 @@ export async function saveToFolder(
 
       attachTabInfoToTitle(item)
       const bookmarkIndex = bookmarksList.findIndex(n => {
-        return n.type === 'bookmark' && n.title === item.title && n.url === item.url
+        return n.type === E.BkmType.Bookmark && n.title === item.title && n.url === item.url
       })
-      let bookmark = bookmarksList[bookmarkIndex]
+      let bookmark: BkmNode | undefined = bookmarksList[bookmarkIndex]
       // Bookmark exists
       if (bookmark) {
         bookmarksList.splice(bookmarkIndex, 1)
@@ -1355,7 +1468,8 @@ export async function saveToFolder(
       else {
         const url = Utils.denormalizeUrl(item.url)
         const createConf = { title: item.title, url, index, parentId: panelFolderId }
-        bookmark = (await browser.bookmarks.create(createConf)) as T.Bookmark
+        const nBookmark = await browser.bookmarks.create(createConf)
+        bookmark = byId.get(nBookmark.id)
       }
 
       if (progress) Notifications.updateProgress(progress, n++, items.length)
@@ -1373,14 +1487,14 @@ export async function saveToFolder(
   // Cleaning up
   for (const node of bookmarksList) {
     // Remove empty folders
-    if (node.type === 'folder' && node.children && !node.children.length) {
+    if (node.type === E.BkmType.Folder && node.children && !node.children.length) {
       await browser.bookmarks.removeTree(node.id)
     }
 
     // Remove remained bookmarks
     else if (removeOld) {
       if (bookmarksList.find(n => n.id === node.parentId)) continue
-      else if (node.type === 'folder') await browser.bookmarks.removeTree(node.id)
+      else if (node.type === E.BkmType.Folder) await browser.bookmarks.removeTree(node.id)
       else await browser.bookmarks.remove(node.id)
     }
   }
@@ -1427,19 +1541,19 @@ async function askWhatToDoWithOldUnusedBookmarks(folderName: string): Promise<st
   return result
 }
 
-export function getPath(bookmark: T.Bookmark): ID[] {
-  let parent = Bookmarks.reactive.byId[bookmark.parentId]
+export function getPath(bookmark: BkmNode): ID[] {
+  let parent = Bookmarks.byId.get(bookmark.parentId)
   const path: ID[] = []
 
   while (parent) {
     path.unshift(parent.id)
-    parent = Bookmarks.reactive.byId[parent.parentId]
+    parent = Bookmarks.byId.get(parent.parentId)
   }
 
   return path
 }
 
-export function findBookmarkPanelOf(bookmark: T.Bookmark): ID | void {
+export function findBookmarkPanelOf(bookmark: BkmNode): ID | void {
   const path = Bookmarks.getPath(bookmark)
 
   for (const panel of Sidebar.panels) {
@@ -1502,8 +1616,8 @@ export function scrollToBookmark(id: ID, forced?: boolean): void {
   }
 }
 
-export function* listBookmarks(nodes?: T.Bookmark[]): IterableIterator<T.Bookmark> {
-  if (!nodes) nodes = Bookmarks.reactive.tree
+export function* listBookmarks(nodes?: BkmNode[]): IterableIterator<BkmNode> {
+  if (!nodes) nodes = Bookmarks.tree
 
   for (const n of nodes) {
     yield n
@@ -1511,8 +1625,8 @@ export function* listBookmarks(nodes?: T.Bookmark[]): IterableIterator<T.Bookmar
   }
 }
 
-export function openAsBookmarksPanel(node: T.Bookmark) {
-  if (node.type !== 'folder') return
+export function openAsBookmarksPanel(node: BkmNode) {
+  if (node.type !== E.BkmType.Folder) return
 
   const index = Sidebar.reactive.nav.indexOf(Sidebar.activePanelId)
   if (index === -1) return
@@ -1531,8 +1645,8 @@ export function openAsBookmarksPanel(node: T.Bookmark) {
   })
 }
 
-export async function openAsTabsPanel(folder: T.Bookmark, showConfigPopup: boolean): Promise<void> {
-  if (folder.type !== 'folder') return
+export async function openAsTabsPanel(folder: BkmNode, showConfigPopup: boolean): Promise<void> {
+  if (folder.type !== E.BkmType.Folder) return
 
   const noTabsPanels = !Sidebar.hasTabs
   const index = Sidebar.getIndexForNewTabsPanel()
@@ -1591,8 +1705,8 @@ export async function copy(ids: ID[], template: T.CopyTemplate) {
   if (resultString) navigator.clipboard.writeText(resultString)
 }
 
-function getNodesWithChildren(ids: ID[], pred: (node: T.Bookmark) => any): T.Bookmark[] {
-  const nodes: T.Bookmark[] = []
+function getNodesWithChildren(ids: ID[], pred: (node: BkmNode) => any): BkmNode[] {
+  const nodes: BkmNode[] = []
   for (const node of Bookmarks.listBookmarks()) {
     const includedItself = ids.includes(node.id)
     if (includedItself || ids.includes(node.parentId)) {
@@ -1603,7 +1717,7 @@ function getNodesWithChildren(ids: ID[], pred: (node: T.Bookmark) => any): T.Boo
   return nodes
 }
 
-function formatCopyTemplate(ids: ID[], nodes: T.Bookmark[], template: T.CopyTemplate): string[] {
+function formatCopyTemplate(ids: ID[], nodes: BkmNode[], template: T.CopyTemplate): string[] {
   const isDBG = template.str === '%DBG'
   const lines: string[] = []
   const bullet = nodes.length > 1 ? Settings.state.copyMultiBullet : ''
@@ -1644,10 +1758,10 @@ export async function pasteInOrAfter(id: ID) {
 
   await Bookmarks.prepareBookmarks()
 
-  const target = Bookmarks.reactive.byId[id]
+  const target = Bookmarks.byId.get(id)
   if (!target) return Logs.warn('Bookmarks.pasteInOrAfter: No target')
 
-  if (target.type === 'folder') Bookmarks.pasteIn(id)
+  if (target.type === E.BkmType.Folder) Bookmarks.pasteIn(id)
   else Bookmarks.pasteAfter(id)
 }
 
@@ -1656,8 +1770,8 @@ export async function pasteIn(id: ID) {
     id = D.BKM_OTHER_ID
   }
 
-  const bkmNode = Bookmarks.reactive.byId[id]
-  if (!bkmNode || bkmNode.type !== 'folder' || !bkmNode.children) {
+  const bkmNode = Bookmarks.byId.get(id)
+  if (!bkmNode || bkmNode.type !== E.BkmType.Folder || !bkmNode.children) {
     return Logs.warn('Bookmarks.pasteIn: No target folder')
   }
 
@@ -1670,10 +1784,10 @@ export async function pasteIn(id: ID) {
 }
 
 export async function pasteAfter(id: ID) {
-  const bkmNode = Bookmarks.reactive.byId[id]
+  const bkmNode = Bookmarks.byId.get(id)
   if (!bkmNode) return Logs.warn('Bookmarks.pasteAfter: No target bookmark')
 
-  const parentNode = Bookmarks.reactive.byId[bkmNode.parentId]
+  const parentNode = Bookmarks.byId.get(bkmNode.parentId)
   if (!parentNode) return Logs.warn('Bookmarks.pasteAfter: No target folder')
 
   const dst: T.DstPlaceInfo = {
@@ -1705,7 +1819,7 @@ export async function paste(dst: T.DstPlaceInfo) {
     dst.parentId = D.BKM_OTHER_ID
     dst.index = undefined
   }
-  const dstParent = Bookmarks.reactive.byId[dst.parentId]
+  const dstParent = Bookmarks.byId.get(dst.parentId)
   if (!dstParent || !dstParent.children) return Logs.warn('Bookmarks.paste: No parent folder')
   // - Index
   if (dst.index === undefined) {
@@ -1720,7 +1834,7 @@ export async function paste(dst: T.DstPlaceInfo) {
   if (bkmNode) Bookmarks.scrollToBookmark(bkmNode.id)
 }
 
-export function isFolderWithURL(folder: T.Bookmark): boolean {
+export function isFolderWithURL(folder: BkmNode): boolean {
   if (!folder.children) return false
 
   const firstChild = folder.children[0]
@@ -1734,7 +1848,7 @@ export function isFolderWithURL(folder: T.Bookmark): boolean {
   return childTitle.startsWith(title) && childTitle[title.length + 1] === '['
 }
 
-function bookmarkIsParentTab(node: T.Bookmark, parentTitle?: string): boolean {
+function bookmarkIsParentTab(node: BkmNode, parentTitle?: string): boolean {
   if (!node.url || !parentTitle) return false
 
   const childTitle = node.title
@@ -1752,7 +1866,7 @@ export async function prepareBookmarks() {
     const result = await Permissions.request('bookmarks')
     if (!result) return false
   }
-  if (!Bookmarks.reactive.tree.length) await Bookmarks.load()
+  if (!Bookmarks.tree.length) await Bookmarks.load()
   return true
 }
 
@@ -1777,7 +1891,7 @@ export function triggerFlashAnimation(panelId: ID, bookmarkId: ID) {
 export function convertTreeToDragItems(rootId: ID): T.DragItem[] {
   const targetIds = [rootId]
   const dragItems: T.DragItem[] = []
-  const walker = (nodes: T.Bookmark[]) => {
+  const walker = (nodes: BkmNode[]) => {
     for (const node of nodes) {
       const incl = node.parentId && targetIds.includes(node.parentId)
       if (incl || Selection.includes(node.id)) {
@@ -1792,212 +1906,80 @@ export function convertTreeToDragItems(rootId: ID): T.DragItem[] {
       if (node.children) walker(node.children)
     }
   }
-  walker(Bookmarks.reactive.tree)
+  walker(Bookmarks.tree)
 
   return dragItems
 }
 
-type BookmarkCreatedListener = browser.bookmarks.CreateListener
 export function setupBookmarksListeners(): void {
   if (!browser.bookmarks) return
-  if (!Info.isBg) {
-    browser.bookmarks.onCreated.addListener(onBookmarkCreatedFg as BookmarkCreatedListener)
-    browser.bookmarks.onChanged.addListener(onBookmarkChangedFg)
-    browser.bookmarks.onMoved.addListener(onBookmarkMovedFg)
-    browser.bookmarks.onRemoved.addListener(onBookmarkRemovedFg)
-  }
+  browser.bookmarks.onCreated.addListener(onBookmarkCreated)
+  browser.bookmarks.onChanged.addListener(onBookmarkChanged)
+  browser.bookmarks.onMoved.addListener(onBookmarkMoved)
+  browser.bookmarks.onRemoved.addListener(onBookmarkRemoved)
 }
 
 export function resetBookmarksListeners(): void {
   if (!browser.bookmarks) return
-  if (!Info.isBg) {
-    browser.bookmarks.onCreated.removeListener(onBookmarkCreatedFg as BookmarkCreatedListener)
-    browser.bookmarks.onChanged.removeListener(onBookmarkChangedFg)
-    browser.bookmarks.onMoved.removeListener(onBookmarkMovedFg)
-    browser.bookmarks.onRemoved.removeListener(onBookmarkRemovedFg)
-  }
+  browser.bookmarks.onCreated.removeListener(onBookmarkCreated)
+  browser.bookmarks.onChanged.removeListener(onBookmarkChanged)
+  browser.bookmarks.onMoved.removeListener(onBookmarkMoved)
+  browser.bookmarks.onRemoved.removeListener(onBookmarkRemoved)
 }
 
-function onBookmarkCreatedFg(id: ID, bookmark: T.Bookmark): void {
-  if (!Bookmarks.reactive.tree.length) return
+function onBookmarkCreated(id: ID, nativeBkmNode: T.NativeBkmNode): void {
+  if (!Bookmarks.tree.length) return
 
-  bookmark.sel = false
-  bookmark.isOpen = false
-  Bookmarks.parseTitle(bookmark)
-  if (bookmark.type === 'separator') bookmark.url = undefined
-  if (bookmark.type === 'folder') {
-    bookmark.len = 0
-    if (!bookmark.children) bookmark.children = []
-  }
-
-  if (Settings.state.highlightOpenBookmarks && bookmark.url) {
-    bookmark.isOpen = !!Tabs.urlsInUse[bookmark.url]
-    if (bookmark.isOpen) Bookmarks.markParents(bookmark)
-  }
-
-  const parent = Bookmarks.reactive.byId[bookmark.parentId]
-  if (parent && parent.children && bookmark.index !== undefined) {
-    parent.children.splice(bookmark.index, 0, bookmark)
-    for (let i = bookmark.index + 1; i < parent.children.length; i++) {
-      parent.children[i].index = i
-    }
-  }
-
-  Bookmarks.reactive.byId[id] = bookmark
-  const rBookmark = Bookmarks.reactive.byId[id]
-  if (bookmark.url) {
-    if (Bookmarks.byUrl[bookmark.url]) {
-      Bookmarks.byUrl[bookmark.url].push(rBookmark)
-    } else {
-      Bookmarks.byUrl[bookmark.url] = [rBookmark]
-    }
-  }
-
-  // Update length of parent folders
-  const addedLen = bookmark.len || 1
-  if (bookmark.type === 'bookmark') {
-    Bookmarks.updateTreeLen(parent, addedLen)
-  }
-
-  Sidebar.recalcBookmarksPanels()
+  const bookmark = new BkmNode(nativeBkmNode)
+  const parent = byId.get(bookmark.parentId)
+  parent?.addBkm(bookmark, bookmark.index)
+  ancestorsUpdBuffer.add(bookmark)
 }
 
-function onBookmarkChangedFg(id: ID, info: browser.bookmarks.UpdateChanges): void {
-  if (!Bookmarks.reactive.tree.length) return
+function onBookmarkChanged(id: ID, info: browser.bookmarks.UpdateChanges): void {
+  if (!Bookmarks.tree.length) return
 
-  const bookmark = Bookmarks.reactive.byId[id]
+  const bookmark = Bookmarks.byId.get(id)
   if (!bookmark) return
 
-  const oldUrl = bookmark.url
-  if (oldUrl && oldUrl !== info.url && Bookmarks.byUrl[oldUrl]) {
-    const iob = Bookmarks.byUrl[oldUrl].findIndex(b => b.id === id)
-    if (iob > -1) Bookmarks.byUrl[oldUrl].splice(iob, 1)
-  }
-
   if (info.title !== undefined && bookmark.title !== info.title) {
-    bookmark.title = info.title
-    Bookmarks.parseTitle(bookmark)
+    bookmark.setTitle(info.title)
   }
 
-  if (info.url !== undefined && oldUrl !== info.url) {
-    bookmark.url = info.url
-    if (Bookmarks.byUrl[info.url]) {
-      Bookmarks.byUrl[info.url].push(bookmark)
-    } else {
-      Bookmarks.byUrl[info.url] = [bookmark]
-    }
-
-    if (Settings.state.highlightOpenBookmarks) {
-      Bookmarks.reMarkOpenBookmark(bookmark)
-    }
+  if (info.url !== undefined && bookmark.url !== info.url) {
+    bookmark.setUrl(info.url)
   }
 }
 
-function onBookmarkMovedFg(id: ID, info: browser.bookmarks.MoveInfo): void {
-  if (!Bookmarks.reactive.tree.length) return
+function onBookmarkMoved(id: ID, info: browser.bookmarks.MoveInfo): void {
+  if (!Bookmarks.tree.length) return
 
-  const oldParent = Bookmarks.reactive.byId[info.oldParentId]
-  const newParent = Bookmarks.reactive.byId[info.parentId]
+  const oldParent = Bookmarks.byId.get(info.oldParentId)
+  const newParent = Bookmarks.byId.get(info.parentId)
 
-  if (oldParent?.children && newParent?.children) {
-    const node = oldParent.children.splice(info.oldIndex, 1)[0]
-    for (let i = info.oldIndex; i < oldParent.children.length; i++) {
-      oldParent.children[i].index = i
-    }
+  const rmNode = oldParent?.rmChildByIndex(info.oldIndex)
+  if (rmNode) newParent?.addBkm(rmNode, info.index)
 
-    node.index = info.index
-    node.parentId = info.parentId
-
-    newParent.children.splice(node.index, 0, node)
-    for (let i = info.index + 1; i < newParent.children.length; i++) {
-      newParent.children[i].index = i
-    }
-  }
-
-  // Update length of parent folders
-  const node = Bookmarks.reactive.byId[id]
-  if (node && oldParent && newParent && newParent.id !== oldParent.id) {
-    const movedLen = node?.len || (node.type === 'bookmark' ? 1 : 0)
-    Bookmarks.updateTreeLen(oldParent, -movedLen)
-    Bookmarks.updateTreeLen(newParent, movedLen)
-
-    if (node.isOpen) {
-      // Unmark old parent
-      let parent = oldParent
-      while (parent) {
-        Bookmarks.markedFolders[parent.id] = (Bookmarks.markedFolders[parent.id] ?? 1) - 1
-        if (!Bookmarks.markedFolders[parent.id] && parent.isOpen) parent.isOpen = false
-        else break
-        parent = Bookmarks.reactive.byId[parent.parentId]
-      }
-
-      // Mark new parent
-      parent = newParent
-      while (parent) {
-        Bookmarks.markedFolders[parent.id] = (Bookmarks.markedFolders[parent.id] ?? 0) + 1
-        if (!parent.isOpen) parent.isOpen = true
-        else break
-        parent = Bookmarks.reactive.byId[parent.parentId]
-      }
-    }
+  oldParent?.updFolderInfo()
+  if (oldParent) ancestorsUpdBuffer.add(oldParent)
+  if (newParent !== oldParent) {
+    newParent?.updFolderInfo()
+    if (newParent) ancestorsUpdBuffer.add(newParent)
   }
 
   Bookmarks.saveBookmarksTree()
-  Sidebar.recalcBookmarksPanels()
 }
 
-function onBookmarkRemovedFg(id: ID, info: browser.bookmarks.RemoveInfo): void {
-  if (!Bookmarks.reactive.tree.length) return
+function onBookmarkRemoved(id: ID, info: browser.bookmarks.RemoveInfo): void {
+  if (!Bookmarks.tree.length) return
 
-  const parent = Bookmarks.reactive.byId[info.parentId]
-  const node = Bookmarks.reactive.byId[id]
-  if (!node) return
+  const parent = Bookmarks.byId.get(info.parentId)
+  parent?.rmChildByIndex(info.index)
 
-  // Update length of parent folders
-  const removedLen = node.len || (node.type === 'bookmark' ? 1 : 0)
-  Bookmarks.updateTreeLen(parent, -removedLen)
-
-  // Remove from tree
-  if (parent?.children) {
-    parent.children.splice(info.index, 1)
-    for (let i = info.index; i < parent.children.length; i++) {
-      parent.children[i].index = i
-    }
+  const node = Bookmarks.byId.get(id)
+  if (node) {
+    byId.delete(node.id)
+    if (node.url) Links.rmBkm(node)
+    ancestorsUpdBuffer.add(node)
   }
-
-  // Remove from byId object
-  if (node.type === 'folder' && node.children?.length) {
-    for (const child of Bookmarks.listBookmarks(node.children)) {
-      delete Bookmarks.reactive.byId[child.id]
-    }
-
-    // Unmark old parent
-    let p = parent
-    while (p) {
-      Bookmarks.markedFolders[p.id] = (Bookmarks.markedFolders[p.id] ?? 1) - 1
-      if (!Bookmarks.markedFolders[p.id] && p.isOpen) p.isOpen = false
-      else break
-      p = Bookmarks.reactive.byId[p.parentId]
-    }
-    delete Bookmarks.markedFolders[node.id]
-  }
-  delete Bookmarks.reactive.byId[id]
-
-  // Remove from byUrl object
-  const url = node?.url
-  if (url && Bookmarks.byUrl[url]) {
-    const ib = Bookmarks.byUrl[url].findIndex(b => b.id === id)
-    if (ib > -1) Bookmarks.byUrl[url].splice(ib, 1)
-  }
-
-  Sidebar.recalcBookmarksPanels()
-}
-
-export function updateTreeLen(parent: T.Bookmark, delta: number): void {
-  let p = parent
-  while (p) {
-    if (p.len !== undefined) p.len += delta
-    p = Bookmarks.reactive.byId[p.parentId]
-  }
-  overallCount += delta
 }

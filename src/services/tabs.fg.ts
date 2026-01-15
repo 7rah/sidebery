@@ -14,6 +14,7 @@ import * as Permissions from 'src/services/permissions.fg'
 import * as Notifications from 'src/services/notifications.fg'
 import * as Selection from 'src/services/selection.fg'
 import * as Favicons from 'src/services/favicons.fg'
+import * as Links from 'src/services/links'
 
 import * as Tabs from 'src/services/tabs.fg'
 
@@ -34,32 +35,6 @@ export interface TabsReactiveState {
   recentlyRemovedLen: number
   inlinePreviewTabId: ID
   inlinePreviewPinnedImg: string
-}
-
-export interface TabsState {
-  ready: boolean
-  shadowMode: boolean
-  shadowReady: boolean
-
-  list: T.Tab[]
-  pinned: T.Tab[]
-  byId: Partial<Record<ID, T.Tab>>
-
-  activeId: ID
-  activeTabsGlobal: T.ActiveTabsHistory
-  activeTabsPerPanel: Record<string, T.ActiveTabsHistory>
-
-  recentlyRemoved: T.RecentlyClosedTabInfo[]
-  urlsInUse: Record<string, number>
-  tabsReinitializing: boolean
-  removedTabs: T.RemovedTabInfo[]
-  newTabsPosition: Record<number, T.NewTabPosition>
-  attachingTabs: T.Tab[]
-  detachingTabIds: Set<ID>
-  normTabsMoving: boolean
-  deferredEventHandling: (() => void)[]
-  ignoreTabsEvents: boolean
-  activateSelectedOnMouseLeave: boolean
 }
 
 export let reactive: TabsReactiveState = {
@@ -85,8 +60,6 @@ export let removedTabs: T.RemovedTabInfo[] = []
 export const setRemovedTabs = (r: T.RemovedTabInfo[]) => (removedTabs = r)
 
 export let newTabsPosition: Record<number, T.NewTabPosition> = {}
-export let urlsInUse: Record<string, number> = {}
-export const setUrlsInUse = (u: Record<string, number>) => (urlsInUse = u)
 
 export let attachingTabs: T.Tab[] = []
 export const setAttachingTabs = (tabs: T.Tab[]) => (attachingTabs = tabs)
@@ -183,7 +156,7 @@ export function reactivateTab(tab: T.Tab) {
   tab.reactive = reactFn(tab.reactive)
 }
 
-export function createReactiveProps(tab: T.Tab): T.ReactiveTabProps {
+function createReactiveProps(tab: T.Tab): T.ReactiveTabProps {
   const rProps: T.ReactiveTabProps = {
     active: tab.active,
     mediaAudible: tab.audible ?? false,
@@ -273,7 +246,7 @@ export async function load(src?: LoadSrc): Promise<void> {
   Tabs.updateNativeTabsVisibility()
   if (!sessionRestoreTabOnly) Tabs.cacheTabsData(1000)
   Tabs.list.forEach(t => {
-    Tabs.updateUrlCounter(t.url, 1)
+    Links.addTab(t)
 
     if (t.isGroup) Tabs.linkGroupWithPinnedTab(t, Tabs.list)
 
@@ -325,7 +298,7 @@ export function unload(): void {
   pinned = []
   recentlyRemoved = []
 
-  urlsInUse = {}
+  Links.rmAllTabs()
   Tabs.setShadowMode(false)
   Tabs.setShadowReady(false)
 
@@ -946,7 +919,7 @@ export function reinitTabs(delay = 500): void {
 
         normTabs.push(tab)
         normTabsMap[tab.id] = tab
-        tab.reactive = Tabs.createReactiveProps(tab)
+        tab.reactive = createReactiveProps(tab)
         panelId = tab.panelId
       } else {
         const tab = mutateNativeTabToSideberyTab(nativeTab)
@@ -1622,7 +1595,7 @@ export async function bookmarkTabs(tabIds: ID[]): Promise<void> {
 
   // Show notification for silent bookmarks creation
   if (!Settings.state.askNewBookmarkPlace) {
-    const parentName = Bookmarks.reactive.byId[parentId]?.title
+    const parentName = Bookmarks.byId.get(parentId)?.title
     Notifications.notify({
       icon: '#icon_bookmarks',
       title: translate('notif.new_bookmark'),
@@ -2916,23 +2889,6 @@ export function triggerFlashAnimation(tab: T.Tab): void {
     tab.flashAnimationTimeout = undefined
     if (tab.flashFxEl) tab.flashFxEl.setAttribute('data-run', 'false')
   }, 1000)
-}
-
-export function updateUrlCounter(url: string, delta: number): number {
-  let count = Tabs.urlsInUse[url]
-  if (count === undefined) {
-    if (delta > 0) return (Tabs.urlsInUse[url] = delta)
-    else return 0
-  }
-
-  count += delta
-  if (count <= 0) {
-    delete Tabs.urlsInUse[url]
-    return 0
-  } else {
-    Tabs.urlsInUse[url] = count
-    return count
-  }
 }
 
 export const enum SwitchingTabScope {

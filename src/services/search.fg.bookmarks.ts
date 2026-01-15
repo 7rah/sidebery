@@ -1,44 +1,53 @@
 import * as Utils from 'src/utils'
-import { Panel, Bookmark, BookmarksPanel, DstPlaceInfo } from 'src/types'
+import { Panel, BookmarksPanel, DstPlaceInfo } from 'src/types'
 import { BKM_ROOT_ID, NOID } from 'src/defaults'
 import * as Bookmarks from 'src/services/bookmarks.fg'
 import * as Search from 'src/services/search.fg'
 import * as Sidebar from 'src/services/sidebar.fg'
 import * as Selection from './selection.fg'
 import * as Tabs from 'src/services/tabs.fg'
+import * as Logs from 'src/services/logs'
+import { BkmType } from 'src/enums'
 
-function ancestorIsFiltered(node: Bookmark, folders: Record<ID, Bookmark>): boolean {
-  let parent = Bookmarks.reactive.byId[node.parentId]
+function ancestorIsFiltered(
+  node: Bookmarks.BkmNode,
+  folders: Record<ID, Bookmarks.BkmNode>
+): boolean {
+  let parent = Bookmarks.byId.get(node.parentId)
 
   while (parent) {
     const isFiltered = !!folders[parent.id]
     if (isFiltered) return true
-    parent = Bookmarks.reactive.byId[parent.parentId]
+    parent = Bookmarks.byId.get(parent.parentId)
   }
 
   return false
 }
 
 function searchTreeWalker(
-  nodes: Bookmark[],
-  filtered: Bookmark[],
-  folders: Record<ID, Bookmark> = {}
+  nodes: Bookmarks.BkmNode[],
+  filtered: Bookmarks.BkmNode[],
+  filteredIds: ID[],
+  folders: Record<ID, Bookmarks.BkmNode> = {}
 ): void {
   for (const n of nodes) {
     if (ancestorIsFiltered(n, folders)) continue
     if (n.title && n.url) {
-      if (Search.check(n.title) || Search.check(n.url)) filtered.push(n)
+      if (Search.check(n.title) || Search.check(n.url)) {
+        filtered.push(n)
+        filteredIds.push(n.id)
+      }
     }
     if (n.title && !n.url && n.parentId !== BKM_ROOT_ID && Search.check(n.title)) {
-      // if (n.expanded) n.expanded = false
       folders[n.id] = n
       filtered.unshift(n)
+      filteredIds.unshift(n.id)
     }
-    if (n.children) searchTreeWalker(n.children, filtered, folders)
+    if (n.children) searchTreeWalker(n.children, filtered, filteredIds, folders)
   }
 }
 
-function searchHistoryWalker(nodes: Bookmark[], filtered: Bookmark[]): void {
+function searchHistoryWalker(nodes: Bookmarks.BkmNode[], filtered: Bookmarks.BkmNode[]): void {
   for (const n of nodes) {
     if (n.title && n.url && (Search.check(n.title) || Search.check(n.url))) filtered.push(n)
     if (n.children) searchHistoryWalker(n.children, filtered)
@@ -47,40 +56,49 @@ function searchHistoryWalker(nodes: Bookmark[], filtered: Bookmark[]): void {
 
 let prevActivePanelId: ID | undefined
 let expandedBookmarks: Record<ID, boolean>
+let visibleBookmarks: Bookmarks.BkmNode[] = []
 export function onBookmarksSearch(activePanel: Panel, panel?: Panel): void {
-  if (!Bookmarks.reactive.tree.length) return
+  if (!Bookmarks.tree.length) return
 
   if (!panel) panel = activePanel
   if (!Utils.isBookmarksPanel(panel)) return
 
   const samePanel = prevActivePanelId === panel.id
   prevActivePanelId = panel.id
+  visibleBookmarks = []
 
   if (Search.query) {
     const query = Search.query
     const prevQuery = Search.prevQuery
-    const rootBookmark = Bookmarks.reactive.byId[panel.rootId]
+    const rootBookmark = Bookmarks.byId.get(panel.rootId)
 
-    let bookmarks: Bookmark[] | undefined
-    if (query.length > prevQuery.length && query.startsWith(prevQuery) && samePanel) {
-      bookmarks = panel.reactive.filteredBookmarks
+    let bookmarks: Bookmarks.BkmNode[] | undefined
+    if (
+      query.length > prevQuery.length &&
+      query.startsWith(prevQuery) &&
+      samePanel &&
+      panel.reactive.filteredBookmarkIds
+    ) {
+      bookmarks = Bookmarks.get(panel.reactive.filteredBookmarkIds)
     }
     if (!bookmarks) {
       if (panel.reactive.rootOffset) {
-        let folder = Bookmarks.reactive.byId[panel.rootId]
+        let folder = Bookmarks.byId.get(panel.rootId)
         for (let i = panel.reactive.rootOffset; i-- && folder; ) {
-          folder = Bookmarks.reactive.byId[folder.parentId]
+          folder = Bookmarks.byId.get(folder.parentId)
         }
         if (folder) bookmarks = folder.children
-        else bookmarks = Bookmarks.reactive.tree
+        else bookmarks = Bookmarks.tree
       } else {
         bookmarks = rootBookmark?.children
       }
     }
-    if (!bookmarks) bookmarks = Bookmarks.reactive.tree
+    if (!bookmarks) bookmarks = Bookmarks.tree
 
-    const filtered: Bookmark[] = []
+    const filtered: Bookmarks.BkmNode[] = []
+    let filteredIds: ID[] | undefined
     if (panel.viewMode === 'tree') {
+      filteredIds = []
       // Save expanded folders and close all folders in all panels
       if (!Search.prevExpandedBookmarks) {
         Search.setPrevExpandedBookmarks(Bookmarks.reactive.expanded)
@@ -91,116 +109,82 @@ export function onBookmarksSearch(activePanel: Panel, panel?: Panel): void {
       }
       expandedBookmarks = Bookmarks.reactive.expanded[activePanel.id]
 
-      searchTreeWalker(bookmarks, filtered)
+      searchTreeWalker(bookmarks, filtered, filteredIds)
     } else if (panel.viewMode === 'history') {
       searchHistoryWalker(bookmarks, filtered)
       filtered.sort((a, b) => (b.dateAdded ?? 0) - (a.dateAdded ?? 0))
+      filteredIds = filtered.map(b => b.id)
     }
-    panel.reactive.filteredBookmarks = filtered
-    panel.reactive.filteredLen = filtered.length
+    visibleBookmarks = filtered
+    panel.filteredBookmarks = filtered
+    panel.reactive.filteredBookmarkIds = filteredIds
+    panel.reactive.filteredLen = filteredIds?.length
 
     // Scroll to the first target
-    if (panel.reactive.filteredBookmarks.length) {
+    if (filteredIds?.length) {
       Selection.resetSelection()
-      const first = panel.reactive.filteredBookmarks[0]
-      Bookmarks.scrollToBookmarkDebounced(first.id)
+      const first = filteredIds[0]
+      Bookmarks.scrollToBookmarkDebounced(first)
     }
   } else {
     expandedBookmarks = {}
-    panel.reactive.filteredBookmarks = undefined
+    panel.filteredBookmarks = undefined
+    panel.reactive.filteredBookmarkIds = undefined
     panel.reactive.filteredLen = undefined
     if (Search.prevQuery) Selection.resetSelection()
   }
 }
 
-let nextWalkerPrevNode: Bookmark | undefined
-function nextWalker(nodes: Bookmark[]): ID | undefined {
-  for (const node of nodes) {
-    if (nextWalkerPrevNode?.sel) return node.id
-
-    nextWalkerPrevNode = node
-
-    const isExpanded = expandedBookmarks[node.id]
-    if (isExpanded && node.children) {
-      const nextId = nextWalker(node.children)
-      if (nextId !== undefined) return nextId
-    }
-  }
-}
-
 export function onBookmarksSearchNext(panel?: Panel): void {
   if (!panel) panel = Sidebar.panelsById[Sidebar.activePanelId]
-  if (!Utils.isBookmarksPanel(panel) || !panel.reactive.filteredBookmarks) return
+  if (!Utils.isBookmarksPanel(panel) || !panel.filteredBookmarks) return
 
-  nextWalkerPrevNode = undefined
-  const filtered = panel.reactive.filteredBookmarks
-  let nextId
-  if (panel.viewMode === 'tree') {
-    nextId = Selection.isSet() ? nextWalker(filtered) : filtered[0]?.id
-  } else if (panel.viewMode === 'history') {
-    const selIndex = filtered.findIndex(b => b.sel)
-    nextId = filtered[selIndex + 1]?.id
-  }
-  if (!nextId) return
+  const selId = Selection.isSet() ? Selection.getFirst() : undefined
+  const selIndex = selId ? visibleBookmarks.findIndex(b => b.id === selId) : -1
+  const nextBkm = visibleBookmarks[selIndex + 1]
+  if (!nextBkm) return
 
   Selection.resetSelection()
-  Selection.selectBookmark(nextId)
-  Bookmarks.scrollToBookmark(nextId)
-}
-
-let prevWalkerPrevId: ID | undefined
-function prevWalker(nodes: Bookmark[]): ID | undefined {
-  for (const node of nodes) {
-    if (node.sel && prevWalkerPrevId) return prevWalkerPrevId
-
-    prevWalkerPrevId = node.id
-
-    const isExpanded = expandedBookmarks[node.id]
-    if (isExpanded && node.children) {
-      const id = prevWalker(node.children)
-      if (id !== undefined) return id
-    }
-  }
+  Selection.selectBookmark(nextBkm.id)
+  Bookmarks.scrollToBookmark(nextBkm.id)
 }
 
 export function onBookmarksSearchPrev(panel?: Panel): void {
   if (!panel) panel = Sidebar.panelsById[Sidebar.activePanelId]
-  if (!Utils.isBookmarksPanel(panel) || !panel.reactive.filteredBookmarks) return
+  if (!Utils.isBookmarksPanel(panel) || !panel.filteredBookmarks) return
 
-  prevWalkerPrevId = undefined
-  const filtered = panel.reactive.filteredBookmarks
-  const filteredLen = filtered.length
-  let prevId
-  if (panel.viewMode === 'tree') {
-    prevId = Selection.isSet() ? prevWalker(filtered) : filtered[filteredLen - 1]?.id
-  } else if (panel.viewMode === 'history') {
-    let selIndex = filtered.findLastIndex(b => b.sel)
-    if (selIndex === -1) selIndex = filtered.length
-    prevId = filtered[selIndex - 1]?.id
-  }
-  if (!prevId) return
+  const selId = Selection.isSet() ? Selection.getFirst() : undefined
+  const selIndex = selId ? visibleBookmarks.findLastIndex(b => b.id === selId) : -1
+  let prevBkm
+  if (selIndex >= 0) prevBkm = visibleBookmarks[selIndex - 1]
+  else prevBkm = visibleBookmarks[visibleBookmarks.length - 1]
+  if (!prevBkm) return
 
   Selection.resetSelection()
-  Selection.selectBookmark(prevId)
-  Bookmarks.scrollToBookmark(prevId)
+  Selection.selectBookmark(prevBkm.id)
+  Bookmarks.scrollToBookmark(prevBkm.id)
 }
 
 export function onBookmarksSearchEnter(actPanel: Panel, panel?: Panel) {
   if (!panel) panel = actPanel
-  if (!Utils.isBookmarksPanel(panel) || !panel.reactive.filteredBookmarks) return
+  if (!Utils.isBookmarksPanel(panel) || !panel.filteredBookmarks) return
 
   // Try to find in another panel
-  if (Search.query && !panel.reactive.filteredBookmarks?.length) {
+  if (Search.query && !panel.filteredBookmarks?.length) {
     return findInAnotherPanel()
   }
 
   const selId = Selection.getFirst()
-  const bookmark = Bookmarks.reactive.byId[selId]
+  const bookmark = Bookmarks.byId.get(selId)
   if (bookmark) {
-    if (bookmark.type === 'folder') {
-      return Bookmarks.toggleBranch(bookmark.id, actPanel.id)
+    if (bookmark.type === BkmType.Folder) {
+      Bookmarks.toggleBranch(bookmark.id, actPanel.id)
+      expandedBookmarks = Bookmarks.reactive.expanded[actPanel.id]
+      visibleBookmarks = []
+      calcVisibleBkms(panel.filteredBookmarks, visibleBookmarks)
+      return
     }
-    if (bookmark.type === 'bookmark') {
+    if (bookmark.type === BkmType.Bookmark) {
       const dst: DstPlaceInfo = {}
       if (Utils.isTabsPanel(actPanel)) dst.panelId = actPanel.id
       else {
@@ -217,20 +201,19 @@ export function onBookmarksSearchEnter(actPanel: Panel, panel?: Panel) {
   if (Sidebar.subPanelActive) Sidebar.closeSubPanel()
 }
 
-function* visibleBookmarks(nodes: Bookmark[]): IterableIterator<Bookmark> {
+function calcVisibleBkms(nodes: Bookmarks.BkmNode[], visible: Bookmarks.BkmNode[]) {
   for (const n of nodes) {
-    yield n
-    const isExpanded = expandedBookmarks[n.id]
-    if (n.children && isExpanded) yield* visibleBookmarks(n.children)
+    visible.push(n)
+    if (n.children && expandedBookmarks[n.id]) calcVisibleBkms(n.children, visible)
   }
 }
 
 export function onBookmarksSearchSelectAll(panel: BookmarksPanel): void {
-  if (!panel.reactive.filteredBookmarks) return
+  if (!panel.filteredBookmarks) return
 
   const ids: ID[] = []
   let allSelected = true
-  for (const node of visibleBookmarks(panel.reactive.filteredBookmarks)) {
+  for (const node of visibleBookmarks) {
     if (allSelected && !node.sel) allSelected = false
     ids.push(node.id)
   }
@@ -239,7 +222,10 @@ export function onBookmarksSearchSelectAll(panel: BookmarksPanel): void {
   if (!allSelected && ids.length) Selection.selectBookmarks(ids)
 }
 
-function firstMatchWalker(nodes: Bookmark[], path: string[]): Bookmark | undefined {
+function firstMatchWalker(
+  nodes: Bookmarks.BkmNode[],
+  path: string[]
+): Bookmarks.BkmNode | undefined {
   for (const n of nodes) {
     if (n.title && n.url && (Search.check(n.title) || Search.check(n.url))) return n
     if (n.title && !n.url && n.parentId !== BKM_ROOT_ID && Search.check(n.title)) return n
@@ -263,7 +249,7 @@ function findPanelWithRoot(path: string[]): BookmarksPanel | undefined {
 
 function findInAnotherPanel(): void {
   const path: string[] = [BKM_ROOT_ID]
-  const firstMatch = firstMatchWalker(Bookmarks.reactive.tree, path)
+  const firstMatch = firstMatchWalker(Bookmarks.tree, path)
   if (!firstMatch) return
 
   const panel = findPanelWithRoot(path)

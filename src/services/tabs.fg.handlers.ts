@@ -18,6 +18,7 @@ import * as Search from 'src/services/search.fg'
 import * as Containers from 'src/services/containers'
 import * as Mouse from 'src/services/mouse.fg'
 import * as Popups from 'src/services/popups.fg'
+import * as Links from 'src/services/links'
 
 const EXT_HOST = browser.runtime.getURL('').slice(16)
 const URL_HOST_PATH_RE = /^([a-z0-9-]{1,63}\.)+\w+(:\d+)?\/[A-Za-z0-9-._~:/?#[\]%@!$&'()*+,;=]*$/
@@ -489,7 +490,7 @@ async function onTabCreated(nativeTab: NativeTab, attached?: boolean) {
   else if (Search.active && Sidebar.activePanelId === tab.panelId && !Sidebar.subPanelActive) {
     Search.searchDebounced(300)
   }
-  Tabs.updateUrlCounter(tab.url, 1)
+  Links.addTab(tab)
 
   // Update tree
   if (Settings.state.tabsTree && !tab.pinned && panel) {
@@ -651,10 +652,6 @@ async function onTabCreated(nativeTab: NativeTab, attached?: boolean) {
 
   if (Sidebar.reactive.hiddenPanelsPopup) {
     Sidebar.closeHiddenPanelsPopup(true)
-  }
-
-  if (Settings.state.highlightOpenBookmarks) {
-    Bookmarks.markOpenBookmarksDebounced(nativeTab.url)
   }
 }
 
@@ -875,14 +872,7 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
     }
 
     // Update url counter
-    const oldUrlCount = Tabs.updateUrlCounter(tab.url, -1)
-    Tabs.updateUrlCounter(change.url, 1)
-
-    // Mark/Unmark open bookmarks
-    if (Settings.state.highlightOpenBookmarks) {
-      if (!oldUrlCount) Bookmarks.unmarkOpenBookmarksDebounced(tab.url)
-      Bookmarks.markOpenBookmarksDebounced(change.url)
-    }
+    Links.updTab(tab, change.url)
 
     // Update filtered results
     if (Search.active && Sidebar.activePanelId === tab.panelId && !Sidebar.subPanelActive) {
@@ -1331,7 +1321,7 @@ function onTabRemoved(tabId: ID, info: browser.tabs.RemoveInfo, detached?: boole
   Sidebar.recalcTabsPanels()
 
   // Update url counter
-  const urlCount = Tabs.updateUrlCounter(tab.url, -1)
+  Links.rmTab(tab)
 
   // Get panel of removed tab
   const panel = Sidebar.panelsById[tab.panelId]
@@ -1402,11 +1392,6 @@ function onTabRemoved(tabId: ID, info: browser.tabs.RemoveInfo, detached?: boole
 
     // Update filtered results
     if (Search.active) Search.search()
-  }
-
-  // Update bookmarks marks
-  if (Settings.state.highlightOpenBookmarks && !urlCount) {
-    Bookmarks.unmarkOpenBookmarksDebounced(tab.url)
   }
 
   // Reload related group for pinned tab

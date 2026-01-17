@@ -1662,7 +1662,7 @@ export async function removePanel(panelId: ID, conf?: RemovingPanelConf): Promis
   let newPanelIdForTabs
 
   if (Utils.isTabsPanel(panel)) {
-    if (panel.tabs.length) {
+    handling_tabs: if (panel.tabs.length) {
       tabsSaveNeeded = true
 
       if (!conf.tabsMode) conf.tabsMode = await askHowRemoveTabsPanel(panel.id)
@@ -1675,6 +1675,8 @@ export async function removePanel(panelId: ID, conf?: RemovingPanelConf): Promis
       } else if (conf.tabsMode === 'close') {
         const tabsIds = panel.tabs.map(t => t.id)
         await Tabs.removeTabs(tabsIds, true)
+      } else if (conf.tabsMode === 'leave') {
+        break handling_tabs
       } else {
         return
       }

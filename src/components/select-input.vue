@@ -38,7 +38,7 @@
       :data-none="((opt as InputObjOpt).value ?? opt) === props.noneOpt"
       :data-color="getOptColor(opt) ?? false"
       :data-active="isActive(opt)"
-      @mousedown.stop="select(opt)")
+      @mouseup.stop="select(opt)")
         svg(v-if="((opt as InputObjOpt).icon || props.icon)?.startsWith('#')")
           use(:href="((opt as InputObjOpt).icon || props.icon)")
         img(v-else-if="(opt as InputObjOpt).icon || props.icon" :src="(opt as InputObjOpt).icon || props.icon")

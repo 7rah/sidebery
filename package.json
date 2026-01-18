@@ -22,7 +22,7 @@
     "clear.npm": "rm -rf node_modules package-lock.json",
     "clear": "rm -rf addon",
     "lint.eslint": "eslint ./src",
-    "lint.types": "tsc --noemit",
+    "lint.types": "vue-tsc --noemit",
     "lint": "npm run lint.eslint && npm run lint.types",
     "changelog": "node build/changelog.js",
     "addon": "node build/addon.js",
@@ -51,6 +51,7 @@
     "typescript-eslint": "8.48.1",
     "vite": "7.2.7",
     "vitest": "4.0.15",
+    "vue-tsc": "3.2.2",
     "web-ext": "9.2.0"
   },
   "dependencies": {

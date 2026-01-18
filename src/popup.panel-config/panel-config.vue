@@ -49,6 +49,10 @@ onMounted(() => {
 
   // Select fields found by Firefox find
   document.addEventListener('selectionchange', () => {
+    // Handle this event only if document doesn't
+    // have focus (e.g. Firefox's Find input focused)
+    if (document.hasFocus()) return
+
     const selection = document.getSelection()
     if (selection?.type !== 'Range') return
 

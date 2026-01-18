@@ -39,7 +39,7 @@ export const sidebarTranslations: Translations = {
     hu: n => `Biztosan bezárható a lap: „${n}”?`,
     pl: n => `jesteś pewnien, że chcesz zamknąć karty ${n}?`,
     ru: n =>
-      NUM_234_RE.test(n.toString())
+      NUM_234_RE.test(n?.toString() ?? '?')
         ? `Вы действительно хотите закрыть ${n} вкладки?`
         : `Вы действительно хотите закрыть ${n} вкладок?`,
     zh_CN: n => `您确定要关闭 ${n} 个标签页吗？`,

@@ -1,5 +1,9 @@
 <template lang="pug">
-.TextField(:data-inactive="props.inactive" @click="focus")
+.TextField(
+  :data-inactive="props.inactive"
+  @mousedown="onMouseDown"
+  @mouseup="onMouseUp"
+  @contextmenu.stop="onContextMenu")
   .body
     .label {{translate(props.label)}}
     TextInput(
@@ -43,6 +47,23 @@ const emit = defineEmits(['update:value', 'keydown'])
 const props = withDefaults(defineProps<TextFieldProps>(), { padding: 0, tabindex: '0' })
 
 const inputEl = ref<TextInputComponent | null>(null)
+
+let rangeIsSelected = false
+
+function onMouseDown(e: DOMEvent<MouseEvent>) {
+  rangeIsSelected = getSelection()?.type === 'Range'
+  if (e.detail > 1) e.preventDefault()
+}
+
+function onMouseUp(e: DOMEvent<MouseEvent>) {
+  if (rangeIsSelected || getSelection()?.type === 'Range') return
+  focus()
+}
+
+function onContextMenu(payload: PointerEvent) {
+  if (rangeIsSelected || getSelection()?.type === 'Range') return
+  payload.preventDefault()
+}
 
 function focus(): void {
   inputEl.value?.focus()

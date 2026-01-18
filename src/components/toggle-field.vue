@@ -2,7 +2,9 @@
 .ToggleField(
   :data-inactive="props.inactive"
   :data-loading="loading"
-  @click="toggle"
+  @mousedown="onMouseDown"
+  @mouseup="onMouseUp"
+  @contextmenu.stop="onContextMenu"
   @keydown="onKeyDown")
   .focus-fx
   .body
@@ -38,6 +40,23 @@ interface ToggleFieldProps {
 const emit = defineEmits(['toggle', 'update:value'])
 const props = defineProps<ToggleFieldProps>()
 const inputComponent = ref<ToggleInputComponent | null>(null)
+
+let rangeIsSelected = false
+
+function onMouseDown(e: DOMEvent<MouseEvent>) {
+  rangeIsSelected = getSelection()?.type === 'Range'
+  if (e.detail > 1) e.preventDefault()
+}
+
+function onMouseUp(e: DOMEvent<MouseEvent>) {
+  if (rangeIsSelected || getSelection()?.type === 'Range') return
+  toggle()
+}
+
+function onContextMenu(payload: PointerEvent) {
+  if (rangeIsSelected || getSelection()?.type === 'Range') return
+  payload.preventDefault()
+}
 
 function toggle(): void {
   if (props.inactive) return

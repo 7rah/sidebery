@@ -1,9 +1,15 @@
 <template lang="pug">
-.CountField(:data-active="props.value !== off" :data-inactive="props.inactive" @click="toggle")
+.CountField(
+  :data-active="props.value !== off"
+  :data-inactive="props.inactive"
+  @mousedown="onMouseDown"
+  @mouseup="onMouseUp"
+  @contextmenu.stop="onContextMenu")
   .body
     .label {{translate(props.label)}}
     .input-group(@click.stop)
       TextInput.text-input(
+        ref="textInputEl"
         :value="props.value"
         :line="true"
         :filter="valueFilter"
@@ -13,7 +19,9 @@
 </template>
 
 <script lang="ts" setup>
+import { ref } from 'vue'
 import { translate } from 'src/dict'
+import type { TextInputComponent } from 'src/types'
 import TextInput from './text-input.vue'
 import ToggleInput from './toggle-input.vue'
 
@@ -28,6 +36,25 @@ interface CountFieldProps {
 
 const emit = defineEmits(['update:value', 'change'])
 const props = withDefaults(defineProps<CountFieldProps>(), { min: 0 })
+const textInputEl = ref<TextInputComponent | null>(null)
+
+let rangeIsSelected = false
+
+function onMouseDown(e: DOMEvent<MouseEvent>) {
+  rangeIsSelected = getSelection()?.type === 'Range'
+  if (e.detail > 1) e.preventDefault()
+}
+
+function onMouseUp(e: DOMEvent<MouseEvent>) {
+  if (rangeIsSelected || getSelection()?.type === 'Range') return
+  if (e.button === 0) focusTextInput()
+  if (e.button === 2) toggle()
+}
+
+function onContextMenu(payload: PointerEvent) {
+  if (rangeIsSelected || getSelection()?.type === 'Range') return
+  payload.preventDefault()
+}
 
 function onInput(val: string): void {
   emit('update:value', val)
@@ -42,6 +69,10 @@ function valueFilter(e: Event): number {
   if (isNaN(val)) return 0
   else if (props.min !== undefined && val < props.min) return props.min
   else return val
+}
+
+function focusTextInput(): void {
+  textInputEl.value?.focus()
 }
 
 function toggle(): void {

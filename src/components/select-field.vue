@@ -4,8 +4,8 @@
   :data-inactive="props.inactive"
   :data-drop-down="dropDownOpen"
   @mousedown="onMouseDown"
-  @contextmenu.stop.prevent=""
-  @blur="onBlur"
+  @mouseup="onMouseUp"
+  @contextmenu.stop="onContextMenu"
   @keydown="onKeyDown")
   .focus-fx
   .body
@@ -20,6 +20,7 @@
       :icon="props.icon"
       :folded="folded"
       :preSelected="preSelected"
+      @dropdown-blur="onDropdownBlur"
       @update:value="select")
   .note(v-if="props.note") {{props.note}}
 </template>
@@ -59,10 +60,23 @@ const preSelected = ref<string | number>(-1)
 const inputComponent = ref<SelectInputComponent | null>(null)
 const rootEl = ref<HTMLElement | null>(null)
 
+let rangeIsSelected = false
+
 function onMouseDown(e: DOMEvent<MouseEvent>) {
+  rangeIsSelected = getSelection()?.type === 'Range'
+  if (e.detail > 1) e.preventDefault()
+}
+
+function onMouseUp(e: DOMEvent<MouseEvent>) {
+  if (rangeIsSelected || getSelection()?.type === 'Range') return
   if (props.inactive || !props.opts || Array.isArray(props.value)) return
   if (e.button === 0) switchOption(1)
   if (e.button === 2) switchOption(-1)
+}
+
+function onContextMenu(payload: PointerEvent) {
+  if (rangeIsSelected || getSelection()?.type === 'Range') return
+  payload.preventDefault()
 }
 
 function switchOption(dir: 1 | -1): void {
@@ -141,7 +155,7 @@ function select(option: string): void {
   if (rootEl.value) rootEl.value.tabIndex = -1
 }
 
-function onBlur(): void {
+function onDropdownBlur(): void {
   dropDownOpen.value = false
   if (inputComponent.value) inputComponent.value.close()
   if (rootEl.value) rootEl.value.tabIndex = -1

@@ -765,6 +765,9 @@ async function addTabsPanel(silent?: boolean): Promise<void> {
   if (!panel) return
 
   Sidebar.activatePanel(panel.id)
+
+  if (!Tabs.ready) await Tabs.load()
+
   Tabs.createTabInPanel(panel)
 }
 

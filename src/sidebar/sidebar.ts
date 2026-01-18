@@ -191,7 +191,7 @@ async function main(): Promise<void> {
         pinned: Tabs.pinned,
         byId: Tabs.byId,
       }),
-      Bookmarks: Utils.clone({ reactive: Bookmarks.reactive }),
+      Bookmarks: Utils.clone({ reactive: Bookmarks.reactive, tree: Bookmarks.tree }),
       Containers: Utils.clone({ reactive: Containers.reactive }),
     }
   }

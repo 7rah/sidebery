@@ -74,9 +74,9 @@ function onMouseUp(e: DOMEvent<MouseEvent>) {
   if (e.button === 2) switchOption(-1)
 }
 
-function onContextMenu(payload: PointerEvent) {
-  if (rangeIsSelected || getSelection()?.type === 'Range') return
-  payload.preventDefault()
+function onContextMenu(e: PointerEvent) {
+  if (props.inactive || rangeIsSelected || getSelection()?.type === 'Range') return
+  e.preventDefault()
 }
 
 function switchOption(dir: 1 | -1): void {

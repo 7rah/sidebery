@@ -46,14 +46,14 @@ function onMouseDown(e: DOMEvent<MouseEvent>) {
 }
 
 function onMouseUp(e: DOMEvent<MouseEvent>) {
-  if (rangeIsSelected || getSelection()?.type === 'Range') return
+  if (props.inactive || rangeIsSelected || getSelection()?.type === 'Range') return
   if (e.button === 0) focusTextInput()
   if (e.button === 2) toggle()
 }
 
-function onContextMenu(payload: PointerEvent) {
-  if (rangeIsSelected || getSelection()?.type === 'Range') return
-  payload.preventDefault()
+function onContextMenu(e: PointerEvent) {
+  if (props.inactive || rangeIsSelected || getSelection()?.type === 'Range') return
+  e.preventDefault()
 }
 
 function onInput(val: string): void {

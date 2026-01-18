@@ -56,12 +56,12 @@ function onMouseDown(e: DOMEvent<MouseEvent>) {
 }
 
 function onMouseUp(e: DOMEvent<MouseEvent>) {
-  if (rangeIsSelected || getSelection()?.type === 'Range') return
+  if (props.inactive || rangeIsSelected || getSelection()?.type === 'Range') return
   focus()
 }
 
 function onContextMenu(payload: PointerEvent) {
-  if (rangeIsSelected || getSelection()?.type === 'Range') return
+  if (props.inactive || rangeIsSelected || getSelection()?.type === 'Range') return
   payload.preventDefault()
 }
 

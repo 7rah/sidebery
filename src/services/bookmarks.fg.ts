@@ -244,6 +244,11 @@ class BkmNode {
 
     this.children.splice(index, 0, bkm)
     this.reactive.children?.splice(index, 0, bkm.id)
+
+    const chLen = this.children.length
+    for (let i = index + 1; i < chLen; i++) {
+      this.children[i].index = i
+    }
   }
 
   rmChildByIndex(index: number): BkmNode | undefined {

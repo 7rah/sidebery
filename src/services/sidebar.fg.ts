@@ -1821,7 +1821,7 @@ export function createHistoryPanel(): T.Panel {
 }
 
 /**
- * Adds panel to the sidebar, returns reactive panel object.
+ * Adds panel to the sidebar, returns panel object.
  */
 export function addPanel<T extends T.Panel>(index: number, panel: T, replace?: boolean): T {
   if (replace) {

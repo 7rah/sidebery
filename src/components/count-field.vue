@@ -2,6 +2,7 @@
 .CountField(
   :data-active="props.value !== off"
   :data-inactive="props.inactive"
+  :data-changed="props.default !== undefined && props.default !== value"
   @mousedown="onMouseDown"
   @mouseup="onMouseUp"
   @contextmenu.stop="onContextMenu")
@@ -32,6 +33,8 @@ interface CountFieldProps {
   inactive?: boolean
   off?: number
   min?: number
+  dbg?: string
+  default?: number | string
 }
 
 const emit = defineEmits(['update:value', 'change'])
@@ -46,6 +49,10 @@ function onMouseDown(e: DOMEvent<MouseEvent>) {
 }
 
 function onMouseUp(e: DOMEvent<MouseEvent>) {
+  if (e.altKey && e.ctrlKey && e.button === 0) {
+    navigator.clipboard.writeText(props.dbg ?? '')
+    return
+  }
   if (props.inactive || rangeIsSelected || getSelection()?.type === 'Range') return
   if (e.button === 0) focusTextInput()
   if (e.button === 2) toggle()

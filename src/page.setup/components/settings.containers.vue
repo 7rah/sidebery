@@ -5,6 +5,8 @@ section(ref="el")
   ToggleField(
     label="settings.containers_sort_by_name"
     v-model:value="Settings.state.containersSortByName"
+    dbg="containersSortByName"
+    :default="DEFAULT_SETTINGS.containersSortByName"
     @update:value="Settings.saveDebounced(150)")
   .sub-fields
     .card(
@@ -39,7 +41,7 @@ section(ref="el")
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import type { Container } from 'src/types'
-import { DEFAULT_CONTAINER } from 'src/defaults'
+import { DEFAULT_CONTAINER, DEFAULT_SETTINGS } from 'src/defaults'
 import { translate } from 'src/dict'
 import * as Utils from 'src/utils'
 import * as Containers from 'src/services/containers'

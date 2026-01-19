@@ -2,6 +2,7 @@
 .ToggleField(
   :data-inactive="props.inactive"
   :data-loading="loading"
+  :data-changed="props.default !== undefined && props.default !== value"
   @mousedown="onMouseDown"
   @mouseup="onMouseUp"
   @contextmenu.stop="onContextMenu"
@@ -35,6 +36,8 @@ interface ToggleFieldProps {
   loading?: boolean
   note?: string
   noteWithLinks?: string
+  dbg?: string
+  default?: any
 }
 
 const emit = defineEmits(['toggle', 'update:value'])
@@ -49,6 +52,10 @@ function onMouseDown(e: DOMEvent<MouseEvent>) {
 }
 
 function onMouseUp(e: DOMEvent<MouseEvent>) {
+  if (e.altKey && e.ctrlKey && e.button === 0) {
+    navigator.clipboard.writeText(props.dbg ?? '')
+    return
+  }
   if (rangeIsSelected || getSelection()?.type === 'Range') return
   toggle()
 }

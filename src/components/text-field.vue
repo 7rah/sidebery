@@ -1,6 +1,7 @@
 <template lang="pug">
 .TextField(
   :data-inactive="props.inactive"
+  :data-changed="props.default !== undefined && props.default !== value"
   @mousedown="onMouseDown"
   @mouseup="onMouseUp"
   @contextmenu.stop="onContextMenu")
@@ -41,6 +42,8 @@ interface TextFieldProps {
   inactive?: boolean
   note?: string
   inputWidth?: string
+  dbg?: string
+  default?: string | number
 }
 
 const emit = defineEmits(['update:value', 'keydown'])
@@ -56,6 +59,10 @@ function onMouseDown(e: DOMEvent<MouseEvent>) {
 }
 
 function onMouseUp(e: DOMEvent<MouseEvent>) {
+  if (e.altKey && e.ctrlKey && e.button === 0) {
+    navigator.clipboard.writeText(props.dbg ?? '')
+    return
+  }
   if (props.inactive || rangeIsSelected || getSelection()?.type === 'Range') return
   focus()
 }

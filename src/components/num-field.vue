@@ -2,6 +2,7 @@
 .NumField(
   :data-active="!!props.value"
   :data-inactive="props.inactive"
+  :data-changed="isChanged"
   @mousedown="onMouseDown"
   @mouseup="onMouseUp"
   @contextmenu.stop="onContextMenu")
@@ -44,12 +45,20 @@ interface NumFieldProps {
   allowNegative?: boolean
   note?: string
   maxValue?: number
+  dbg?: string
+  default?: number | string
+  defaultUnit?: string
 }
 
 const emit = defineEmits(['update:value', 'update:unit'])
 const props = defineProps<NumFieldProps>()
 const textInputEl = ref<TextInputComponent | null>(null)
 
+const isChanged = computed(() => {
+  if (props.value !== undefined && props.value !== props.default) return true
+  if (props.unit !== undefined && props.unit !== props.defaultUnit) return true
+  return false
+})
 const validUnit = computed((): string => {
   return !props.value ? 'none' : (props.unit ?? 'none')
 })
@@ -62,6 +71,10 @@ function onMouseDown(e: DOMEvent<MouseEvent>) {
 }
 
 function onMouseUp(e: DOMEvent<MouseEvent>) {
+  if (e.altKey && e.ctrlKey && e.button === 0) {
+    navigator.clipboard.writeText(props.dbg ?? '')
+    return
+  }
   if (props.inactive || rangeIsSelected || getSelection()?.type === 'Range') return
   if (e.button === 0) focusTextInput()
   if (e.button === 2) switchUnitOption(-1)

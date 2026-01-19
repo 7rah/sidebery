@@ -12,36 +12,50 @@ section(
     label="settings.nav_bar_layout"
     optLabel="settings.nav_bar_layout_"
     v-model:value="Settings.state.navBarLayout"
+    dbg="navBarLayout"
+    :default="DEFAULT_SETTINGS.navBarLayout"
     :opts="Settings.getOpts('navBarLayout')"
     @update:value="Settings.saveDebounced(150)")
   .sub-fields
     ToggleField(
       label="settings.nav_bar_inline"
       v-model:value="Settings.state.navBarInline"
+      dbg="navBarInline"
+      :default="DEFAULT_SETTINGS.navBarInline"
       :inactive="Settings.state.navBarLayout !== 'horizontal'"
       @update:value="Settings.saveDebounced(150)")
     SelectField(
       label="settings.nav_bar_side"
       optLabel="settings.nav_bar_side_"
       v-model:value="Settings.state.navBarSide"
+      dbg="navBarSide"
+      :default="DEFAULT_SETTINGS.navBarSide"
       :opts="Settings.getOpts('navBarSide')"
       :inactive="Settings.state.navBarLayout !== 'vertical'"
       @update:value="Settings.saveDebounced(150)")
   ToggleField(
     label="settings.nav_btn_count"
     v-model:value="Settings.state.navBtnCount"
+    dbg="navBtnCount"
+    :default="DEFAULT_SETTINGS.navBtnCount"
     @update:value="Settings.saveDebounced(150)")
   ToggleField(
     label="settings.hide_empty_panels"
     v-model:value="Settings.state.hideEmptyPanels"
+    dbg="hideEmptyPanels"
+    :default="DEFAULT_SETTINGS.hideEmptyPanels"
     @update:value="Settings.saveDebounced(150)")
   ToggleField(
       label="settings.hide_discarded_tab_panels"
       v-model:value="Settings.state.hideDiscardedTabPanels"
+      dbg="hideDiscardedTabPanels"
+      :default="DEFAULT_SETTINGS.hideDiscardedTabPanels"
       @update:value="Settings.saveDebounced(150)")
   NumField.-inline(
     label="settings.nav_switch_panels_delay"
     v-model:value="Settings.state.navSwitchPanelsDelay"
+    dbg="navSwitchPanelsDelay"
+    :default="DEFAULT_SETTINGS.navSwitchPanelsDelay"
     :or="128"
     @update:value="Settings.saveDebounced(500)")
   
@@ -50,18 +64,26 @@ section(
     ToggleField(
       label="settings.sub_panel.recently_closed_tabs"
       v-model:value="Settings.state.subPanelRecentlyClosedBar"
+      dbg="subPanelRecentlyClosedBar"
+      :default="DEFAULT_SETTINGS.subPanelRecentlyClosedBar"
       @update:value="Settings.saveDebounced(150)")
     ToggleField(
       label="settings.sub_panel.bookmarks"
       v-model:value="Settings.state.subPanelBookmarks"
+      dbg="subPanelBookmarks"
+      :default="DEFAULT_SETTINGS.subPanelBookmarks"
       @update:value="Settings.saveDebounced(150)")
     ToggleField(
       label="settings.sub_panel.history"
       v-model:value="Settings.state.subPanelHistory"
+      dbg="subPanelHistory"
+      :default="DEFAULT_SETTINGS.subPanelHistory"
       @update:value="Settings.saveDebounced(150)")
     ToggleField(
       label="settings.sub_panel.sync"
       v-model:value="Settings.state.subPanelSync"
+      dbg="subPanelSync"
+      :default="DEFAULT_SETTINGS.subPanelSync"
       @update:value="Settings.saveDebounced(150)")
 
   InfoField(
@@ -157,7 +179,7 @@ import * as Utils from 'src/utils'
 import * as Popups from 'src/services/popups.fg'
 import { translate } from 'src/dict'
 import type { BookmarksPanel, Panel, PanelConfig } from 'src/types'
-import { BTN_ICONS } from 'src/defaults'
+import { BTN_ICONS, DEFAULT_SETTINGS } from 'src/defaults'
 import * as Settings from 'src/services/settings.fg'
 import * as SidebarConfig from 'src/services/sidebar-config.fg'
 import * as Permissions from 'src/services/permissions.fg'

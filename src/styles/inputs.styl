@@ -140,6 +140,21 @@
   align-items: flex-start
   flex-wrap: nowrap
 
+.ToggleField[data-changed="true"]
+.SelectField[data-changed="true"]
+.NumField[data-changed="true"]
+.CountField[data-changed="true"]
+.TextField[data-changed="true"]
+  .body:before
+    content: ''
+    position: absolute
+    top: 3px
+    right: -13px
+    width: 3px
+    height: calc(100% - 6px)
+    background-color: var(--toolbar-fg-active)
+    opacity: .5
+    border-radius: 1.5px
 
 .Sidebar .SelectField .body
 .Sidebar .TextField .body

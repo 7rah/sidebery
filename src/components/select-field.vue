@@ -3,6 +3,7 @@
   ref="rootEl"
   :data-inactive="props.inactive"
   :data-drop-down="dropDownOpen"
+  :data-changed="props.default !== undefined && props.default !== value"
   @mousedown="onMouseDown"
   @mouseup="onMouseUp"
   @contextmenu.stop="onContextMenu"
@@ -51,6 +52,8 @@ interface SelectFieldProps {
   noneOpt?: string | number
   note?: string
   folded?: boolean
+  dbg?: string
+  default?: any
 }
 
 const emit = defineEmits(['update:value'])
@@ -68,6 +71,10 @@ function onMouseDown(e: DOMEvent<MouseEvent>) {
 }
 
 function onMouseUp(e: DOMEvent<MouseEvent>) {
+  if (e.altKey && e.ctrlKey && e.button === 0) {
+    navigator.clipboard.writeText(props.dbg ?? '')
+    return
+  }
   if (rangeIsSelected || getSelection()?.type === 'Range') return
   if (props.inactive || !props.opts || Array.isArray(props.value)) return
   if (e.button === 0) switchOption(1)

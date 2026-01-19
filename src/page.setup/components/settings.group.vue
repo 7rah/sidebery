@@ -6,6 +6,8 @@ section(ref="el")
     label="settings.group_layout"
     optLabel="settings.group_layout_"
     v-model:value="Settings.state.groupLayout"
+    dbg="groupLayout"
+    :default="DEFAULT_SETTINGS.groupLayout"
     :opts="Settings.getOpts('groupLayout')"
     @update:value="Settings.saveDebounced(150)")
 </template>
@@ -13,6 +15,7 @@ section(ref="el")
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { translate } from 'src/dict'
+import { DEFAULT_SETTINGS } from 'src/defaults'
 import * as Settings from 'src/services/settings.fg'
 import * as SetupPage from 'src/services/setup-page.fg'
 import SelectField from '../../components/select-field.vue'

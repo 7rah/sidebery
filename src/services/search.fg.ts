@@ -73,6 +73,16 @@ export function onOutsideSearchInput(q: string): void {
   }
 }
 
+let keepSearchingOnOutsideExitTimeout: number | undefined
+export let keepSearchingOnOutsideExit = false
+export function tmpKeepSearchingOnOutsideExit(time: number) {
+  keepSearchingOnOutsideExit = true
+  clearTimeout(keepSearchingOnOutsideExitTimeout)
+  keepSearchingOnOutsideExitTimeout = setTimeout(() => {
+    keepSearchingOnOutsideExit = false
+  }, time)
+}
+
 export function onOutsideSearchExit(): void {
   if (!Search.reactive.barIsShowed) return
 
@@ -85,8 +95,13 @@ export function onOutsideSearchExit(): void {
 
   const sidebarFocused = document.hasFocus()
   if (!sidebarFocused) {
-    if (!Settings.state.searchTabSwitch || !query) Search.close()
-    else IPC.sendToSearchPopup(Windows.id, 'closePopup')
+    if (keepSearchingOnOutsideExit) {
+      // Do not clear and close search bar in sidebar, close only search popup
+      IPC.sendToSearchPopup(Windows.id, 'closePopup')
+    } else {
+      // Close search popup, clear and close search-bar in sidebar
+      Search.close()
+    }
   } else if (inputEl && inputEl !== document.activeElement) {
     Search.reactive.popupIsShowed = false
   }

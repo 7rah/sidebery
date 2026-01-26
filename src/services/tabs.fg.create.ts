@@ -100,7 +100,10 @@ export async function createTabInPanel(panel: Panel, conf?: CreateTabInPanelConf
   }
 
   let index = conf?.index ?? Tabs.getIndexForNewTab(panel, conf)
-  const parentId = Tabs.getParentForNewTab(panel, conf)
+  let parentId
+  if (conf && conf.position !== 'start' && conf.position !== 'end') {
+    parentId = Tabs.getParentForNewTab(panel, conf)
+  }
   if (!Utils.isTabsPanel(panel)) return
   if (index === undefined && panel.nextTabIndex > -1) index = panel.nextTabIndex
 

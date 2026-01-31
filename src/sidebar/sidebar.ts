@@ -121,6 +121,8 @@ async function main(): Promise<void> {
   Styles.loadCustomSidebarCSS()
   Styles.load()
 
+  IPC.connectTo(E.InstanceType.bg)
+
   await Sidebar.loadPanels()
   Sidebar.setupListeners()
 
@@ -128,8 +130,6 @@ async function main(): Promise<void> {
   const initBookmarks = !Settings.state.loadBookmarksOnDemand || Utils.isBookmarksPanel(actPanel)
   const initHistory = !Settings.state.loadHistoryOnDemand || Utils.isHistoryPanel(actPanel)
   const initSync = Utils.isSyncPanel(actPanel)
-
-  IPC.connectTo(E.InstanceType.bg)
 
   if (Sidebar.hasTabs) await Tabs.load()
   else await Tabs.loadInShadowMode()

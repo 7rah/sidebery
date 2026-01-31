@@ -10,6 +10,6 @@ export default defineConfig({
   test: {
     dir: './src',
     environment: 'jsdom',
-    setupFiles: './tests/env-setup.js',
+    setupFiles: ['./tests/env-setup.ts', './tests/ipc-setup.ts'],
   },
 })

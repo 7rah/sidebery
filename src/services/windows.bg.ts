@@ -1,4 +1,4 @@
-import { BgWindow, ItemInfo, Notification, Tab, TabCache, TabSessionData, Window } from 'src/types'
+import { BgWindow, ItemInfo, Notification, Tab, TabCache, TabSessionData } from 'src/types'
 import { DEFAULT_CONTAINER_ID, MOVEID, NOID, PRIVATE_CONTAINER_ID } from 'src/defaults'
 import * as Tabs from 'src/services/tabs.bg'
 import * as Info from 'src/services/info'
@@ -6,6 +6,7 @@ import * as Containers from 'src/services/containers'
 import * as Logs from 'src/services/logs'
 import * as IPC from 'src/services/ipc'
 import * as Omnibox from 'src/services/omnibox.bg'
+import * as Sidebar from 'src/services/sidebar.bg'
 import * as Utils from 'src/utils'
 import { translate } from 'src/dict'
 
@@ -277,5 +278,7 @@ function onWindowFocused(windowId: ID): void {
       focusedId = windowId
       window.focused = true
     }
+
+    Sidebar.saveFocusedActivePanelIdDebounced(1000)
   }
 }

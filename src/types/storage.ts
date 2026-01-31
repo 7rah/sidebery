@@ -19,6 +19,7 @@ export interface Stored {
   favDomains?: Record<string, T.FavDomain>
 
   sidebar?: T.SidebarConfig
+  lastFocusedActivePanelId?: ID
 
   snapshots?: T.Snapshot[]
   lastSnapTime?: number

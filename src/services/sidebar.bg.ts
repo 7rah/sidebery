@@ -1,9 +1,11 @@
 import * as T from 'src/types'
 import * as E from 'src/enums'
 import * as D from 'src/defaults'
+import * as Utils from 'src/utils'
 import * as Store from 'src/services/storage.bg'
 import * as Logs from 'src/services/logs'
 import * as SidebarConfig from 'src/services/sidebar-config'
+import * as Windows from 'src/services/windows.bg'
 import * as Omnibox from 'src/services/omnibox.bg'
 import * as Settings from 'src/services/settings'
 
@@ -69,4 +71,32 @@ function updateSidebar(newConfig?: T.SidebarConfig | null): void {
   if (Settings.state.omniMoveToPanel || Settings.state.omniSwitchToPanel) {
     Omnibox.updateCommandsDebounced(500)
   }
+}
+
+let prevSavedFocusedActivePanelId = D.NOID
+function saveFocusedActivePanelId() {
+  if (Windows.lastFocusedId === D.NOID) return
+  const win = Windows.byId.get(Windows.lastFocusedId)
+  if (!win) {
+    Logs.warn('Sidebar.saveFocusedActivePanelId: No win', Windows.lastFocusedId)
+    return
+  }
+
+  if (prevSavedFocusedActivePanelId === win.activePanelId) return
+
+  prevSavedFocusedActivePanelId = win.activePanelId
+  Store.set({ lastFocusedActivePanelId: win.activePanelId })
+}
+export const saveFocusedActivePanelIdDebounced = Utils.debounce(saveFocusedActivePanelId)
+
+export function setActivePanelId(winId: ID, panelId: ID) {
+  const win = Windows.byId.get(winId)
+  if (!win) {
+    Logs.warn('Sidebar.setActivePanelId: No win', winId, panelId)
+    return
+  }
+
+  win.activePanelId = panelId
+
+  saveFocusedActivePanelIdDebounced(1000)
 }

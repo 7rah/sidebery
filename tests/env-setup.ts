@@ -44,6 +44,21 @@ void (function () {
       getURL: (path: string) => 'moz-extension://blablabla/' + path,
       sendMessage: (msg: any) => MsgHandlers.map(h => h(msg)),
       getManifest: () => manifest,
+      connect: (connectInfo: browser.runtime.ConnectInfo): browser.runtime.Port => {
+        return {
+          name: '',
+          disconnect: () => {},
+          onDisconnect: {
+            addListener: (listener: any) => {},
+            removeListener: (listener: any) => {},
+          },
+          onMessage: {
+            addListener: (listener: any) => {},
+            removeListener: (listener: any) => {},
+          },
+          postMessage: (msg: any) => {},
+        }
+      },
       onMessage: { addListener: (handler: any) => MsgHandlers.push(handler) },
     },
     sidebarAction: {

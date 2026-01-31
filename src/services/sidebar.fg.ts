@@ -11,6 +11,7 @@ import * as Containers from 'src/services/containers'
 import * as Bookmarks from 'src/services/bookmarks.fg'
 import * as Menu from 'src/services/menu.fg'
 import * as Tabs from 'src/services/tabs.fg'
+import * as IPC from 'src/services/ipc'
 import * as Store from 'src/services/storage.fg'
 import * as DnD from 'src/services/drag-and-drop.fg'
 import * as History from 'src/services/history.fg'
@@ -72,7 +73,12 @@ export let reactive: SidebarReactiveState = {
 }
 
 export let activePanelId = D.NOID
-export const setActivePanelId = (id: ID) => (activePanelId = id)
+export const setActivePanelId = (id: ID) => {
+  if (activePanelId === id) return
+  reactive.activePanelId = activePanelId = id
+  IPC.bg('setActivePanelId', Windows.id, id)
+  saveActivePanelDebounced(1000)
+}
 export let prevActivePanelId = D.NOID
 export let prevTabsPanelId = D.NOID
 export let panelsById: Record<ID, T.Panel> = {}
@@ -158,10 +164,27 @@ export function registerHorizontalNavBarEl(el: HTMLElement): void {
 }
 
 async function loadSidebarConfig() {
-  return browser.storage.managed
-    .get<T.Stored>('sidebar')
-    .catch(() => undefined)
-    .then(storage => (!storage?.sidebar ? browser.storage.local.get<T.Stored>('sidebar') : storage))
+  const msp = browser.storage.managed.get<T.Stored>('sidebar').catch(() => undefined)
+  const psp = browser.storage.local.get<T.Stored>('lastFocusedActivePanelId').catch(() => undefined)
+  const lsp = Utils.pending({
+    action: () => browser.storage.local.get<T.Stored>('sidebar').catch(() => undefined),
+    check: storage => !!storage?.sidebar?.nav?.length,
+    interval: 250,
+    tryCount: 20,
+  })
+
+  const [ms, ps, ls] = await Promise.all([msp, psp, lsp])
+  if (ms?.sidebar) {
+    if (ps?.lastFocusedActivePanelId) Object.assign(ms, ps)
+    return ms
+  }
+
+  if (ls?.sidebar) {
+    if (ps?.lastFocusedActivePanelId) Object.assign(ls, ps)
+    return ls
+  }
+
+  return {}
 }
 
 export async function loadPanels(): Promise<void> {
@@ -169,12 +192,7 @@ export async function loadPanels(): Promise<void> {
   Logs.info('Sidebar.loadPanels')
 
   const [storage, activeId, hiddenPanels] = await Promise.all([
-    Utils.pending({
-      action: loadSidebarConfig,
-      check: storage => !!storage.sidebar?.nav?.length,
-      interval: 250,
-      tryCount: 20,
-    }),
+    loadSidebarConfig(),
     browser.sessions.getWindowValue<ID>(Windows.id, 'activePanelId').catch(() => undefined),
     browser.sessions.getWindowValue<ID[]>(Windows.id, 'hiddenPanels').catch(() => undefined),
   ])
@@ -185,6 +203,7 @@ export async function loadPanels(): Promise<void> {
   }
 
   const sidebar = storage.sidebar
+  const lastFocusedActivePanelId = storage.lastFocusedActivePanelId
   const panelConfigs = sidebar?.panels ? Object.values(sidebar?.panels) : []
   if (sidebar?.nav) {
     reactive.nav = sidebar.nav
@@ -218,15 +237,16 @@ export async function loadPanels(): Promise<void> {
   if (!Windows.incognito) {
     let actPanel: T.Panel | undefined
     if (activeId !== undefined) actPanel = panelsById[activeId]
+    if (!actPanel && lastFocusedActivePanelId) actPanel = panelsById[lastFocusedActivePanelId]
     if (!actPanel) actPanel = panels.find(p => p.type === E.PanelType.tabs)
-    if (actPanel) reactive.activePanelId = activePanelId = actPanel.id
-    else reactive.activePanelId = activePanelId = panels[0]?.id ?? D.NOID
-    prevActivePanelId = reactive.activePanelId
+    if (actPanel) setActivePanelId(actPanel.id)
+    else setActivePanelId(panels[0]?.id ?? D.NOID)
+    prevActivePanelId = activePanelId
   } else {
     const tabsPanel = panels.find(p => p.type === E.PanelType.tabs)
-    if (tabsPanel) reactive.activePanelId = activePanelId = tabsPanel.id
-    else reactive.activePanelId = activePanelId = panels[0]?.id ?? D.NOID
-    prevActivePanelId = reactive.activePanelId
+    if (tabsPanel) setActivePanelId(tabsPanel.id)
+    else setActivePanelId(panels[0]?.id ?? D.NOID)
+    prevActivePanelId = activePanelId
   }
 
   ready = true
@@ -1145,8 +1165,6 @@ async function updateSidebar(newConfig?: T.SidebarConfig): Promise<void> {
       const firstPanel = panels[0]
       if (firstPanel) activatePanel(firstPanel.id)
     }
-
-    saveActivePanel()
   }
 
   // On or off web request handler
@@ -1174,7 +1192,7 @@ export function activatePanel(panelId: ID, loadPanels = true, keepSearching?: bo
   }
 
   if (prevPanel) prevActivePanelId = activePanelId
-  reactive.activePanelId = activePanelId = panelId
+  setActivePanelId(panelId)
 
   if (Search.active && prevPanel) {
     if (
@@ -1197,8 +1215,6 @@ export function activatePanel(panelId: ID, loadPanels = true, keepSearching?: bo
   if (DnD.reactive.isStarted) DnD.reactive.dstPanelId = panelId
 
   if (Settings.state.updateSidebarTitle) updateSidebarTitle(0)
-
-  if (!DnD.reactive.isStarted && !Search.active) saveActivePanelDebounced(1000)
 
   if (subPanelActive) closeSubPanel()
 
@@ -1225,12 +1241,12 @@ let prevSavedActPanelId = D.NOID
 /**
  * Save active panel id in current window
  */
-export function saveActivePanel(): void {
+function saveActivePanel(): void {
   if (Windows.incognito || prevSavedActPanelId === activePanelId) return
   prevSavedActPanelId = activePanelId
   browser.sessions.setWindowValue(Windows.id, 'activePanelId', activePanelId)
 }
-export const saveActivePanelDebounced = Utils.debounce(saveActivePanel)
+const saveActivePanelDebounced = Utils.debounce(saveActivePanel)
 
 let updatePanelBoundsTimeout: number | undefined
 export function updatePanelBoundsDebounced(delay = 256): void {
@@ -1355,7 +1371,7 @@ export function switchPanel(
     activePanel = panelsById[prevActivePanelId]
     if (!activePanel) activePanel = panels[0]
     if (activePanel) {
-      reactive.activePanelId = activePanelId = activePanel.id
+      setActivePanelId(activePanel.id)
       if (Settings.updateWinPrefaceOnPanelSwitch) Windows.updWindowPreface()
     }
     return
@@ -1701,7 +1717,6 @@ export async function removePanel(panelId: ID, conf?: RemovingPanelConf): Promis
     }
     if (nextActivePanelId !== undefined) {
       activatePanel(nextActivePanelId)
-      saveActivePanel()
     }
   }
 
@@ -1828,7 +1843,7 @@ export function addPanel<T extends T.Panel>(index: number, panel: T, replace?: b
     const replaceableId = reactive.nav[index]
     if (replaceableId !== undefined) {
       if (activePanelId === replaceableId) {
-        reactive.activePanelId = activePanelId = panel.id
+        setActivePanelId(panel.id)
         prevActivePanelId = panel.id
 
         if (Settings.updateWinPrefaceOnPanelSwitch) Windows.updWindowPreface()

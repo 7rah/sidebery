@@ -34,6 +34,7 @@ void (async function main() {
     getSidebarTabs: Tabs.getSidebarTabs,
     detachSidebarTabs: Tabs.detachSidebarTabs,
     openTabs: Tabs.openTabs,
+    setActivePanelId: Sidebar.setActivePanelId,
     createSnapshot: Snapshots.createSnapshot,
     addSnapshot: Snapshots.addSnapshot,
     removeSnapshot: Snapshots.removeSnapshot,

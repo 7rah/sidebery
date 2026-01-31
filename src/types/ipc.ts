@@ -10,6 +10,7 @@ import * as WindowsFg from 'src/services/windows.fg'
 import * as Store from 'src/services/storage.bg'
 import type * as SyncBg from 'src/services/sync.bg'
 import type * as TabsFg from 'src/services/tabs.fg'
+import type * as SidebarBg from 'src/services/sidebar.bg'
 import type * as SidebarFg from 'src/services/sidebar.fg'
 import type * as E from 'src/enums'
 
@@ -39,6 +40,7 @@ export type BgActions = {
   getSidebarTabs: typeof Tabs.getSidebarTabs
   detachSidebarTabs: typeof Tabs.detachSidebarTabs
   openTabs: typeof Tabs.openTabs
+  setActivePanelId: typeof SidebarBg.setActivePanelId
   createSnapshot: typeof Snapshots.createSnapshot
   addSnapshot: typeof Snapshots.addSnapshot
   removeSnapshot: typeof Snapshots.removeSnapshot

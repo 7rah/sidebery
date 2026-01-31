@@ -296,13 +296,14 @@ export const tabsMenuOptions: Record<string, () => MenuOption | MenuOption[] | u
   },
 
   discard: () => {
+    const firstTab = Tabs.byId[Selection.getFirst()]
     const option: MenuOption = {
       label: translate('menu.tab.discard'),
       icon: 'icon_discard',
-      inactive: Settings.state.pinnedNoUnload,
-      onClick: () => Tabs.discardTabs(Selection.ids()),
+      inactive:
+        firstTab?.pinned && Settings.state.pinnedNoUnloadExplicit && Settings.state.pinnedNoUnload,
+      onClick: () => Tabs.discardTabs(Selection.ids(), true),
     }
-    const firstTab = Tabs.byId[Selection.getFirst()]
     if (Selection.getLength() === 1 && firstTab?.discarded) option.inactive = true
     if (!Settings.state.ctxMenuRenderInact && option.inactive) return
     return option

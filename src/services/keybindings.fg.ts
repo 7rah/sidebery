@@ -1411,7 +1411,7 @@ function onKeyROIP() {
 
 function onKeyUnloadTabs() {
   const ids = Selection.isTabs() ? Selection.ids() : [Tabs.activeId]
-  if (ids.length) Tabs.discardTabs(ids)
+  if (ids.length) Tabs.discardTabs(ids, true)
 }
 
 function onKeyUnloadAllTabsInPanel() {

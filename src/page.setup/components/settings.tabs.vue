@@ -301,6 +301,14 @@ section(ref="el")
       v-model:value="Settings.state.pinnedNoUnload"
       :default="DEFAULT_SETTINGS.pinnedNoUnload"
       @update:value="Settings.saveDebounced(150)")
+    .sub-fields
+      ToggleField(
+        label="settings.pinned.no_unload_explicit"
+        dbg="pinnedNoUnloadPanel"
+        v-model:value="Settings.state.pinnedNoUnloadExplicit"
+        :inactive="!Settings.state.pinnedNoUnload"
+        :default="DEFAULT_SETTINGS.pinnedNoUnloadExplicit"
+        @update:value="Settings.saveDebounced(150)")
 
   .wrapper(ref="tabsTreeEl")
     .sub-title: .text {{translate('settings.nav_settings_tabs_tree')}}

@@ -128,6 +128,7 @@ export interface SettingsState {
   pinnedTabsList: boolean
   pinnedAutoGroup: boolean
   pinnedNoUnload: boolean
+  pinnedNoUnloadExplicit: boolean
   pinnedForcedDiscard: boolean
 
   // Tabs tree

@@ -1247,9 +1247,9 @@ export function reloadTab(tab: T.Tab): void {
 /**
  * Discard tabs
  */
-export async function discardTabs(tabIds: ID[] = []): Promise<void> {
+export async function discardTabs(tabIds: ID[] = [], explicit = false): Promise<void> {
   // Skip pinned tabs
-  if (Settings.state.pinnedNoUnload) {
+  if (Settings.state.pinnedNoUnload && (!explicit || Settings.state.pinnedNoUnloadExplicit)) {
     tabIds = tabIds.filter(id => {
       const tab = Tabs.byId[id]
       if (!tab || tab.pinned) return false

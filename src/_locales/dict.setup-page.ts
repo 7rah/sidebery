@@ -3468,6 +3468,9 @@ Przykłady: "*", "ctrl+$", "ctrl+alt+g"`,
     zh_TW: '阻止卸載已釘選分頁',
     ja: '固定タブのアンロードを防止する',
   },
+  'settings.pinned.no_unload_explicit': {
+    en: 'Including explicit unloading via context menu, mouse action or keybinding',
+  },
 
   // - Tabs tree
   'settings.tabs_tree_layout': {

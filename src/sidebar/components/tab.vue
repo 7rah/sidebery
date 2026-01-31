@@ -204,7 +204,7 @@ function closeBtnAction(e: MouseEvent) {
       if (shouldBeConvertedToGroup()) return convertToGroup()
       Tabs.removeTabs([tab.id])
     } else if (Settings.state.tabCloseMiddleClick === 'discard') {
-      Tabs.discardTabs([tab.id])
+      Tabs.discardTabs([tab.id], true)
     } else if (Settings.state.tabCloseMiddleClick === 'discard_or_close') {
       discardOrCloseTabs([tab.id])
     }
@@ -288,7 +288,7 @@ function onMouseDown(e: MouseEvent): void {
 
     if (e.ctrlKey) {
       if (Settings.state.tabMiddleClickCtrl === 'discard') {
-        Tabs.discardTabs(selectedTabs)
+        Tabs.discardTabs(selectedTabs, true)
         return
       } else if (Settings.state.tabMiddleClickCtrl === 'discard_or_close') {
         discardOrCloseTabs(selectedTabs)
@@ -307,7 +307,7 @@ function onMouseDown(e: MouseEvent): void {
 
     if (e.shiftKey) {
       if (Settings.state.tabMiddleClickShift === 'discard') {
-        Tabs.discardTabs(selectedTabs)
+        Tabs.discardTabs(selectedTabs, true)
         return
       } else if (Settings.state.tabMiddleClickShift === 'discard_or_close') {
         discardOrCloseTabs(selectedTabs)
@@ -326,7 +326,7 @@ function onMouseDown(e: MouseEvent): void {
 
     if (tab.pinned) {
       if (Settings.state.tabPinnedMiddleClick === 'discard') {
-        Tabs.discardTabs(selectedTabs)
+        Tabs.discardTabs(selectedTabs, true)
         return
       } else if (Settings.state.tabPinnedMiddleClick === 'close') {
         if (shouldBeConvertedToGroup()) convertToGroup()
@@ -351,7 +351,7 @@ function onMouseDown(e: MouseEvent): void {
         if (shouldBeConvertedToGroup()) convertToGroup()
         else Tabs.removeTabs(selectedTabs)
       } else if (Settings.state.tabMiddleClick === 'discard') {
-        Tabs.discardTabs(selectedTabs)
+        Tabs.discardTabs(selectedTabs, true)
       } else if (Settings.state.tabMiddleClick === 'discard_or_close') {
         discardOrCloseTabs(selectedTabs)
       } else if (Settings.state.tabMiddleClick === 'duplicate') {
@@ -384,7 +384,7 @@ function longClickFeedback(e: MouseEvent) {
 
   let noop = false
   if (action === 'reload') Tabs.reloadTabs([tab.id])
-  else if (action === 'discard') Tabs.discardTabs([tab.id])
+  else if (action === 'discard') Tabs.discardTabs([tab.id], true)
   else if (action === 'duplicate') Tabs.duplicateTabs([tab.id])
   else if (action === 'dup_child') Tabs.duplicateTabs([tab.id], true)
   else if (action === 'pin') Tabs.repinTabs([tab.id])
@@ -667,7 +667,7 @@ function discardOrCloseTabs(selectedTabs: ID[]): void {
   if (tab.discarded) {
     Tabs.removeTabs(selectedTabs)
   } else {
-    Tabs.discardTabs(selectedTabs)
+    Tabs.discardTabs(selectedTabs, true)
   }
 }
 

@@ -1382,7 +1382,6 @@ export function switchPanel(
   const hiddenPanels = []
   const isInline = Settings.state.navBarLayout === 'horizontal' && Settings.state.navBarInline
   let hdnStartIndex = -1
-  let actIsHidden = false
 
   for (const id of nav) {
     if (id === 'hdn') {
@@ -1401,7 +1400,6 @@ export function switchPanel(
 
     if (isHidden) {
       if (panel.id === currentActivePanelId) {
-        actIsHidden = true
         hiddenPanels.push(panel)
       } else if (!ignoreHidden) {
         hiddenPanels.push(panel)
@@ -1812,23 +1810,6 @@ export function createBookmarksPanel(conf?: Partial<T.BookmarksPanelConfig>): T.
   panel.reactive.iconSVG = panel.iconSVG
   panel.reactive.iconIMG = panel.iconIMG
   panel.reactive.viewMode = panel.viewMode
-
-  if (reactFn) panel.reactive = reactFn(panel.reactive)
-
-  return panel
-}
-
-// TODO: Remove
-/**
- * Creates history-panel object.
- */
-export function createHistoryPanel(): T.Panel {
-  const panel = Utils.cloneObject(D.HISTORY_PANEL_STATE)
-
-  panel.reactive.name = panel.name
-  panel.reactive.color = panel.color
-  panel.reactive.iconSVG = panel.iconSVG
-  panel.reactive.iconIMG = panel.iconIMG
 
   if (reactFn) panel.reactive = reactFn(panel.reactive)
 

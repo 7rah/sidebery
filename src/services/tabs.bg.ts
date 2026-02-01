@@ -206,6 +206,7 @@ function onTabCreated(nativeTab: browser.tabs.Tab): void {
       incognito: tab.incognito,
       tabs: [tab],
       activeTabId: tab.active ? tab.id : D.NOID,
+      activePanelId: D.NOID,
     }
     Windows.byId.set(tab.windowId, win)
     return

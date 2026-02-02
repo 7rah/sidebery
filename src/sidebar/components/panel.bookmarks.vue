@@ -74,10 +74,6 @@ const state = reactive({
   unrendered: false,
 
   expandedHistoryGroups: [true, true],
-
-  treeScrollTop: 0,
-  historyScrollTop: 0,
-  domainsScrollTop: 0,
 })
 
 const isActive = computed<boolean>(() => props.panel.id === Sidebar.reactive.activePanelId)

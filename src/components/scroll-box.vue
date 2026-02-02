@@ -1,5 +1,5 @@
 <template lang="pug">
-.ScrollBox(ref="el" @wheel="onWheel")
+.ScrollBox(@wheel="onWheel")
   .top-shadow(:data-show="state.topOverflow")
   .bottom-shadow(:data-show="state.bottomOverflow")
   .scroll-container(ref="scrollBoxEl" tabindex="-1" @scroll.passive="recalcScroll(true)")
@@ -22,7 +22,6 @@ const props = defineProps<{
   preScroll?: number
 }>()
 
-const el = ref<HTMLElement | null>(null)
 const scrollBoxEl = ref<HTMLElement | null>(null)
 const scrollContentEl = ref<HTMLElement | null>(null)
 

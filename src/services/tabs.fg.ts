@@ -994,40 +994,36 @@ export function switchTab(globaly: boolean, cycle: boolean, step: number, pinned
   if (!Utils.isTabsPanel(activePanel)) return
 
   let targetTabId = D.NOID
-  const index = activeTab.index
-  const panelTabs = activePanel.tabs ?? []
   let t: T.Tab | boolean = true
   let cycled = false
 
-  if (
-    (!pinned && !globaly && activeTab.panelId !== activePanel.id) ||
-    (!pinned && !pinnedAndPanel && activeTab.pinned)
-  ) {
-    let i = step > 0 ? 0 : panelTabs.length - 1
-    let pTab: T.Tab | undefined = panelTabs[i]
-    while (pTab) {
-      pTab = panelTabs[i]
-      i += step
-      if (!pTab) break
-      if (visibleOnly && pTab.invisible) continue
-      if (skipDiscarded && pTab.discarded) continue
-      targetTabId = pTab.id
-      break
-    }
-    if (targetTabId !== D.NOID) {
-      browser.tabs.update(targetTabId, { active: true }).catch(err => {
-        Logs.err('Tabs.switchTab: Cannot activate tab (1):', err)
-      })
-    }
-    return
+  let tabs
+  if (globaly && !activePanel.filteredTabs) {
+    tabs = [...Tabs.list]
+  } else {
+    tabs = [
+      ...(Settings.state.pinnedTabsPosition === 'panel' ? activePanel.pinnedTabs : Tabs.pinned),
+      ...(activePanel.filteredTabs ?? activePanel.tabs),
+    ]
   }
+  if (!tabs.length) return
+
+  let index = tabs.findIndex(t => t.id === Tabs.activeId)
+  // Reset index if we're switching only between tabs of a certain pinned state
+  // and the active tab has different pinned state
+  if (pinned !== undefined) {
+    if ((pinned && !activeTab.pinned) || (!pinned && !pinnedAndPanel && activeTab.pinned)) {
+      index = -1
+    }
+  }
+  if (index === -1 && step < 0) index = tabs.length
 
   for (let i = index + step; t; i += step) {
-    t = Tabs.list[i]
+    t = tabs[i]
     if (!t) {
       if (cycle && !cycled) {
         if (step > 0) i = -1
-        else i = Tabs.list.length
+        else i = tabs.length
         cycled = t = true
         continue
       } else {
@@ -1037,9 +1033,11 @@ export function switchTab(globaly: boolean, cycle: boolean, step: number, pinned
 
     if (visibleOnly && t.invisible) continue
     if (skipDiscarded && t.discarded) continue
-    if (pinned && !t.pinned) continue
-    if (!pinned && !globaly && t.panelId !== activeTab.panelId) continue
-    if (!pinned && !pinnedAndPanel && t.pinned) continue
+    // Switch between only pinned or non-pinned tabs
+    if (pinned !== undefined) {
+      if (pinned && !t.pinned) continue
+      else if (!pinned && !pinnedAndPanel && t.pinned) continue
+    }
     targetTabId = t.id
     break
   }
@@ -1066,13 +1064,13 @@ export function switchTabWithPreselect(globaly: boolean, cycle: boolean, dir: 1 
   if (!Utils.isTabsPanel(activePanel)) return
 
   let tabs
-  if (globaly) {
+  if (globaly && !activePanel.filteredTabs) {
     tabs = [...Tabs.list]
   } else {
     if (Settings.state.pinnedTabsPosition === 'panel') {
-      tabs = [...activePanel.pinnedTabs, ...activePanel.tabs]
+      tabs = [...activePanel.pinnedTabs, ...(activePanel.filteredTabs ?? activePanel.tabs)]
     } else {
-      tabs = [...Tabs.pinned, ...activePanel.tabs]
+      tabs = [...Tabs.pinned, ...(activePanel.filteredTabs ?? activePanel.tabs)]
     }
   }
   if (!tabs.length) return

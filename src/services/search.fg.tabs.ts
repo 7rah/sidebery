@@ -111,7 +111,6 @@ export function onTabsSearchEnter(panel?: Panel): void {
   if (tab) browser.tabs.update(tab.id, { active: true })
 
   if (!Settings.state.searchTabSwitch) Search.stop()
-  else Search.tmpKeepSearchingOnOutsideExit(500)
 }
 
 export function onTabsSearchSelectAll(panel: TabsPanel): void {

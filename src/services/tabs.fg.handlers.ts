@@ -1776,4 +1776,9 @@ function onTabActivated(info: browser.tabs.ActiveInfo): void {
   if (Settings.state.previewTabs && Preview.state.modeFallback) {
     Preview.resetMode()
   }
+
+  // Do not reset search if configured so
+  if (Search.active && Settings.state.searchTabSwitch && !Search.reactive.barIsFocused) {
+    Search.tmpKeepSearchingOnOutsideExit(500)
+  }
 }

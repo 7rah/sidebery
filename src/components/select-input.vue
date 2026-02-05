@@ -104,10 +104,6 @@ function getOptColor(opt: InputOption): string | undefined {
   return (opt as InputObjOpt).color
 }
 
-function getOptIcon(opt: InputOption): string | undefined {
-  return (opt as InputObjOpt).icon
-}
-
 function isActive(opt: InputOption): boolean {
   if (Array.isArray(props.value)) {
     const val = opt instanceof Object ? opt.value : opt

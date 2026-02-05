@@ -7,7 +7,8 @@
   @mousedown="onMouseDown"
   @mouseup="onMouseUp"
   @contextmenu.stop="onContextMenu"
-  @keydown="onKeyDown")
+  @keydown="onKeyDown"
+  @blur="onBlur")
   .focus-fx
   .body
     .label {{translate(props.label)}}
@@ -209,6 +210,10 @@ function onKeyDown(e: KeyboardEvent) {
       preSelect(-1)
     }
   }
+}
+
+function onBlur() {
+  dropDownOpen.value = false
 }
 
 const publicInterface: SelectInputComponent = {

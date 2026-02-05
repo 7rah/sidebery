@@ -349,11 +349,12 @@ const regexCJK = /[\u4E00-\u9FFF,\u3400-\u4DBF,\u3040-\u312F,\uAC00-\uD7A3]/g
 export function search(q?: string): void {
   const ts = performance.now()
 
+  prevQuery = query
+
   // Update query
   if (q !== undefined) {
     if (q.length < MIN_SEARCH_QUERY_LEN && !regexCJK.test(q)) q = ''
     if (query === q) return
-    prevQuery = query
     query = q
     lowerCaseQuery = q.toLowerCase()
 

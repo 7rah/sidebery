@@ -56,10 +56,10 @@ import NotificationsPopup from '../sidebar/components/popup.notifications.vue'
 const animations = computed(() => (Settings.state.animations ? 'fast' : 'none'))
 
 onMounted(() => {
-  document.addEventListener('keyup', onDocumentKeyup)
+  document.addEventListener('keydown', onDocumentKeydown)
 })
 
-function onDocumentKeyup(e: KeyboardEvent): void {
+function onDocumentKeydown(e: KeyboardEvent): void {
   // Close popups
   if (e.code === 'Escape') {
     // Bookmarks popup

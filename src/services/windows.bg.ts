@@ -1,4 +1,4 @@
-import { BgWindow, ItemInfo, Notification, Tab, TabCache, TabSessionData } from 'src/types'
+import { BgWindow, ItemInfo, Notification, BgTab, TabCache, TabSessionData } from 'src/types'
 import { DEFAULT_CONTAINER_ID, MOVEID, NOID, PRIVATE_CONTAINER_ID } from 'src/defaults'
 import * as Tabs from 'src/services/tabs.bg'
 import * as Info from 'src/services/info'
@@ -140,7 +140,7 @@ export async function createWithTabs(
   // Go through moved/new tabs and restore their state from srcInfo
   const cache: TabCache[] = []
   for (let i = 0; i < processedTabs.length; i++) {
-    const tab = processedTabs[i] as Tab | null
+    const tab = processedTabs[i] as BgTab | null
     const srcInfo = tabsInfo[i]
     if (!srcInfo || !tab) continue
 
@@ -154,7 +154,7 @@ export async function createWithTabs(
 
     // Create cache data
     const cachedData: TabCache = { id: tab.id, url: srcInfo.url ?? 'about:newtab' }
-    if (+tab.parentId > -1) cachedData.parentId = tab.parentId
+    if (tab.parentId !== undefined && tab.parentId !== NOID) cachedData.parentId = tab.parentId
     if (srcInfo.panelId) cachedData.panelId = srcInfo.panelId
     if (tab.cookieStoreId !== defaultContainerId) cachedData.ctx = tab.cookieStoreId
     if (srcInfo.customTitle) cachedData.customTitle = srcInfo.customTitle

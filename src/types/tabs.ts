@@ -17,7 +17,6 @@ export interface Tab extends NativeTab {
   loading: boolean | 'ok' | 'err'
   warn: boolean
   unread?: boolean
-  // proxified?: boolean
   relGroupId: ID
   dstPanelId: ID
   autoGroupped?: boolean
@@ -34,9 +33,7 @@ export interface Tab extends NativeTab {
   reopenInContainer?: string
   customTitle?: string
   customColor?: string
-  // reloadOnActivation?: boolean
   moving?: boolean
-  // preventAutoReopening?: boolean
   previewImg?: string
   removing?: boolean
   flashAnimationTimeout?: number

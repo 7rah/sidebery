@@ -7,6 +7,7 @@ import * as IPC from 'src/services/ipc'
 import * as Logs from 'src/services/logs'
 import * as Settings from 'src/services/settings'
 import * as Sidebar from 'src/services/sidebar.fg'
+import * as Popups from 'src/services/popups.fg'
 import * as Windows from 'src/services/windows.fg'
 import * as Containers from 'src/services/containers'
 import * as Bookmarks from 'src/services/bookmarks.fg'
@@ -847,111 +848,28 @@ function _saveTabData(tabId: ID, forced?: boolean): void {
 
 let normTabsTimeout: number | undefined
 /**
- * Load tabs and normalize order. (on unrecoverable situations)
- * TODO: Completely rewrite this piece of shit, with unit tests
+ * Reload tabs. (on unrecoverable situations)
  */
 export function reinitTabs(delay = 500): void {
   if (!tabsReinitializing) tabsReinitializing = true
+
+  Popups.openProcessingTabsPopup()
+
   clearTimeout(normTabsTimeout)
   normTabsTimeout = setTimeout(async () => {
     Logs.warn('Tabs.reinitTabs')
 
-    const panelsList = []
-    for (const panel of Sidebar.panels) {
-      if (Utils.isTabsPanel(panel)) panelsList.push({ id: panel.id, index: -1 })
-    }
+    // Unload tabs
+    Tabs.unload()
 
-    const normTabs: T.Tab[] = []
-    const normTabsMap: Record<ID, T.Tab> = {}
-    const nativeTabs = await browser.tabs.query({
-      windowId: browser.windows.WINDOW_ID_CURRENT,
-    })
-    const moves: [ID, number][] = []
-    let panelId: ID | undefined
-    let index = 0
-    let panelIndex = 0
-    for (const nativeTab of nativeTabs) {
-      const tab = Tabs.list.find(t => t.id === nativeTab.id)
-      if (tab) {
-        tab.index = index++
-        tab.status = 'complete'
-        tab.active = nativeTab.active
-        if (nativeTab.active) activeId = nativeTab.id
+    // Load tabs
+    await Tabs.load()
 
-        if (!tab.pinned) {
-          const panelInfo = panelsList[panelIndex]
-          if (!panelInfo) {
-            Logs.err('Tabs.reinitTabs: > > No panelInfo 1')
-            break
-          }
-          if (panelInfo.id !== tab.panelId) {
-            const pi = panelsList.findIndex(p => {
-              if (p.index === -1) p.index = index - 1
-              return p.id === tab.panelId
-            })
-            // Tab panel is after the current one: Switch the current panel
-            if (pi > panelIndex) {
-              panelIndex = pi
-              const panelInfo = panelsList[panelIndex]
-              if (panelInfo) panelInfo.index = index
-            }
-            // Tab panel is not found: Use the current panel
-            else if (pi === -1) {
-              tab.panelId = panelId ?? D.NOID
-            }
-            // Tab panel is before the current one
-            else {
-              const panelInfo = panelsList[pi]
-              if (!panelInfo) return
-              moves.push([tab.id, panelInfo.index])
-              for (let i = pi; i < panelsList.length; i++) {
-                const panelInfo = panelsList[i]
-                if (!panelInfo) break
-                panelInfo.index++
-              }
-            }
-          } else {
-            panelInfo.index = index
-          }
-        }
+    // Wait for the browser to render sidebery tabs calmly
+    await Utils.sleep(100)
 
-        normTabs.push(tab)
-        normTabsMap[tab.id] = tab
-        tab.reactive = createReactiveProps(tab)
-        panelId = tab.panelId
-      } else {
-        const tab = mutateNativeTabToSideberyTab(nativeTab)
-        Tabs.reactivateTab(tab)
-        normTabs.push(tab)
-        if (nativeTab.active) activeId = nativeTab.id
-        normTabsMap[nativeTab.id] = tab
-        index++
-      }
-    }
-
-    if (moves.length && !Tabs.normTabsMoving) {
-      normTabsMoving = true
-      const moving = moves.map(m => browser.tabs.move(m[0], { index: m[1] }))
-      await Promise.all(moving)
-      reinitTabs(0)
-      return
-    }
-
-    list = normTabs
-    byId = normTabsMap
-    Sidebar.recalcTabsPanels(true)
-    updateTabsTree()
-    Sidebar.recalcVisibleTabs()
-    if (Sidebar.reMountSidebar) Sidebar.reMountSidebar()
-
-    tabsReinitializing = false
-    normTabsMoving = false
-
-    if (Settings.state.colorizeTabs) Tabs.colorizeTabs()
-    if (Settings.state.colorizeTabsBranches) Tabs.colorizeBranches()
-
-    Tabs.list.forEach(t => saveTabData(t.id))
-    cacheTabsData()
+    // Close popup
+    Popups.closeProcessingTabsPopup()
   }, delay)
 }
 

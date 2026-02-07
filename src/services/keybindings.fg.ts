@@ -412,7 +412,6 @@ function onKeySwitchToTab(targetIndex?: number, conf?: SwitchToTab): void {
   if (!targetTab) return
 
   if (targetTab.id !== Tabs.activeId) browser.tabs.update(targetTab.id, { active: true })
-  else if (Settings.state.tabsSecondClickActPrev) Tabs.tabFlip()
 }
 
 function onKeyMoveTabsToPanel(targetIndex: number): void {

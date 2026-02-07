@@ -241,6 +241,8 @@ async function onTabCreated(nativeTab: NativeTab, attached?: boolean) {
   if (Tabs.ignoreTabsEvents) return
   if (Tabs.tabsReinitializing) return Tabs.reinitTabs()
 
+  // Logs.info('Tabs.onTabCreated:', nativeTab.id, nativeTab.index, nativeTab.url, nativeTab.title)
+
   Menu.close()
   Selection.resetSelection()
 
@@ -748,6 +750,8 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
   if (!tab) {
     return Logs.warn(`Tabs.onTabUpdated: Cannot find local tab: ${tabId}`, Object.keys(change))
   }
+
+  // Logs.info('Tabs.onTabUpdated:', tabId, Object.keys(change))
 
   // Discarded
   if (change.discarded !== undefined) {

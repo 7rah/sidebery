@@ -239,6 +239,10 @@ async function onTabCreated(nativeTab: NativeTab, attached?: boolean) {
   }
   if (Tabs.ignoreTabsEvents) return
   if (Tabs.tabsReinitializing) return Tabs.reinitTabs()
+  if (Tabs.byId[nativeTab.id]) {
+    Logs.warn('Tabs.onTabCreated: Already added', nativeTab.id)
+    return Tabs.reinitTabs()
+  }
 
   // Logs.info('Tabs.onTabCreated:', nativeTab.id, nativeTab.index, nativeTab.url, nativeTab.title)
 

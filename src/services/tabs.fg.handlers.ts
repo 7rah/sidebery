@@ -23,6 +23,7 @@ const EXT_HOST = browser.runtime.getURL('').slice(16)
 const URL_HOST_PATH_RE = /^([a-z0-9-]{1,63}\.)+\w+(:\d+)?\/[A-Za-z0-9-._~:/?#[\]%@!$&'()*+,;=]*$/
 const NEWTAB_URL = browser.extension.inIncognitoContext ? 'about:privatebrowsing' : 'about:newtab'
 
+export let listenersAreSet = false
 export function setupTabsListeners(): void {
   if (!Sidebar.hasTabs) return
 
@@ -39,6 +40,7 @@ export function setupTabsListeners(): void {
   browser.tabs.onDetached.addListener(onTabDetached)
   browser.tabs.onAttached.addListener(onTabAttached)
   browser.tabs.onActivated.addListener(onTabActivated)
+  listenersAreSet = true
 }
 
 export function resetTabsListeners(): void {
@@ -49,6 +51,7 @@ export function resetTabsListeners(): void {
   browser.tabs.onDetached.removeListener(onTabDetached)
   browser.tabs.onAttached.removeListener(onTabAttached)
   browser.tabs.onActivated.removeListener(onTabActivated)
+  listenersAreSet = false
 }
 
 let waitForOtherReopenedTabsTimeout: number | undefined

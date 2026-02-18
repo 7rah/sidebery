@@ -215,8 +215,6 @@ export async function load(src?: LoadSrc): Promise<void> {
 
   if (Tabs.shadowMode) Tabs.unloadShadowed()
 
-  Tabs.setupTabsListeners()
-
   await Utils.retry({
     action: async (again, isLastTry) => {
       try {
@@ -355,6 +353,8 @@ async function restoreTabsState(src?: LoadSrc, ignoreLockedTabs?: boolean): Prom
 
   // Clear deferredEventHandling
   deferredEventHandling = []
+
+  if (!Tabs.listenersAreSet) Tabs.setupTabsListeners()
 
   const sessionOnly = src === LoadSrc.SessionOnly
   const results = await Promise.allSettled([

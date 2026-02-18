@@ -76,19 +76,14 @@ async function main(): Promise<void> {
     updWindowPreface: Windows.updWindowPreface,
   })
 
-  await Promise.all([
-    Windows.load(),
-    Settings.load(),
-    Containers.load(),
-    Permissions.load(),
-    Info.loadVersionInfo(),
-  ])
+  await Promise.all([Windows.load(), Settings.load(), Permissions.load(), Info.loadVersionInfo()])
 
   IPC.setWinId(Windows.id)
   Logs.setWinId(Windows.id)
 
   IPC.setupGlobalMessageListener()
   IPC.setupConnectionListener()
+  IPC.connectTo(E.InstanceType.bg)
 
   // Reactivate data for vue
   Containers.reactivate(shallowReactive)
@@ -115,24 +110,22 @@ async function main(): Promise<void> {
   Settings.setupSettingsChangeListener()
   Permissions.setupListeners()
   Windows.setupWindowsListeners()
-  Containers.setupListeners()
 
   Styles.setupListeners()
   Styles.loadCustomSidebarCSS()
   Styles.load()
 
-  IPC.connectTo(E.InstanceType.bg)
-
+  await Containers.load()
   await Sidebar.loadPanels()
   Sidebar.setupListeners()
+
+  if (Sidebar.hasTabs) await Tabs.load()
+  else await Tabs.loadInShadowMode()
 
   const actPanel = Sidebar.panelsById[Sidebar.activePanelId]
   const initBookmarks = !Settings.state.loadBookmarksOnDemand || Utils.isBookmarksPanel(actPanel)
   const initHistory = !Settings.state.loadHistoryOnDemand || Utils.isHistoryPanel(actPanel)
   const initSync = Utils.isSyncPanel(actPanel)
-
-  if (Sidebar.hasTabs) await Tabs.load()
-  else await Tabs.loadInShadowMode()
   if (Sidebar.hasBookmarks && initBookmarks) Bookmarks.load()
   if (Sidebar.hasHistory && initHistory) History.load()
   if (Sidebar.hasSync && initSync) Sync.load()

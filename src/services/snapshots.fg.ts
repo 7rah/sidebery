@@ -59,18 +59,7 @@ export async function adaptContainer(
   }
 
   // Create new container
-  const newContainer = await Containers.create(
-    snapContainer.name,
-    snapContainer.color,
-    snapContainer.icon
-  )
-  newContainer.proxified = snapContainer.proxified
-  newContainer.proxy = Utils.clone(snapContainer.proxy)
-  newContainer.reopenRulesActive = snapContainer.reopenRulesActive
-  newContainer.reopenRules = Utils.clone(snapContainer.reopenRules)
-  newContainer.userAgentActive = snapContainer.userAgentActive
-  newContainer.userAgent = snapContainer.userAgent
-  await Containers.saveContainers()
+  const newContainer = await Containers.create(Utils.clone(snapContainer))
 
   return newContainer.id
 }

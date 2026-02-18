@@ -57,6 +57,12 @@ void (async function main() {
     removeCachedIdFromGoogleSync: Sync.Google.removeCachedId,
     getDataFromSync: Sync.getData,
     loadSync: Sync.load,
+
+    getContainers: Containers.getContainers,
+    setContainers: Containers.setContainers,
+    createContainer: Containers.createAndSave,
+    removeContainer: Containers.removeAndSave,
+    importContainers: Containers.importContainers,
   })
 
   // Init first-need stuff
@@ -66,7 +72,6 @@ void (async function main() {
 
   Info.saveVersion()
   Windows.setupWindowsListeners()
-  Containers.setupListeners()
   Settings.setupSettingsChangeListener()
 
   await Sidebar.load()

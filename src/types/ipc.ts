@@ -12,6 +12,7 @@ import type * as SyncBg from 'src/services/sync.bg'
 import type * as TabsFg from 'src/services/tabs.fg'
 import type * as SidebarBg from 'src/services/sidebar.bg'
 import type * as SidebarFg from 'src/services/sidebar.fg'
+import type * as ContainersBg from 'src/services/containers.bg'
 import type * as E from 'src/enums'
 
 export interface Message<T extends E.InstanceType, A extends ActionsKeys<T>> {
@@ -63,6 +64,12 @@ export type BgActions = {
   removeCachedIdFromGoogleSync: typeof SyncBg.Google.removeCachedId
   getDataFromSync: typeof SyncBg.getData
   loadSync: typeof SyncBg.load
+
+  getContainers: typeof ContainersBg.getContainers
+  setContainers: typeof ContainersBg.setContainers
+  createContainer: typeof ContainersBg.createAndSave
+  removeContainer: typeof ContainersBg.removeAndSave
+  importContainers: typeof ContainersBg.importContainers
 }
 
 export type SettingsActions = {

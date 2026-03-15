@@ -2,6 +2,7 @@ import { createApp, reactive, shallowReactive } from 'vue'
 import * as E from 'src/enums'
 import * as Utils from 'src/utils'
 import * as IPC from 'src/services/ipc'
+import * as IPPC from 'src/services/ippc.addon'
 import * as Logs from 'src/services/logs'
 import * as Popups from 'src/services/popups.fg'
 import * as Favicons from 'src/services/favicons.fg'
@@ -30,6 +31,7 @@ import SidebarRoot from './sidebar.vue'
 async function main(): Promise<void> {
   Info.setInstanceType(E.InstanceType.sidebar)
   IPC.setInstanceType(E.InstanceType.sidebar)
+  IPPC.setInstanceType(E.InstanceType.sidebar)
   Logs.setInstanceType(E.InstanceType.sidebar)
 
   const ts = performance.now()

@@ -533,3 +533,45 @@ footer
     fill: #646464
     cursor: default
     opacity: .24
+
+.loading-dots
+  position: absolute
+  display: flex
+  width: 100%
+  height: 100%
+  justify-content: center
+  align-items: center
+  opacity: 0
+  animation: loading-dots-init .2s ease-in forwards
+  .loading-dots-a, .loading-dots-b, .loading-dots-c
+    position: relative
+    width: 5px
+    height: 5px
+    flex-shrink: 0
+    background-color: var(--frame-fg, #787878)
+    border-radius: 50%
+    margin: 3px
+  .loading-dots-a
+    animation: loading-dots 1s infinite
+  .loading-dots-b
+    animation: loading-dots 1s .15s infinite
+  .loading-dots-c
+    animation: loading-dots 1s .3s infinite
+
+#root[data-animations="none"] .loading-dots
+  .loading-dots-a, .loading-dots-b, .loading-dots-c
+    animation: none
+
+@keyframes loading-dots-init
+  0%
+    opacity: 0
+  100%
+    opacity: 1
+
+@keyframes loading-dots
+  0%
+    opacity: 0
+  50%
+    opacity: 1
+  100%
+    opacity: 0

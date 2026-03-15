@@ -280,10 +280,10 @@ export function updateInternalUrls(snapshot: T.NormalizedSnapshot): void {
 
 export function updateInternalUrl(url: string): string {
   if (Utils.isGroupUrl(url)) {
-    const newUrl = D.GROUP_URL + url.slice(D.GROUP_URL_LEN)
+    const newUrl = D.GROUP_URL + url.slice(D.GROUP_URL.length)
     url = newUrl
   } else if (Utils.isUrlUrl(url)) {
-    const newUrl = D.URL_URL + url.slice(D.URL_URL_LEN)
+    const newUrl = D.URL_URL + url.slice(D.URL_URL.length)
     url = newUrl
   }
   return url

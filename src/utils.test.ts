@@ -61,16 +61,16 @@ describe('Utils.createPlaceholderUrl(), Utils.parsePlaceholderUrl()', () => {
   })
 })
 
-describe('Utils.denormalizeUrl()', () => {
+describe('Utils.restoreUrl()', () => {
   test('group page url', () => {
     const sUrl =
       'moz-extension://c02055a8-a7a3-4076-bb5c-8d913619f579/sidebery/group.html#New%20Tab'
-    const rUrl = Utils.denormalizeUrl(sUrl)
+    const rUrl = Utils.restoreUrl(sUrl)
     expect(rUrl).toBe(sUrl)
   })
   test('group page url with empty title', () => {
     const sUrl = 'moz-extension://c02055a8-a7a3-4076-bb5c-8d913619f579/sidebery/group.html#'
-    const rUrl = Utils.denormalizeUrl(sUrl)
+    const rUrl = Utils.restoreUrl(sUrl)
     expect(rUrl).toBe(sUrl)
   })
   test('group page url (+chId)', () => {
@@ -78,27 +78,27 @@ describe('Utils.denormalizeUrl()', () => {
       'moz-extension://c02055a8-a7a3-4076-bb5c-8d913619f579/sidebery/group.html#New%20Tab~!PpBA2ocRL1ry!ch!~'
     const eUrl =
       'moz-extension://c02055a8-a7a3-4076-bb5c-8d913619f579/sidebery/group.html#New%20Tab'
-    const rUrl = Utils.denormalizeUrl(sUrl)
+    const rUrl = Utils.restoreUrl(sUrl)
     expect(rUrl).toBe(eUrl)
   })
   test('group page url (+chId) with empty title', () => {
     const sUrl =
       'moz-extension://c02055a8-a7a3-4076-bb5c-8d913619f579/sidebery/group.html#~!PpBA2ocRL1ry!ch!~'
     const eUrl = 'moz-extension://c02055a8-a7a3-4076-bb5c-8d913619f579/sidebery/group.html#'
-    const rUrl = Utils.denormalizeUrl(sUrl)
+    const rUrl = Utils.restoreUrl(sUrl)
     expect(rUrl).toBe(eUrl)
   })
   test('group page url (+hash msg)', () => {
     const sUrl =
       'moz-extension://c02055a8-a7a3-4076-bb5c-8d913619f579/sidebery/group.html#123~!+.0.syPdgQdGolHy!p!b!~'
     const eUrl = 'moz-extension://c02055a8-a7a3-4076-bb5c-8d913619f579/sidebery/group.html#123'
-    const rUrl = Utils.denormalizeUrl(sUrl)
+    const rUrl = Utils.restoreUrl(sUrl)
     expect(rUrl).toBe(eUrl)
   })
   test('placeholder page url (+chId)', () => {
     const origUrl = 'file:///abc/cba/123.json'
     const sUrl = Utils.createPlaceholderUrl({ url: origUrl }) + '~!PpBA2ocRL1ry!ch!~'
-    const rUrl = Utils.denormalizeUrl(sUrl)
+    const rUrl = Utils.restoreUrl(sUrl)
     expect(rUrl).toBe(origUrl)
   })
 })

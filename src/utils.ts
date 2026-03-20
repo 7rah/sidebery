@@ -659,7 +659,7 @@ export function clone<T>(value: T): T {
 /**
  * Prepare url to be opened by sidebery
  */
-export function normalizeUrl(url?: string, title?: string): string | undefined {
+export function sanitizeUrl(url?: string, title?: string): string | undefined {
   if (!url) return url
   if (url === 'about:newtab') return undefined
   if (url === 'about:blank') return undefined
@@ -693,7 +693,7 @@ export function normalizeUrl(url?: string, title?: string): string | undefined {
 /**
  * Convert url from Sidebery-safe/specific to its original form
  */
-export function denormalizeUrl(url?: string): string | undefined {
+export function restoreUrl(url?: string): string | undefined {
   if (!url) return url
   // Parse placeholder URL and return original url
   else if (isUrlUrl(url)) {
@@ -1415,7 +1415,7 @@ export function parseTextForItems(srcText: string): T.ItemInfo[] {
       inlineLinks.push({
         id: lineData.id,
         parentId: lineData.parentId,
-        url: normalizeUrl(url),
+        url: sanitizeUrl(url),
         title: label,
       })
     }

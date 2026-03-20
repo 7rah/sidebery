@@ -149,7 +149,7 @@ function openCachedWindow(cache: T.TabCache[]) {
   for (const cachedTab of cache) {
     items.push({
       id: cachedTab.id,
-      url: Utils.denormalizeUrl(cachedTab.url),
+      url: Utils.restoreUrl(cachedTab.url),
       title: cachedTab.customTitle ?? cachedTab.url.replace(/^https?:\/\//, ''),
       parentId: cachedTab.parentId ?? D.NOID,
       panelId: cachedTab.panelId ?? D.NOID,
@@ -809,7 +809,7 @@ export async function reopenTab(tab: T.BgTab, url: string, cookieStoreId?: strin
 
   await browser.tabs.create({
     windowId: tab.windowId,
-    url: Utils.normalizeUrl(url),
+    url: Utils.sanitizeUrl(url),
     cookieStoreId,
     active: tab.active,
     index,

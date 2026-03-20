@@ -2626,7 +2626,7 @@ export async function copy(ids: ID[], template: T.CopyTemplate) {
     if (template.hasB) result = result.replaceAll('%B', bullet)
     if (template.hasCT) result = result.replaceAll('%CT', tab.customTitle || tab.title)
     if (template.hasT) result = result.replaceAll('%T', tab.title)
-    if (template.hasU) result = result.replaceAll('%U', Utils.denormalizeUrl(tab.url) ?? tab.url)
+    if (template.hasU) result = result.replaceAll('%U', Utils.restoreUrl(tab.url) ?? tab.url)
     lines.push(indent.repeat(indentLvl) + result)
   }
 

@@ -316,7 +316,7 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo): void {
   if (change.url) {
     const isInternal = change.url.startsWith(D.ADDON_HOST)
     const isGroup = isInternal && Utils.isGroupUrl(change.url)
-    const isPlaceholder = isInternal && Utils.isUrlUrl(change.url)
+    const isPlaceholder = isInternal && Utils.isPlaceholderUrl(change.url)
     if (isGroup || isPlaceholder) {
       // Broadcast channel init
       if (
@@ -619,7 +619,7 @@ export async function initInternalPageScripts(tabs: T.BgTab[]) {
 
     if (tab.internal === undefined) tab.internal = tab.url.startsWith(D.ADDON_HOST)
     const isGroup = Utils.isGroupUrl(tab.url)
-    const isPlaceholder = Utils.isUrlUrl(tab.url)
+    const isPlaceholder = Utils.isPlaceholderUrl(tab.url)
 
     // Wrong addon ID - update url
     if (!tab.internal && isGroup) {

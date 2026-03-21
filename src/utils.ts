@@ -521,13 +521,10 @@ export async function parseDragEvent(
   })
 }
 
-/**
- * Check if string is group url
- */
 export function isGroupUrl(url: string): boolean {
   return url.startsWith('m') && url.startsWith('/sidebery/group.html', 52)
 }
-export function isUrlUrl(url: string): boolean {
+export function isPlaceholderUrl(url: string): boolean {
   return url.startsWith('m') && url.startsWith('/sidebery/url.html', 52)
 }
 
@@ -543,7 +540,7 @@ export function createGroupUrl(name?: string, pinUrl?: string, pinCtr?: string):
 }
 
 export function createPlaceholderUrl(info: T.PlaceholderInfo): string {
-  if (isUrlUrl(info.url)) info = parsePlaceholderUrl(info.url)
+  if (isPlaceholderUrl(info.url)) info = parsePlaceholderUrl(info.url)
   if (info.title === undefined && info.url.startsWith('file:')) {
     const i = info.url.lastIndexOf('/')
     if (i !== -1) {
@@ -696,7 +693,7 @@ export function sanitizeUrl(url?: string, title?: string): string | undefined {
 export function restoreUrl(url?: string): string | undefined {
   if (!url) return url
   // Parse placeholder URL and return original url
-  else if (isUrlUrl(url)) {
+  else if (isPlaceholderUrl(url)) {
     try {
       return parsePlaceholderUrl(url).url
     } catch {
@@ -1397,7 +1394,7 @@ export function parseTextForItems(srcText: string): T.ItemInfo[] {
       if (isGroupUrl(url)) {
         url = updateGroupUrlBase(url)
         label = getGroupName(url) ?? label
-      } else if (isUrlUrl(url)) {
+      } else if (isPlaceholderUrl(url)) {
         url = updatePlaceholderUrlBase(url)
       }
 

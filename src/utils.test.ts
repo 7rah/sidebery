@@ -132,11 +132,11 @@ file:///some/path/to/File%20Name.json
 <a href="about:config">one two</a>
 [hey](not link)`
     const items = Utils.parseTextForItems(input)
-    expect(Utils.isUrlUrl(items[0].url ?? '')).toBe(true)
+    expect(Utils.isPlaceholderUrl(items[0].url ?? '')).toBe(true)
     expect(items[0].title).toBe('File Name.json')
-    expect(Utils.isUrlUrl(items[1].url ?? '')).toBe(true)
+    expect(Utils.isPlaceholderUrl(items[1].url ?? '')).toBe(true)
     expect(items[1].title).toBe('1 2 3')
-    expect(Utils.isUrlUrl(items[2].url ?? '')).toBe(true)
+    expect(Utils.isPlaceholderUrl(items[2].url ?? '')).toBe(true)
     expect(items[2].title).toBe('one two')
     expect(items[3].url).toBe(undefined)
     expect(items[3].title).toBe('[hey](not link)')

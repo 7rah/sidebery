@@ -552,7 +552,7 @@ export function createPlaceholderUrl(info: T.PlaceholderInfo): string {
     }
   }
 
-  let url = D.URL_URL
+  let url = D.PLACEHOLDER_URL
   const infoJSON = JSON.stringify(info)
   const bytes = new TextEncoder().encode(infoJSON)
   let binString = ''
@@ -594,7 +594,7 @@ export function updateGroupUrlBase(url: string): string {
 
 export function updatePlaceholderUrlBase(url: string): string {
   const index = url.indexOf('url.html') + 8
-  const newUrl = D.URL_URL + url.slice(index)
+  const newUrl = D.PLACEHOLDER_URL + url.slice(index)
   return newUrl
 }
 

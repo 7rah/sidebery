@@ -283,7 +283,7 @@ export function updateInternalUrl(url: string): string {
     const newUrl = D.GROUP_URL + url.slice(D.GROUP_URL.length)
     url = newUrl
   } else if (Utils.isPlaceholderUrl(url)) {
-    const newUrl = D.URL_URL + url.slice(D.URL_URL.length)
+    const newUrl = D.PLACEHOLDER_URL + url.slice(D.PLACEHOLDER_URL.length)
     url = newUrl
   }
   return url

@@ -634,7 +634,7 @@ export async function initInternalPageScripts(tabs: T.BgTab[]) {
     if (!tab.internal && isPlaceholder) {
       const [_, urlUrlInfo] = tab.url.split('/url.html')
       if (!urlUrlInfo) continue
-      const urlUrl = D.URL_URL + urlUrlInfo
+      const urlUrl = D.PLACEHOLDER_URL + urlUrlInfo
       browser.tabs.update(tab.id, { url: urlUrl }).catch(err => {
         Logs.err('Tabs.initInternalPageScripts: Cannot update url url:', err)
       })

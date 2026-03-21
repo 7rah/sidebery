@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import * as Utils from './utils'
-import { URL_URL } from 'src/defaults'
+import { PLACEHOLDER_URL } from 'src/defaults'
 
 describe('Utils.createGroupUrl()', () => {
   test('just name', () => {
@@ -30,14 +30,15 @@ describe('Utils.createPlaceholderUrl(), Utils.parsePlaceholderUrl()', () => {
   test('decode legacy', () => {
     const srcUrl = 'file:///home/m/sidebery-snapshot-2026.02.08-13.46.05.json'
     const srcTitle = '123'
-    const placeholderUrl = URL_URL + '#' + encodeURIComponent(JSON.stringify([srcUrl, srcTitle]))
+    const placeholderUrl =
+      PLACEHOLDER_URL + '#' + encodeURIComponent(JSON.stringify([srcUrl, srcTitle]))
     const info = Utils.parsePlaceholderUrl(placeholderUrl)
     expect(info.url).toBe(srcUrl)
     expect(info.title).toBe(srcTitle)
   })
   test('decode legacy without title', () => {
     const srcUrl = 'file:///path/to/file.pdf'
-    const placeholderUrl = URL_URL + '#' + srcUrl
+    const placeholderUrl = PLACEHOLDER_URL + '#' + srcUrl
     const info = Utils.parsePlaceholderUrl(placeholderUrl)
     expect(info.url).toBe(srcUrl)
   })

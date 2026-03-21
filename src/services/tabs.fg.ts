@@ -161,43 +161,6 @@ export function reactivateTab(tab: T.Tab) {
   tab.reactive = reactFn(tab.reactive)
 }
 
-function createReactiveProps(tab: T.Tab): T.ReactiveTabProps {
-  const rProps: T.ReactiveTabProps = {
-    active: tab.active,
-    mediaAudible: tab.audible ?? false,
-    mediaMuted: tab.mutedInfo?.muted ?? false,
-    mediaPaused: tab.mediaPaused,
-    containerColor: Containers.reactive.byId[tab.cookieStoreId]?.color ?? null,
-    discarded: tab.discarded ?? false,
-    pinned: tab.pinned,
-    status: getStatus(tab),
-    isParent: tab.isParent,
-    folded: tab.folded,
-    tooltip: Settings.state.forceUpdTooltip ? getTooltip(tab) : '',
-    customTitleEdit: false,
-    customColor: tab.customColor ?? null,
-    url: tab.url,
-    lvl: tab.lvl,
-    branchLen: 0,
-    sel: tab.sel,
-    selLock: tab.selLock,
-    warn: tab.warn,
-    updated: tab.updated,
-    unread: !!tab.unread,
-    flash: false,
-    branchColor: null,
-    color: null,
-    isGroup: tab.isGroup,
-    preview: false,
-  }
-
-  if (reactFn) return reactFn(rProps)
-  else {
-    Logs.warn('Tabs.createReactiveProps: No reactFn')
-    return rProps
-  }
-}
-
 export function getStatus(tab: T.Tab): TabStatus {
   if (tab.status === 'loading') return TabStatus.Loading
   if (tab.status === 'pending') return TabStatus.Pending

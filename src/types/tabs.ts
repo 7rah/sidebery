@@ -43,9 +43,6 @@ export interface Tab extends NativeTab {
   reactive: ReactiveTabProps
   sessionData?: TabSessionData
 
-  // ch?: BroadcastChannel
-  // chId?: string
-
   titleEl?: HTMLElement
   favImgEl?: HTMLImageElement
   favSvgUseEl?: SVGElement
@@ -98,9 +95,6 @@ export interface BgTab extends NativeTab {
   proxified?: boolean
   preventAutoReopening?: boolean
   reloadOnActivation?: boolean
-
-  // ch?: BroadcastChannel
-  // chId?: string
 }
 
 export interface InlineTabData {

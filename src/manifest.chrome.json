@@ -7,8 +7,10 @@
   "description": "__MSG_ExtDesc__",
   "homepage_url": "https://github.com/mbnuqw/sidebery",
   "icons": {
-    "48": "./assets/logo.svg",
-    "96": "./assets/logo.svg"
+    "16": "./assets/chrome-icons/logo-16.png",
+    "32": "./assets/chrome-icons/logo-32.png",
+    "48": "./assets/chrome-icons/logo-48.png",
+    "128": "./assets/chrome-icons/logo-128.png"
   },
   "options_ui": {
     "open_in_tab": true,
@@ -423,7 +425,12 @@
     }
   },
   "action": {
-    "default_icon": "./assets/logo-native.svg",
+    "default_icon": {
+      "16": "./assets/chrome-icons/logo-16.png",
+      "32": "./assets/chrome-icons/logo-32.png",
+      "48": "./assets/chrome-icons/logo-48.png",
+      "128": "./assets/chrome-icons/logo-128.png"
+    },
     "default_title": "__MSG_ActionTitle__"
   },
   "background": {

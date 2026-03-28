@@ -16,6 +16,7 @@ const COPY = {
   './src/assets/logo-native-light.svg': `${ADDON_PATH}/assets/`,
   './src/assets/logo-native.svg': `${ADDON_PATH}/assets/`,
   './src/assets/logo.svg': `${ADDON_PATH}/assets/`,
+  './src/assets/chrome-icons': `${ADDON_PATH}/assets/chrome-icons/`,
   './src/assets/group-page-favicon.svg': `${ADDON_PATH}/assets/`,
   './src/assets/snapshot-native.svg': `${ADDON_PATH}/assets/`,
   './src/assets/proxy-native.svg': `${ADDON_PATH}/assets/`,

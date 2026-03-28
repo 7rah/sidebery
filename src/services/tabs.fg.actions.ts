@@ -531,6 +531,7 @@ function findCachedData(
   if (Windows.uniqWinId && Windows.uniqWinId !== NOID) {
     const winTabsCache = data.find(winTabs => winTabs[0]?.uniqWinId === Windows.uniqWinId)
     if (winTabsCache) data = [winTabsCache]
+    else if (!Platform.hasSessionValues) return
   }
 
   for (const winTabs of data) {

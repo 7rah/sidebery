@@ -38,7 +38,8 @@ export async function loadWindows(): Promise<void> {
 
 export async function loadWindowInfo(): Promise<void> {
   const currentWindow = await browser.windows.getCurrent({ populate: false })
-  let uniqWinId = await getWindowState<string>(browser.windows.WINDOW_ID_CURRENT, 'uniqWinId')
+  const currentWindowStorageId = currentWindow.id ?? browser.windows.WINDOW_ID_CURRENT
+  let uniqWinId = await getWindowState<string>(currentWindowStorageId, 'uniqWinId')
 
   // Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1660564
   if (Info.isSidebar && currentWindow.type !== 'normal') {
@@ -49,7 +50,7 @@ See https://bugzilla.mozilla.org/show_bug.cgi?id=1660564`
   // Generate unique window id
   if (!uniqWinId) {
     uniqWinId = currentWindow.id !== undefined ? String(currentWindow.id) : Utils.uid()
-    void setWindowState(browser.windows.WINDOW_ID_CURRENT, 'uniqWinId', uniqWinId)
+    void setWindowState(currentWindowStorageId, 'uniqWinId', uniqWinId)
   }
 
   Windows.incognito = currentWindow.incognito

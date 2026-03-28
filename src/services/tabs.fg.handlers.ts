@@ -17,7 +17,7 @@ import * as Preview from 'src/services/tabs.preview'
 import { Search } from './search'
 import { Containers } from './containers'
 import { Mouse } from './mouse'
-import { getTabState } from './platform.actions'
+import { getTabState, updateTab } from './platform.actions'
 import { Platform } from './platform'
 
 const EXT_HOST = browser.runtime.getURL('').slice(16)
@@ -577,7 +577,7 @@ function onTabCreated(nativeTab: NativeTab, attached?: boolean): void {
     if (tab.openerTabId === undefined || tab.openerTabId === -1) newOpenerTabId = tab.id
     else newOpenerTabId = tab.openerTabId
 
-    browser.tabs.update(tab.id, { openerTabId: newOpenerTabId }).catch(err => {
+    updateTab(tab.id, { openerTabId: newOpenerTabId }).catch(err => {
       Logs.err('Tabs.onTabCreated: Cannot update openerTabId', err)
     })
   }

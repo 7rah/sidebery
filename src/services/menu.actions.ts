@@ -138,6 +138,8 @@ export function setCtxMenu(conf?: MenuConfs) {
 }
 
 export function setupListeners(): void {
+  if (!browser.menus?.onHidden) return
+
   if (Info.isBg) {
     browser.menus.onHidden.addListener(onMenuHiddenBg)
   } else {
@@ -147,6 +149,8 @@ export function setupListeners(): void {
 }
 
 export function resetListeners(): void {
+  if (!browser.menus?.onHidden) return
+
   if (Info.isBg) {
     browser.menus.onHidden.removeListener(onMenuHiddenBg)
   } else {

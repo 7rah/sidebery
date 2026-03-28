@@ -125,6 +125,21 @@ export async function createTab(
   return browser.tabs.create(normalized)
 }
 
+export async function updateTab(
+  tabId: ID,
+  updateProperties: browser.tabs.UpdateProperties
+): Promise<browser.tabs.Tab> {
+  const normalized = { ...updateProperties }
+
+  if (normalized.openerTabId === tabId && Platform.browserName !== 'firefox') {
+    delete normalized.openerTabId
+  }
+
+  if (!Object.keys(normalized).length) return browser.tabs.get(tabId)
+
+  return browser.tabs.update(tabId, normalized)
+}
+
 export async function getWindowState<T>(windowId: ID, key: string): Promise<T | undefined> {
   if (Platform.hasSessionValues && typeof browser.sessions.getWindowValue === 'function') {
     return browser.sessions.getWindowValue(windowId, key)

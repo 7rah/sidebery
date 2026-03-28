@@ -540,7 +540,7 @@ function onDragStart(e: DragEvent): void {
 }
 
 function onMouseEnter(e: MouseEvent) {
-  if (Settings.state.tabWarmupOnHover) {
+  if (Settings.state.tabWarmupOnHover && typeof browser.tabs.warmup === 'function') {
     if (tab.active) {
       /// warmup successor tab, in case user decides to close active tab
       const successorTabId = tab.successorTabId

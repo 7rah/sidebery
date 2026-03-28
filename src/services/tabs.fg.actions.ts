@@ -22,6 +22,7 @@ import {
   moveTabsInSuccession,
   search,
   setTabState,
+  updateTab,
   updateNativeTabsVisibility as applyNativeTabsVisibility,
 } from './platform.actions'
 import { Platform } from './platform'
@@ -1938,7 +1939,7 @@ export function flattenTabs(tabIds: ID[]): void {
       if (updVisPanelId === NOID) updVisPanelId = tab.panelId
       else if (updVisPanelId && updVisPanelId !== tab.panelId) updVisPanelId = undefined
     }
-    if (tab.parentId === -1) browser.tabs.update(tab.id, { openerTabId: tab.id })
+    if (tab.parentId === -1) updateTab(tab.id, { openerTabId: tab.id })
   }
 
   updateTabsTree(tabsToFlatten[0].index - 1, tabsToFlatten[tabsToFlatten.length - 1].index + 1)
@@ -2043,13 +2044,13 @@ export function updateTabsTree(startIndex = 0, endIndex = -1): void {
 
     // Update openerTabId
     if (tab.parentId === -1 && tab.openerTabId !== undefined) {
-      browser.tabs.update(tab.id, { openerTabId: tab.id }).catch(err => {
+      updateTab(tab.id, { openerTabId: tab.id }).catch(err => {
         Logs.err('Tabs.updateTabsTree: Cannot reset openerTabId:', err)
       })
       tab.openerTabId = undefined
     }
     if (tab.parentId !== -1 && tab.openerTabId !== tab.parentId) {
-      browser.tabs.update(tab.id, { openerTabId: tab.parentId }).catch(err => {
+      updateTab(tab.id, { openerTabId: tab.parentId }).catch(err => {
         Logs.err('Tabs.updateTabsTree: Cannot set openerTabId:', err)
       })
       tab.openerTabId = tab.parentId

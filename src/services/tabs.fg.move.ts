@@ -12,7 +12,7 @@ import * as IPC from 'src/services/ipc'
 import * as Popups from 'src/services/popups'
 import * as Logs from 'src/services/logs'
 import * as Utils from 'src/utils'
-import { isPrimarySidebarOpen, moveTabsInSuccession } from 'src/services/platform.actions'
+import { isPrimarySidebarOpen, moveTabsInSuccession, updateTab } from 'src/services/platform.actions'
 
 export async function move(
   tabsInfo: DeepReadonly<ItemInfo[]>,
@@ -195,8 +195,8 @@ export async function move(
         if (ids.includes(child.id) || !ids.includes(child.parentId)) continue
         child.parentId = tab.parentId
         orphansToSave.push(child.id)
-        if (tab.parentId !== NOID) browser.tabs.update(child.id, { openerTabId: tab.parentId })
-        else browser.tabs.update(child.id, { openerTabId: child.id })
+        if (tab.parentId !== NOID) updateTab(child.id, { openerTabId: tab.parentId })
+        else updateTab(child.id, { openerTabId: child.id })
       }
     }
 
@@ -234,8 +234,8 @@ export async function move(
     if (tab.parentId !== dst.parentId && (!oldParent || !tabs.includes(oldParent))) {
       tab.parentId = dst.parentId
 
-      if (dstParent) browser.tabs.update(tab.id, { openerTabId: dst.parentId })
-      else browser.tabs.update(tab.id, { openerTabId: tab.id })
+      if (dstParent) updateTab(tab.id, { openerTabId: dst.parentId })
+      else updateTab(tab.id, { openerTabId: tab.id })
     }
   }
 
@@ -334,7 +334,7 @@ export async function move(
   // Pin tab
   if (toPin?.length) {
     for (const tab of toPin) {
-      await browser.tabs.update(tab.id, { pinned: true, openerTabId: tab.id }).catch(err => {
+      await updateTab(tab.id, { pinned: true, openerTabId: tab.id }).catch(err => {
         Logs.err('Tabs.move: Cannot pin tab', err)
       })
     }

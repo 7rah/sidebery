@@ -24,6 +24,7 @@
     "scripting",
     "search",
     "identity",
+    "sidePanel",
     "contextMenus"
   ],
   "optional_permissions": [

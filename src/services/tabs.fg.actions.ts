@@ -24,6 +24,7 @@ import {
   setTabState,
   updateNativeTabsVisibility as applyNativeTabsVisibility,
 } from './platform.actions'
+import { Platform } from './platform'
 
 const URL_WITHOUT_PROTOCOL_RE = /^(.+\.)\/?(.+\/)?\w+/
 
@@ -315,7 +316,7 @@ async function restoreTabsState(ignoreLockedTabs?: boolean): Promise<void> {
   }
 
   // From session data
-  else {
+  else if (Platform.hasSessionValues) {
     const querying = nativeTabs.map(t => getTabState<TabSessionData | undefined>(t.id, 'data'))
     try {
       tabsSessionData = (await Promise.all(querying)) ?? []
@@ -325,6 +326,11 @@ async function restoreTabsState(ignoreLockedTabs?: boolean): Promise<void> {
     }
 
     tabs = restoreTabsFromSessionData(nativeTabs, tabsSessionData, lastPanel)
+  }
+
+  // Fallback for Chrome and other platforms without per-tab session values
+  else {
+    tabs = restoreTabsFromSessionData(nativeTabs, [], lastPanel)
   }
 
   Tabs.list = tabs

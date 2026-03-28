@@ -18,6 +18,7 @@ import { Search } from './search'
 import { Containers } from './containers'
 import { Mouse } from './mouse'
 import { getTabState } from './platform.actions'
+import { Platform } from './platform'
 
 const EXT_HOST = browser.runtime.getURL('').slice(16)
 const URL_HOST_PATH_RE = /^([a-z0-9-]{1,63}\.)+\w+(:\d+)?\/[A-Za-z0-9-._~:/?#[\]%@!$&'()*+,;=]*$/
@@ -59,6 +60,16 @@ function waitForOtherReopenedTabs(tab: Tab): void {
   if (!waitForOtherReopenedTabsBuffer) waitForOtherReopenedTabsBuffer = []
   waitForOtherReopenedTabsBuffer.push(tab)
   waitForOtherReopenedTabsCheckLen++
+
+  if (!Platform.hasSessionValues) {
+    tab.reopened = false
+    waitForOtherReopenedTabsCheckLen--
+    if (waitForOtherReopenedTabsCheckLen <= 0) {
+      clearTimeout(waitForOtherReopenedTabsTimeout)
+      releaseReopenedTabsBuffer()
+    }
+    return
+  }
 
   // Get session data of probably reopened tab
   // to check if it was actually reopened
@@ -103,6 +114,8 @@ let prevSRCheckTimestamp = 0
 let suspectTabs = null as Tab[] | null
 let suspectTabsDataQuerying = null as Promise<TabSessionData | undefined>[] | null
 function checkIfSessionRestoring(newTab: Tab) {
+  if (!Platform.hasSessionValues) return
+
   const srCheckTimestamp = performance.now()
   let srCheckTimeDif = 0
   if (prevSRCheckTimestamp !== 0) srCheckTimeDif = srCheckTimestamp - prevSRCheckTimestamp

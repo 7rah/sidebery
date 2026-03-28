@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "node build/all.js --dev",
+    "dev.chrome": "node build/all.js --dev --chromium",
     "dev.styles": "node build/styles.js --dev",
     "dev.html": "node build/html.js --dev",
     "dev.copy": "node build/copy.js --dev",
@@ -16,6 +17,7 @@
     "build.copy": "node build/copy.js",
     "build.scripts": "node build/scripts.js",
     "build.ext": "web-ext build --source-dir ./addon -a dist/ -i __tests__",
+    "build.chrome": "node build/all.js --chromium",
     "build.run": "node build/webext.run.js",
     "build": "node build/all.js",
     "clear.npm": "rm -rf node_modules package-lock.json",

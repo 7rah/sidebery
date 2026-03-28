@@ -3,11 +3,11 @@ import fs from 'fs'
 import path from 'path'
 import { IS_DEV, ADDON_PATH, treeToList, watch, log, logOk, VUE_DIST, logErr } from './utils.js'
 
+const FOR_CHROMIUM = process.argv.includes('--chromium')
+const MANIFEST_SRC = FOR_CHROMIUM ? './src/manifest.chrome.json' : './src/manifest.json'
+
 const COPY = {
-  './src/manifest.json': {
-    path: `${ADDON_PATH}/`,
-    handler: handleManifest,
-  },
+  [MANIFEST_SRC]: `${ADDON_PATH}/manifest.json`,
   './src/_locales/dict.browser.json': {
     path: `${ADDON_PATH}/_locales/`,
     handler: handleLocales,
@@ -145,51 +145,6 @@ function main() {
   }
 }
 main()
-
-async function handleManifest(srcPath, dstPath) {
-  const forChromium = process.argv.includes('--chromium')
-
-  // Parse and patch manifest for chromium-based browser
-  if (forChromium) {
-    const srcData = await fs.promises.readFile(srcPath, 'utf-8')
-    const data = JSON.parse(srcData)
-
-    // Remove unsupported keys
-    delete data.page_action
-    delete data.browser_specific_settings
-
-    // Reset commands
-    for (const key of Object.keys(data.commands)) {
-      const cmd = data.commands[key]
-      if (key === '_execute_sidebar_action') {
-        cmd.suggested_key.windows = cmd.suggested_key.default
-      } else {
-        delete cmd.suggested_key
-      }
-    }
-
-    // Clean up permissions
-    const contextualIdentitiesIndex = data.permissions.indexOf('contextualIdentities')
-    if (contextualIdentitiesIndex !== -1) data.permissions.splice(contextualIdentitiesIndex, 1)
-    const menusIndex = data.permissions.indexOf('menus')
-    if (menusIndex !== -1) data.permissions.splice(menusIndex, 1)
-    const menusOverrideContextIndex = data.permissions.indexOf('menus.overrideContext')
-    if (menusOverrideContextIndex !== -1) data.permissions.splice(menusOverrideContextIndex, 1)
-    const tabHideIndex = data.permissions.indexOf('tabHide')
-    if (tabHideIndex !== -1) data.permissions.splice(tabHideIndex, 1)
-    const proxyIndex = data.optional_permissions.indexOf('proxy')
-    if (proxyIndex !== -1) data.optional_permissions.splice(proxyIndex, 1)
-    data.permissions.push('proxy')
-
-    const dstData = JSON.stringify(data)
-    await fs.promises.writeFile(dstPath, dstData)
-  }
-
-  // Copy
-  else {
-    return fs.promises.copyFile(srcPath, dstPath)
-  }
-}
 
 async function handleLocales(srcPath, dstPath) {
   const dirPath = path.dirname(dstPath)

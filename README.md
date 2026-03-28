@@ -74,6 +74,8 @@ Firefox doesn't allow addons to hide native tabs, so you have two options:
 2. Build all parts of Add-on: `npm run build`
 3. Create Add-on archive in `./dist`: `npm run build.ext`
 
+Chrome core packaging target: `npm run build.chrome`, then load unpacked from `addon/` in `chrome://extensions`.
+
 After creating the Add-on archive, you can then use the version in Firefox as follows:
 
 1. Open Firefox
@@ -91,6 +93,7 @@ After creating the Add-on archive, you can then use the version in Firefox as fo
 
 Install dependencies: `npm install`  
 Build and watch for changes: `npm run dev`  
+Build and watch Chrome packaging target: `npm run dev.chrome`  
 Run browser with Add-on: `npm run dev.run -- <firefox-executable>`
 
 ## Donate

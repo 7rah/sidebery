@@ -5,9 +5,14 @@ on:
   push:
     branches:
       - manifest-v3
+    tags:
+      - 'v*'
   pull_request:
     branches:
       - manifest-v3
+
+permissions:
+  contents: write
 
 jobs:
   build-chrome:
@@ -27,9 +32,21 @@ jobs:
       - name: Build Chrome addon
         run: npm run build.chrome
 
+      - name: Package Chrome addon
+        run: |
+          mkdir -p dist
+          cd addon
+          zip -r "../dist/sidebery-chrome-${GITHUB_REF_NAME}.zip" .
+
       - name: Upload Chrome addon artifact
         uses: actions/upload-artifact@v4
         with:
           name: sidebery-chrome-addon
-          path: addon
+          path: dist/sidebery-chrome-${{ github.ref_name }}.zip
           if-no-files-found: error
+
+      - name: Upload Chrome release asset
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/sidebery-chrome-${{ github.ref_name }}.zip

@@ -269,7 +269,7 @@ async function restoreTabsState(ignoreLockedTabs?: boolean): Promise<void> {
   Logs.info('Tabs.restoreTabsState')
 
   let isWindowTabsLocked
-  if (!ignoreLockedTabs) {
+  if (!ignoreLockedTabs && Platform.browserName === 'firefox') {
     try {
       isWindowTabsLocked = await IPC.bg('isWindowTabsLocked', Windows.id)
     } catch {

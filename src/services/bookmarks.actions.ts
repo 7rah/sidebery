@@ -31,6 +31,16 @@ export async function load(): Promise<void> {
   if (!Info.isBg) return loadInFg()
 }
 
+export function normalizeBookmarkNode(node: Bookmark): Bookmark {
+  if (!node.type) {
+    node.type = node.url ? 'bookmark' : 'folder'
+  }
+
+  if (node.type === 'separator') node.url = undefined
+
+  return node
+}
+
 let loading = false
 let onLoaded: (() => void)[] = []
 function finishLoading() {
@@ -62,12 +72,12 @@ async function loadInFg(): Promise<void> {
   Bookmarks.byUrl = {}
   const list: Bookmark[] = []
   const walker = (nodes: Bookmark[], count: number): number => {
-    for (const n of nodes) {
+    for (const rawNode of nodes) {
+      const n = Bookmarks.normalizeBookmarkNode(rawNode)
       Bookmarks.reactive.byId[n.id] = n
       n.sel = false
       n.isOpen = false
-      if (n.type === 'separator') n.url = undefined
-      else if (n.url) {
+      if (n.type === 'bookmark' && n.url) {
         count++
         list.push(n)
         const rBookmark = Bookmarks.reactive.byId[n.id]

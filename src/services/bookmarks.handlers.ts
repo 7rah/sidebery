@@ -29,9 +29,10 @@ export function resetBookmarksListeners(): void {
 function onBookmarkCreatedFg(id: ID, bookmark: Bookmark): void {
   if (!Bookmarks.reactive.tree.length) return
 
+  bookmark = Bookmarks.normalizeBookmarkNode(bookmark)
+
   bookmark.sel = false
   bookmark.isOpen = false
-  if (bookmark.type === 'separator') bookmark.url = undefined
   if (bookmark.type === 'folder') {
     bookmark.len = 0
     if (!bookmark.children) bookmark.children = []

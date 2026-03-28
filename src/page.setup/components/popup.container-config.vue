@@ -1,5 +1,5 @@
 <template lang="pug">
-.ConfigPopup(ref="rootEl" @wheel="onWheel")
+.ConfigPopup(v-if="Platform.hasContextualIdentities" ref="rootEl" @wheel="onWheel")
   TextInput.title(
     ref="nameInput"
     :value="props.conf.name"
@@ -96,6 +96,7 @@ import { CONTAINER_ICON_OPTS, COLOR_OPTS, PROXY_OPTS } from 'src/defaults'
 import { Container, TextInputComponent } from 'src/types'
 import { Containers } from 'src/services/containers'
 import { Permissions } from 'src/services/permissions'
+import { Platform } from 'src/services/platform'
 import TextField from '../../components/text-field.vue'
 import TextInput from '../../components/text-input.vue'
 import ToggleField from '../../components/toggle-field.vue'
@@ -173,6 +174,7 @@ function onNameInput(value: string): void {
 }
 
 function updateContainer(): void {
+  if (!Platform.hasContextualIdentities) return
   if (!props.conf.name || !props.conf.id) return
   browser.contextualIdentities.update(props.conf.id, {
     name: props.conf.name,
@@ -205,6 +207,8 @@ async function init(): Promise<void> {
 }
 
 async function checkWebDataPerm(): Promise<boolean> {
+  if (!Platform.hasContextualIdentities) return false
+
   if (!Permissions.reactive.webData) {
     if (props.conf.proxified) {
       props.conf.proxified = false
@@ -302,6 +306,7 @@ function onUserAgentInput(value: string): void {
 }
 
 function openRulesPopup() {
+  if (!Platform.hasContextualIdentities) return
   Popups.openTabReopenRulesPopup(props.conf.id)
 }
 

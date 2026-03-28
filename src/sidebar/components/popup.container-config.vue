@@ -1,6 +1,6 @@
 <template lang="pug">
 .ContainerConfigPopup.popup-container(@click="onCancel")
-  .popup(v-if="Popups.reactive.containerConfigPopup" @click.stop)
+  .popup(v-if="Platform.hasContextualIdentities && Popups.reactive.containerConfigPopup" @click.stop)
     h2 {{translate('popup.container.title')}}
     .field
       .field-label {{translate('popup.common.name_label')}}
@@ -45,6 +45,7 @@ import SelectInput from 'src/components/select-input.vue'
 import { SetupPage } from 'src/services/setup-page'
 import { TextInputComponent, Container } from 'src/types'
 import { Containers } from 'src/services/containers'
+import { Platform } from 'src/services/platform'
 import * as Popups from 'src/services/popups'
 
 const titleInput = ref<TextInputComponent | null>(null)
@@ -81,6 +82,7 @@ function openFullConfig(): void {
 }
 
 async function onSave(): Promise<void> {
+  if (!Platform.hasContextualIdentities) return
   if (!Popups.reactive.containerConfigPopup) return
   const popup = Popups.reactive.containerConfigPopup
 

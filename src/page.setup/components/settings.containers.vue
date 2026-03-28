@@ -1,5 +1,5 @@
 <template lang="pug">
-section(ref="el")
+section(v-if="Platform.hasContextualIdentities" ref="el")
   h2 {{translate('settings.containers_title')}}
   span.header-shadow
   ToggleField(
@@ -43,6 +43,7 @@ import { translate } from 'src/dict'
 import { Container } from 'src/types'
 import { Containers } from 'src/services/containers'
 import { SetupPage } from 'src/services/setup-page'
+import { Platform } from 'src/services/platform'
 import ContainerConfig from './popup.container-config.vue'
 import ToggleField from '../../components/toggle-field.vue'
 import * as Logs from 'src/services/logs'
@@ -53,25 +54,23 @@ import { Settings } from 'src/services/settings'
 
 const el = ref<HTMLElement | null>(null)
 
-onMounted(() => SetupPage.registerEl('settings_containers', el.value))
+onMounted(() => {
+  if (!Platform.hasContextualIdentities) return
+  SetupPage.registerEl('settings_containers', el.value)
+})
 
 /**
  * Create container
  */
 async function createContainer(): Promise<void> {
+  if (!Platform.hasContextualIdentities) return
+
   let containersCount = Object.keys(Containers.reactive.byId).length
-  const newFFContainer = await browser.contextualIdentities.create({
-    name: `New Container ${containersCount + 1}`,
-    color: 'blue',
-    icon: 'fingerprint',
-  })
-  const container = Utils.cloneObject(DEFAULT_CONTAINER)
-  container.cookieStoreId = newFFContainer.cookieStoreId
-  container.id = newFFContainer.cookieStoreId
-  container.name = newFFContainer.name
-  container.icon = newFFContainer.icon
-  container.color = newFFContainer.color
-  Containers.reactive.byId[newFFContainer.cookieStoreId] = container
+  const container = await Containers.create(
+    `New Container ${containersCount + 1}`,
+    'blue',
+    'fingerprint'
+  )
 
   SetupPage.reactive.selectedContainer = container
 }
@@ -80,6 +79,8 @@ async function createContainer(): Promise<void> {
  * Remove container
  */
 async function removeContainer(container: Container): Promise<void> {
+  if (!Platform.hasContextualIdentities) return
+
   let preMsg = translate('settings.contianer_remove_confirm_prefix')
   let postMsg = translate('settings.contianer_remove_confirm_postfix')
   if (window.confirm(preMsg + container.name + postMsg)) {

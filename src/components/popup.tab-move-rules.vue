@@ -31,6 +31,7 @@
       :or="'...'"
       :line="true")
     SelectField.-no-separator.-compact(
+      v-if="Platform.hasContextualIdentities"
       label="popup.tab_move_rules.rule_container_label"
       noneOpt="-"
       v-model:value="newRuleContainerId"
@@ -69,6 +70,7 @@ import TextField from './text-field.vue'
 import SelectField from './select-field.vue'
 import ToggleField from './toggle-field.vue'
 import { Info } from 'src/services/info'
+import { Platform } from 'src/services/platform'
 import { SidebarConfigRState, saveSidebarConfig } from 'src/services/sidebar-config'
 
 interface MoveRulePreview {
@@ -108,7 +110,7 @@ const editing = ref<ID | null>(null)
 
 const addBtnActive = computed<boolean>(() => {
   const urlIsValid = !!newRuleURL.value
-  const containerIsValid = newRuleContainerId.value !== 'none'
+  const containerIsValid = Platform.hasContextualIdentities && newRuleContainerId.value !== 'none'
   return urlIsValid || containerIsValid
 })
 
@@ -144,6 +146,11 @@ function createRulePreview(ruleConfig: TabToPanelMoveRuleConfig): MoveRulePrevie
     rule.containerIcon = '#' + container.icon
     rule.containerColor = container.color
   } else if (ruleConfig.containerId) {
+    const unsupportedContainer = getUnsupportedContainerConf(ruleConfig.containerId)
+    rule.containerId = ruleConfig.containerId
+    rule.containerName = unsupportedContainer.name
+    rule.containerIcon = '#' + unsupportedContainer.icon
+    rule.containerColor = unsupportedContainer.color
     rule.active = false
   }
 
@@ -160,6 +167,7 @@ function createRulePreview(ruleConfig: TabToPanelMoveRuleConfig): MoveRulePrevie
 
 function getContainerConf(containerId: string): ContainerConf | undefined {
   if (containerId === 'none') return
+  if (!Platform.hasContextualIdentities) return
   if (containerId === DEFAULT_CONTAINER_ID) {
     const defaultTitle = translate('popup.new_tab_shortcuts.new_shortcut_default_container')
     return {
@@ -180,8 +188,28 @@ function getContainerConf(containerId: string): ContainerConf | undefined {
   }
 }
 
+function getUnsupportedContainerConf(containerId: string): ContainerConf {
+  if (containerId === DEFAULT_CONTAINER_ID) {
+    const defaultTitle = translate('popup.new_tab_shortcuts.new_shortcut_default_container')
+    return {
+      id: DEFAULT_CONTAINER_ID,
+      name: defaultTitle,
+      icon: 'icon_ff',
+      color: 'inactive',
+    }
+  }
+
+  return {
+    id: containerId,
+    name: translate('popup.tab_move_rules.rule_container_label'),
+    icon: 'icon_ff',
+    color: 'inactive',
+  }
+}
+
 const availableContainersOpts = computed<ContainerOption[]>(() => {
   if (!Popups.reactive.tabMoveRulesPopup) return []
+  if (!Platform.hasContextualIdentities) return []
 
   const defaultTitle = translate('popup.new_tab_shortcuts.new_shortcut_default_container')
   const result: ContainerOption[] = [
@@ -221,7 +249,10 @@ function onAdd(): void {
   if (!Utils.isTabsPanel(panel)) return
 
   // Remove duplicate
-  const newCtrId = newRuleContainerId.value !== 'none' ? newRuleContainerId.value : undefined
+  const newCtrId =
+    Platform.hasContextualIdentities && newRuleContainerId.value !== 'none'
+      ? newRuleContainerId.value
+      : undefined
   const newURL = newRuleURL.value ? newRuleURL.value : undefined
   panels.find(p => {
     if (!Utils.isTabsPanel(p)) return false
@@ -239,7 +270,9 @@ function onAdd(): void {
     id: Utils.uid(),
     active: true,
   }
-  if (newRuleContainerId.value !== 'none') ruleConfig.containerId = newRuleContainerId.value
+  if (Platform.hasContextualIdentities && newRuleContainerId.value !== 'none') {
+    ruleConfig.containerId = newRuleContainerId.value
+  }
   if (newRuleURL.value) ruleConfig.url = newRuleURL.value
   if (name) ruleConfig.name = name
 
@@ -335,7 +368,7 @@ function editRule(rule: MoveRulePreview) {
   if (rule.url) newRuleURL.value = rule.url
   else newRuleURL.value = ''
 
-  if (rule.containerId && getContainerConf(rule.containerId)) {
+  if (Platform.hasContextualIdentities && rule.containerId && getContainerConf(rule.containerId)) {
     newRuleContainerId.value = rule.containerId
   } else {
     newRuleContainerId.value = 'none'
@@ -372,7 +405,10 @@ function onSave() {
   const name = newRuleName.value.trim()
 
   // Remove duplicate
-  const newCtrId = newRuleContainerId.value !== 'none' ? newRuleContainerId.value : undefined
+  const newCtrId =
+    Platform.hasContextualIdentities && newRuleContainerId.value !== 'none'
+      ? newRuleContainerId.value
+      : undefined
   const newURL = newRuleURL.value ? newRuleURL.value : undefined
   panels.find(p => {
     if (!Utils.isTabsPanel(p)) return false
@@ -390,8 +426,11 @@ function onSave() {
   const ruleConfig = panel.moveRules.find(r => r.id === rule.id)
   if (ruleConfig) {
     ruleConfig.active = true
-    if (newRuleContainerId.value !== 'none') ruleConfig.containerId = newRuleContainerId.value
-    else delete ruleConfig.containerId
+    if (Platform.hasContextualIdentities && newRuleContainerId.value !== 'none') {
+      ruleConfig.containerId = newRuleContainerId.value
+    } else {
+      delete ruleConfig.containerId
+    }
     if (newRuleURL.value) ruleConfig.url = newRuleURL.value
     else delete ruleConfig.url
     ruleConfig.topLvlOnly = newRuleTopLvl.value
@@ -411,7 +450,12 @@ function onSave() {
     rule.containerName = container.name
     rule.containerIcon = '#' + container.icon
     rule.containerColor = container.color
-  } else delete rule.containerId
+  } else {
+    delete rule.containerId
+    delete rule.containerName
+    delete rule.containerIcon
+    delete rule.containerColor
+  }
   if (newRuleURL.value) rule.url = newRuleURL.value
   else delete rule.url
   rule.topLvlOnly = newRuleTopLvl.value

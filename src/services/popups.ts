@@ -2,6 +2,7 @@ import { ConfirmDialog, Container, Dialog, DialogConfig, GroupConfig, PanelConfi
 import { TabToPanelMoveRuleConfig, PanelType, TabsPanelConfig, Tab } from 'src/types'
 import { GroupConfigResult, Sidebar } from './sidebar'
 import { Containers } from './containers'
+import { Platform } from './platform'
 import * as Utils from 'src/utils'
 import { BOOKMARKS_PANEL_CONFIG, DEFAULT_CONTAINER, NOID, TABS_PANEL_CONFIG } from 'src/defaults'
 
@@ -147,6 +148,8 @@ export function closePanelPopup(): void {
 }
 
 export function openContainerPopup(containerId: ID): Promise<ID | null> {
+  if (!Platform.hasContextualIdentities) return Promise.resolve(null)
+
   return new Promise(res => {
     let container = Containers.reactive.byId[containerId]
     if (!container) {
@@ -208,6 +211,8 @@ export function closeTabMoveRulesPopup(): void {
 }
 
 export function openTabReopenRulesPopup(containerId: string): void {
+  if (!Platform.hasContextualIdentities) return
+
   const container = Containers.reactive.byId[containerId]
   if (!container) return
 

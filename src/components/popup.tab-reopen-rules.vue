@@ -1,6 +1,6 @@
 <template lang="pug">
 .TabReopenRulesPopup.popup-container(@mousedown.stop.self="onCancel" @mouseup.stop)
-  .popup(v-if="Popups.reactive.tabReopenRulesPopup")
+  .popup(v-if="Platform.hasContextualIdentities && Popups.reactive.tabReopenRulesPopup")
     h2(v-if="rules.length") {{translate('popup.tab_reopen_rules.title')}}
     .rules(v-if="rules.length" :data-active="Popups.reactive.tabReopenRulesPopup.container.reopenRulesActive")
       .rule(
@@ -75,6 +75,7 @@ import * as Popups from 'src/services/popups'
 import TextField from './text-field.vue'
 import ToggleField from './toggle-field.vue'
 import { Permissions } from 'src/services/permissions'
+import { Platform } from 'src/services/platform'
 
 interface ReopenRulePreview {
   id: ID
@@ -131,6 +132,7 @@ function createRulePreview(ruleConfig: TabReopenRuleConfig): ReopenRulePreview {
 }
 
 async function onAdd() {
+  if (!Platform.hasContextualIdentities) return
   if (!Popups.reactive.tabReopenRulesPopup) return
   if (!addBtnActive.value) return
   if (!newRuleURL.value) return
@@ -288,6 +290,7 @@ function onSave() {
 }
 
 async function toggleRules() {
+  if (!Platform.hasContextualIdentities) return
   const container = Popups.reactive.tabReopenRulesPopup?.container
   if (!container) return
 

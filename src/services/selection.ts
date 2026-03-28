@@ -523,7 +523,6 @@ function updateHighlightedTabs(delay = 250): void {
   updateHighlightedTabsTimeout = setTimeout(() => {
     const conf: browser.tabs.HighlightInfo = {
       windowId: Windows.id,
-      populate: false,
       tabs: [],
     }
     const activeTab = Tabs.byId[Tabs.activeId]

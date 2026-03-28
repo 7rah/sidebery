@@ -1,4 +1,3 @@
-import * as Logs from 'src/services/logs'
 import { Platform } from './platform'
 
 const ACTION_MENU_OPEN_SETTINGS = 'open_settings'
@@ -13,7 +12,7 @@ export async function configureSidePanel(path: string): Promise<void> {
     await browser.sidePanel.setOptions({ enabled: true, path })
     await browser.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
   } catch (err) {
-    Logs.err('Platform.configureSidePanel: Cannot configure side panel:', err)
+    logError('Platform.configureSidePanel: Cannot configure side panel:', err)
   }
 }
 
@@ -29,7 +28,7 @@ export async function openPrimarySidebar(windowId?: ID): Promise<void> {
       await browser.sidebarAction.toggle()
     }
   } catch (err) {
-    Logs.err('Platform.openPrimarySidebar: Cannot open sidebar:', err)
+    logError('Platform.openPrimarySidebar: Cannot open sidebar:', err)
   }
 }
 
@@ -40,7 +39,7 @@ export async function ensureActionContextMenu(): Promise<void> {
   try {
     await menusApi.removeAll()
   } catch (err) {
-    Logs.err('Platform.ensureActionContextMenu: Cannot clear menus:', err)
+    logError('Platform.ensureActionContextMenu: Cannot clear menus:', err)
   }
 
   try {
@@ -50,7 +49,7 @@ export async function ensureActionContextMenu(): Promise<void> {
       contexts: ['action'],
     })
   } catch (err) {
-    Logs.err('Platform.ensureActionContextMenu: Cannot create menu:', err)
+    logError('Platform.ensureActionContextMenu: Cannot create menu:', err)
   }
 
   if (!actionMenuListenerInstalled) {
@@ -81,7 +80,7 @@ export async function search(query: string, tabId?: ID): Promise<void> {
       return
     }
   } catch (err) {
-    Logs.err('Platform.search: Native search failed:', err)
+    logError('Platform.search: Native search failed:', err)
   }
 
   const url = `https://www.google.com/search?q=${encodeURIComponent(query)}`
@@ -136,4 +135,8 @@ function onActionMenuClicked(info: browser.menus.OnClickData): void {
 
 function getStorageKey(scope: 'window' | 'tab', id: ID, key: string): string {
   return `${Platform.storagePrefix}.${scope}.${String(id)}.${key}`
+}
+
+function logError(...args: unknown[]): void {
+  console.error(...args)
 }

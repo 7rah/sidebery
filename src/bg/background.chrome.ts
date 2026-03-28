@@ -1,38 +1,26 @@
-import type { IPCNodeInfo } from 'src/types/ipc'
-import type { Stored } from 'src/types/storage'
-import type { Tab, TabCache } from 'src/types/tabs'
-import { InstanceType } from 'src/types/ipc'
-import * as IPC from 'src/services/ipc'
-import * as Logs from 'src/services/logs'
-import { Info } from 'src/services/info'
-import { Store } from 'src/services/storage'
-import { Windows } from 'src/services/windows'
 import { SettingsBg } from 'src/services/settings.bg'
 import { SidebarBg } from 'src/services/sidebar.bg'
 import { configureSidePanel, ensureActionContextMenu } from 'src/services/platform.actions'
-import { versionToInt } from 'src/services/info.actions'
 
 const SIDEBAR_PATH = 'sidebar/sidebar.html'
 const ts = performance.now()
-const cacheByWindow: Record<ID, TabCache[]> = {}
+const BG_INSTANCE_TYPE = 0
+const SIDEBAR_INSTANCE_TYPE = 2
+const BG_CONNECTION_CONFIRM_ID = -1
+const cacheByWindow: Record<ID, TabCacheLike[]> = {}
+const sidebarPorts = new Map<ID, browser.runtime.Port>()
 
-Info.setInstanceType(InstanceType.bg)
-IPC.setInstanceType(InstanceType.bg)
-Logs.setInstanceType(InstanceType.bg)
-
-Logs.info('Chrome bg init start')
-
-IPC.registerActions({
+const actions: Record<string, (...args: any[]) => any> = {
   cacheTabsData,
   getGroupPageInitData,
   tabsApiProxy,
   getSidebarTabs,
-  isWindowTabsLocked: Windows.isWindowTabsLocked,
-  saveInLocalStorage: Store.setFromRemoteFg,
-} as any)
+  isWindowTabsLocked,
+  saveInLocalStorage,
+}
 
-IPC.setupGlobalMessageListener()
-IPC.setupConnectionListener()
+browser.runtime.onConnect.addListener(onConnect)
+browser.runtime.onMessage.addListener(onMessage)
 
 browser.runtime.onInstalled.addListener(() => {
   void setupChromeUi()
@@ -48,15 +36,8 @@ browser.runtime.onUpdateAvailable.addListener(details => {
 
 void (async function main() {
   await setupChromeUi()
-  await Promise.all([
-    SettingsBg.loadSettings(),
-    SidebarBg.loadState(),
-    Info.loadVersionInfo(),
-    Info.loadPlatformInfo(),
-  ])
-
-  Info.saveVersion()
-  Logs.info(`Chrome bg init end: ${performance.now() - ts}ms`)
+  await Promise.all([SettingsBg.loadSettings(), SidebarBg.loadState()])
+  console.info(`Chrome bg init end: ${performance.now() - ts}ms`)
 })()
 
 async function setupChromeUi(): Promise<void> {
@@ -64,12 +45,12 @@ async function setupChromeUi(): Promise<void> {
   await ensureActionContextMenu()
 }
 
-function cacheTabsData(windowId: ID, tabs: TabCache[], delay = 300): void {
+function cacheTabsData(windowId: ID, tabs: TabCacheLike[], delay = 300): void {
   cacheByWindow[windowId] = tabs
 
   setTimeout(() => {
     const tabsDataCache = Object.values(cacheByWindow).filter(cache => cache.length)
-    void browser.storage.local.set<Stored>({ tabsDataCache })
+    void browser.storage.local.set({ tabsDataCache })
   }, delay)
 }
 
@@ -83,12 +64,12 @@ async function getGroupPageInitData(winId: ID, tabId: ID): Promise<Record<string
   }
 }
 
-async function getSidebarTabs(windowId: ID, tabIds?: ID[]): Promise<Tab[]> {
-  const tabs = (await browser.tabs.query({ windowId })) as Tab[]
+async function getSidebarTabs(windowId: ID, tabIds?: ID[]): Promise<browser.tabs.Tab[]> {
+  const tabs = await browser.tabs.query({ windowId })
   if (!tabIds?.length) return tabs
 
   const tabIdsSet = new Set(tabIds)
-  return tabs.filter(tab => tabIdsSet.has(tab.id))
+  return tabs.filter(tab => tab.id !== undefined && tabIdsSet.has(tab.id))
 }
 
 function tabsApiProxy(method: string, ...args: any[]): any {
@@ -99,6 +80,136 @@ function tabsApiProxy(method: string, ...args: any[]): any {
   return fn(...args)
 }
 
-function saveInLocalStorage(newValues: Stored, srcInfo: IPCNodeInfo): void {
-  Store.setFromRemoteFg(newValues, srcInfo)
+function isWindowTabsLocked(): boolean {
+  return false
+}
+
+async function saveInLocalStorage(
+  newValues: Record<string, unknown>,
+  srcInfo?: { type?: number; winId?: ID }
+): Promise<void> {
+  await browser.storage.local.set(newValues)
+  broadcastStorageChange(newValues, srcInfo)
+}
+
+function broadcastStorageChange(
+  newValues: Record<string, unknown>,
+  srcInfo?: { type?: number; winId?: ID }
+): void {
+  for (const [winId, port] of sidebarPorts) {
+    if (srcInfo?.type === SIDEBAR_INSTANCE_TYPE && srcInfo.winId === winId) continue
+    postMessageSafely(port, { action: 'storageChanged', args: [newValues] })
+  }
+}
+
+function onConnect(port: browser.runtime.Port): void {
+  const portNameData = parsePortName(port.name)
+  if (!portNameData) return
+  if (portNameData.dstType !== BG_INSTANCE_TYPE) return
+
+  if (portNameData.srcType === SIDEBAR_INSTANCE_TYPE && portNameData.srcWinId !== undefined) {
+    sidebarPorts.set(portNameData.srcWinId, port)
+  }
+
+  port.onMessage.addListener(msg => {
+    void onPortMessage(msg, port)
+  })
+  port.onDisconnect.addListener(() => {
+    if (portNameData.srcType === SIDEBAR_INSTANCE_TYPE && portNameData.srcWinId !== undefined) {
+      const activePort = sidebarPorts.get(portNameData.srcWinId)
+      if (activePort === port) sidebarPorts.delete(portNameData.srcWinId)
+    }
+  })
+
+  postMessageSafely(port, BG_CONNECTION_CONFIRM_ID)
+}
+
+function onMessage(msg: IPCMessage): Promise<any> | undefined {
+  if (msg.dstType !== undefined && msg.dstType !== BG_INSTANCE_TYPE) return
+  return runAction(msg)
+}
+
+async function onPortMessage(msg: IPCMessage | number, port: browser.runtime.Port): Promise<void> {
+  if (typeof msg === 'number') return
+  if (!msg.action) return
+
+  if (!msg.id) {
+    await runAction(msg)
+    return
+  }
+
+  let result: any
+  let error: string | undefined
+
+  try {
+    result = runAction(msg)
+  } catch (err) {
+    error = String(err)
+  }
+
+  if (result instanceof Promise) {
+    postMessageSafely(port, msg.id)
+    try {
+      result = await result
+    } catch (err) {
+      error = String(err)
+      result = undefined
+    }
+  }
+
+  postMessageSafely(port, { id: msg.id, result, error })
+}
+
+function runAction(msg: IPCMessage): Promise<any> | any {
+  if (!msg.action) return
+  const action = actions[msg.action]
+  if (!action) return
+  if (msg.arg !== undefined) return action(msg.arg)
+  if (msg.args) return action(...msg.args)
+  return action()
+}
+
+function parsePortName(name: string): PortNameData | undefined {
+  try {
+    return JSON.parse(name) as PortNameData
+  } catch {
+    return undefined
+  }
+}
+
+function postMessageSafely(port: browser.runtime.Port, msg: IPCMessage | number): void {
+  try {
+    port.postMessage(msg)
+  } catch (err) {
+    console.warn('Chrome bg: Cannot post message:', err)
+  }
+}
+
+function versionToInt(version: string): number {
+  return version
+    .split('.')
+    .map(part => Number.parseInt(part, 10) || 0)
+    .reduce((acc, part, index) => acc + part * 1000 ** (3 - index), 0)
+}
+
+interface PortNameData {
+  srcType: number
+  dstType: number
+  srcWinId?: ID
+  srcTabId?: ID
+}
+
+interface IPCMessage {
+  id?: number
+  dstType?: number
+  action?: string
+  arg?: any
+  args?: any[]
+  result?: any
+  error?: string
+}
+
+interface TabCacheLike {
+  id: ID
+  url: string
 }

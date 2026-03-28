@@ -1,4 +1,4 @@
-import { SettingsState } from '../types/settings'
+import type { SettingsState } from '../types/settings'
 
 export const DEFAULT_SETTINGS: SettingsState = {
   // General

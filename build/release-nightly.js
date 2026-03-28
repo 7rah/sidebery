@@ -10,7 +10,8 @@ const BRANCH = 'v5'
 const MAX_ASSETS_COUNT = 10
 const ADDON_ID = '{3c078156-979c-498b-8990-85f7987dd929}'
 const CONSIDERED_COMMIT_PREFIXES_RE = /^(fix|feat|perf)/
-const ASSET_RE = /sidebery-(\d\d?\.\d\d?\.\d\d?\.\d?\d?\d?)\.xpi/
+const FIREFOX_ASSET_RE = /sidebery-(\d\d?\.\d\d?\.\d\d?\.\d?\d?\d?)\.xpi/
+const CHROME_ASSET_RE = /sidebery-chrome-(\d\d?\.\d\d?\.\d\d?\.\d?\d?\d?)\.zip/
 
 const gitLogFlags = `--date-order --abbrev-commit --decorate --format=format:'%H::%s' ${BRANCH}`
 const updatesGitlogFlags = `--date-order --format=format:'%H' -n 1 ${BRANCH} -- ./updates.json`
@@ -44,17 +45,24 @@ async function main() {
   // Build and sign
   console.log('Building and signing...')
   execSync(`node ./build/addon.js --sign ${newVersion}`, { encoding: 'utf-8', stdio: 'inherit' })
+  console.log('Building chrome package...')
+  execSync(`node ./build/addon.js --chromium ${newVersion}`, {
+    encoding: 'utf-8',
+    stdio: 'inherit',
+  })
 
   // Get the last github release
   console.log('Getting the last github release...')
   const ghRelease = await getGHRelease(amoVersion)
 
   // Remove the third version of asset leaving the last two
-  await removeOldestAsset(ghRelease)
+  await removeOldestAsset(ghRelease, FIREFOX_ASSET_RE)
+  await removeOldestAsset(ghRelease, CHROME_ASSET_RE)
 
   // Upload the new version as an asset and get the direct link for that .xpi file
   const newVersionLink = await uploadNewVersion(ghRelease, newVersion)
   if (!newVersionLink) throw 'No link for new version'
+  await uploadChromeVersion(ghRelease, newVersion)
 
   // Update the 'updates.json' and 'README.md' files
   console.log('Updating "updates.json" and "README.md"...')
@@ -175,15 +183,15 @@ async function getGHRelease(amoVersion) {
   }
 }
 
-async function removeOldestAsset(ghRelease) {
-  const assets = ghRelease.assets
+async function removeOldestAsset(ghRelease, assetRe) {
+  const assets = ghRelease.assets.filter(asset => assetRe.test(asset.name))
   if (assets.length < MAX_ASSETS_COUNT) return
 
   let rmID
   let rmName
   let minN = 999
   for (const asset of assets) {
-    const result = ASSET_RE.exec(asset.name)
+    const result = assetRe.exec(asset.name)
     if (!result || !result[1]) continue
     const assetVer = result[1]
     const digits = assetVer.split('.').map(n => parseInt(n))
@@ -236,6 +244,31 @@ async function uploadNewVersion(ghRelease, newVersion) {
   }
 
   return newAsset.browser_download_url
+}
+
+async function uploadChromeVersion(ghRelease, newVersion) {
+  const fileName = `sidebery-chrome-${newVersion}.zip`
+  const filePath = `./dist/${fileName}`
+  const file = await fs.readFile(filePath)
+
+  const url = `https://uploads.github.com/repos/${OWNER}/${REPO}/releases/${ghRelease.id}/assets?name=${fileName}`
+  console.log(`Uploading "${fileName}"...`)
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/vnd.github+json',
+      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+      'X-GitHub-Api-Version': '2022-11-28',
+      'Content-Type': 'application/zip',
+    },
+    body: new Blob([file]),
+  })
+
+  try {
+    await response.json()
+  } catch {
+    throw 'uploadChromeVersion: Cannot parse response json'
+  }
 }
 
 async function updateFiles(updates, newVersion, newVersionLink) {

@@ -4,6 +4,7 @@ import fs from 'fs/promises'
 import { execSync } from 'child_process'
 
 const UPDATE_URL = 'https://raw.githubusercontent.com/mbnuqw/sidebery/v5/updates.json'
+const FOR_CHROMIUM = process.argv.includes('--chromium')
 
 async function main() {
   // Parse arguments
@@ -12,6 +13,8 @@ async function main() {
   const is4Digit = version.split('.').length === 4
   const preserveVersion = process.argv.some(arg => arg === '--preserve')
   const sign = process.argv.some(arg => arg === '--sign')
+  const manifestPath = FOR_CHROMIUM ? './src/manifest.chrome.json' : './src/manifest.json'
+  const outputPath = FOR_CHROMIUM ? `./dist/sidebery-chrome-${version}.zip` : `./dist/sidebery-${version}.zip`
   if (!versionRE.test(version)) {
     console.log('\nWrong target version (the last argument)')
     return
@@ -46,26 +49,29 @@ async function main() {
     return
   }
   try {
-    console.log(`Updating version${is4Digit ? ' and update_url' : ''} in manifest.json...`)
-    let manifestContent = await fs.readFile('./src/manifest.json', { encoding: 'utf-8' })
+    console.log(`Updating version${is4Digit && !FOR_CHROMIUM ? ' and update_url' : ''} in manifest.json...`)
+    let manifestContent = await fs.readFile(manifestPath, { encoding: 'utf-8' })
     const manifest = JSON.parse(manifestContent)
     manifest.version = version
-    if (is4Digit) manifest.browser_specific_settings.gecko.update_url = UPDATE_URL
+    if (is4Digit && !FOR_CHROMIUM) manifest.browser_specific_settings.gecko.update_url = UPDATE_URL
     manifestContent = JSON.stringify(manifest, undefined, '  ') + '\n'
-    await fs.writeFile('./src/manifest.json', manifestContent, { encoding: 'utf-8' })
+    await fs.writeFile(manifestPath, manifestContent, { encoding: 'utf-8' })
   } catch {
     console.log('\nCannot revert changes in manifest.json')
     return
   }
 
   // Delete folder './addon' and './dist/sidebery-X.zip'
-  console.log(`Removing ./addon and ./dist/sidebery-${version}.zip...`)
+  console.log(`Removing ./addon and ${outputPath}...`)
   await fs.rm('./addon', { force: true, recursive: true })
-  await fs.rm(`./dist/sidebery-${version}.zip`, { force: true })
+  await fs.rm(outputPath, { force: true })
 
   // Build ('build')
   console.log('Preparing code...')
-  execSync('node ./build/all.js', { encoding: 'utf-8', stdio: 'inherit' })
+  execSync(`node ./build/all.js${FOR_CHROMIUM ? ' --chromium' : ''}`, {
+    encoding: 'utf-8',
+    stdio: 'inherit',
+  })
 
   // Revert version in package.json, package-lock.json and manifest.json
   const revertVersion = !preserveVersion && prevVersion && version !== prevVersion
@@ -97,27 +103,34 @@ async function main() {
   if (revertVersion || is4Digit) {
     try {
       console.log('Reverting data in manifest.json...')
-      let manifestContent = await fs.readFile('./src/manifest.json', { encoding: 'utf-8' })
+      let manifestContent = await fs.readFile(manifestPath, { encoding: 'utf-8' })
       const manifest = JSON.parse(manifestContent)
       if (revertVersion) manifest.version = prevVersion
-      if (is4Digit) delete manifest.browser_specific_settings.gecko.update_url
+      if (is4Digit && !FOR_CHROMIUM) delete manifest.browser_specific_settings.gecko.update_url
       manifestContent = JSON.stringify(manifest, undefined, '  ') + '\n'
-      await fs.writeFile('./src/manifest.json', manifestContent, { encoding: 'utf-8' })
+      await fs.writeFile(manifestPath, manifestContent, { encoding: 'utf-8' })
     } catch {
       console.log('\nCannot revert changes in manifest.json')
       return
     }
   }
 
-  // Create './dist/sidebery-X.zip' ('build.ext')
+  // Create archive
   console.log('Creating addon archive...')
-  execSync('npx web-ext build --source-dir ./addon -a ./dist/ -i __tests__', {
-    encoding: 'utf-8',
-    stdio: 'inherit',
-  })
+  if (FOR_CHROMIUM) {
+    execSync(`cd ./addon && zip -qr ../dist/sidebery-chrome-${version}.zip .`, {
+      encoding: 'utf-8',
+      stdio: 'inherit',
+    })
+  } else {
+    execSync('npx web-ext build --source-dir ./addon -a ./dist/ -i __tests__', {
+      encoding: 'utf-8',
+      stdio: 'inherit',
+    })
+  }
 
   // Sign
-  if (is4Digit && sign) {
+  if (!FOR_CHROMIUM && is4Digit && sign) {
     console.log('Signing addon...')
 
     if (!process.env.WEB_EXT_API_KEY || !process.env.WEB_EXT_API_SECRET) {

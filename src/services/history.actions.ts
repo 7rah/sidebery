@@ -395,16 +395,16 @@ function onTitleChange(info: browser.history.TitleChangeDetails): void {
 
 export function setupListeners(): void {
   if (!browser.history) return
-  browser.history.onVisited.addListener(onVisit)
-  browser.history.onVisitRemoved.addListener(onRemoved)
-  browser.history.onTitleChanged.addListener(onTitleChange)
+  browser.history.onVisited?.addListener(onVisit)
+  browser.history.onVisitRemoved?.addListener(onRemoved)
+  browser.history.onTitleChanged?.addListener(onTitleChange)
 }
 
 export function resetListeners(): void {
   if (!browser.history) return
-  browser.history.onVisited.removeListener(onVisit)
-  browser.history.onVisitRemoved.removeListener(onRemoved)
-  browser.history.onTitleChanged.removeListener(onTitleChange)
+  browser.history.onVisited?.removeListener(onVisit)
+  browser.history.onVisitRemoved?.removeListener(onRemoved)
+  browser.history.onTitleChanged?.removeListener(onTitleChange)
 }
 
 const scrollConf: ScrollToOptions = { behavior: 'smooth', top: 0 }

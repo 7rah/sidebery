@@ -3,7 +3,7 @@
   section(ref="el")
     h2 {{translate('settings.kb_general')}}
     span.header-shadow
-    KeybindingField.-no-separator(:keybinding="Keybindings.reactive.byName._execute_sidebar_action")
+    KeybindingField.-no-separator(v-if="openSidebarCommand" :keybinding="openSidebarCommand")
     KeybindingField(:keybinding="Keybindings.reactive.byName.search")
     KeybindingField(:keybinding="Keybindings.reactive.byName.hide_act_panel")
     KeybindingField(:keybinding="Keybindings.reactive.byName.create_snapshot")
@@ -197,7 +197,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { translate } from 'src/dict'
 import { Keybindings } from 'src/services/keybindings'
 import { SetupPage } from 'src/services/setup-page'
@@ -207,6 +207,12 @@ import ToggleField from 'src/components/toggle-field.vue'
 import InfoField from 'src/components/info-field.vue'
 
 const el = ref<HTMLElement | null>(null)
+const openSidebarCommand = computed(() => {
+  return (
+    Keybindings.reactive.byName._execute_sidebar_action ??
+    Keybindings.reactive.byName._execute_action
+  )
+})
 
 onMounted(() => SetupPage.registerEl('settings_keybindings', el.value))
 </script>

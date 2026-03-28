@@ -4,6 +4,7 @@ import { Tabs } from 'src/services/tabs.fg'
 import { Bookmarks } from 'src/services/bookmarks'
 import { Settings } from 'src/services/settings'
 import { Windows } from 'src/services/windows'
+import { Platform } from 'src/services/platform'
 
 export async function loadInShadowMode(): Promise<void> {
   setupShadowListeners()
@@ -39,9 +40,13 @@ export function unloadShadowed(): void {
 export function setupShadowListeners(): void {
   browser.tabs.onCreated.addListener(onShadowTabCreated)
   browser.tabs.onRemoved.addListener(onShadowTabRemoved)
-  browser.tabs.onUpdated.addListener(onShadowTabUpdated, {
-    properties: ['pinned', 'title', 'status', 'favIconUrl', 'url'],
-  })
+  if (Platform.hasContextualIdentities) {
+    browser.tabs.onUpdated.addListener(onShadowTabUpdated, {
+      properties: ['pinned', 'title', 'status', 'favIconUrl', 'url'],
+    })
+  } else {
+    browser.tabs.onUpdated.addListener(onShadowTabUpdated)
+  }
   browser.tabs.onActivated.addListener(onShadowTabActivated)
   browser.tabs.onMoved.addListener(onShadowTabMoved)
   browser.tabs.onAttached.addListener(onShadowTabAttached)

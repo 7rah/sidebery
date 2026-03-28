@@ -28,13 +28,17 @@ export function setupTabsListeners(): void {
   if (!Sidebar.hasTabs) return
 
   browser.tabs.onCreated.addListener(onTabCreated)
-  browser.tabs.onUpdated.addListener(onTabUpdated, {
-    // prettier-ignore
-    properties: [
-      'audible', 'discarded', 'favIconUrl', 'hidden',
-      'mutedInfo', 'pinned', 'status', 'title', 'url',
-    ],
-  })
+  if (Platform.hasContextualIdentities) {
+    browser.tabs.onUpdated.addListener(onTabUpdated, {
+      // prettier-ignore
+      properties: [
+        'audible', 'discarded', 'favIconUrl', 'hidden',
+        'mutedInfo', 'pinned', 'status', 'title', 'url',
+      ],
+    })
+  } else {
+    browser.tabs.onUpdated.addListener(onTabUpdated)
+  }
   browser.tabs.onRemoved.addListener(onTabRemoved)
   browser.tabs.onMoved.addListener(onTabMoved)
   browser.tabs.onDetached.addListener(onTabDetached)

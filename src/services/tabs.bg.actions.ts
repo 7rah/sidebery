@@ -15,6 +15,7 @@ import * as Logs from './logs'
 import { ParsedTheme, Styles } from './styles'
 import { DetachedTabsInfo } from './tabs.fg.move'
 import { hidePageAction, showPageAction } from './platform.actions'
+import { Platform } from './platform'
 
 /**
  * Load tabs
@@ -694,9 +695,13 @@ export async function openTabs(items: ItemInfo[], dst: DstPlaceInfo) {
 export function setupTabsListeners(): void {
   browser.tabs.onCreated.addListener(onTabCreated)
   browser.tabs.onRemoved.addListener(onTabRemoved)
-  browser.tabs.onUpdated.addListener(onTabUpdated, {
-    properties: ['pinned', 'title', 'status', 'favIconUrl', 'url', 'hidden', 'discarded'],
-  })
+  if (Platform.hasContextualIdentities) {
+    browser.tabs.onUpdated.addListener(onTabUpdated, {
+      properties: ['pinned', 'title', 'status', 'favIconUrl', 'url', 'hidden', 'discarded'],
+    })
+  } else {
+    browser.tabs.onUpdated.addListener(onTabUpdated)
+  }
   browser.tabs.onActivated.addListener(onTabActivated)
   browser.tabs.onMoved.addListener(onTabMoved)
   browser.tabs.onAttached.addListener(onTabAttached)

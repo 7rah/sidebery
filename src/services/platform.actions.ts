@@ -117,12 +117,33 @@ export async function createTab(
   createProperties: browser.tabs.CreateProperties = {}
 ): Promise<browser.tabs.Tab> {
   const normalized = { ...createProperties }
+  const shouldDiscardAfterCreate =
+    normalized.discarded === true &&
+    Platform.browserName !== 'firefox' &&
+    normalized.active !== true &&
+    typeof browser.tabs.discard === 'function'
 
   if (!Platform.hasContextualIdentities && 'cookieStoreId' in normalized) {
     delete normalized.cookieStoreId
   }
 
-  return browser.tabs.create(normalized)
+  if (Platform.browserName !== 'firefox') {
+    if ('discarded' in normalized) delete normalized.discarded
+    if ('title' in normalized) delete normalized.title
+  }
+
+  const createdTab = await browser.tabs.create(normalized)
+
+  if (shouldDiscardAfterCreate) {
+    try {
+      await browser.tabs.discard(createdTab.id)
+      createdTab.discarded = true
+    } catch (err) {
+      logError('Platform.createTab: Cannot discard created tab:', err)
+    }
+  }
+
+  return createdTab
 }
 
 export async function updateTab(

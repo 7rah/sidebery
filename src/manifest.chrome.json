@@ -57,10 +57,6 @@
       "description": "__MSG_KbOpenNewTabInCurrPanel__"
     },
     "new_tab_in_group": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+Space",
-        "mac": "MacCtrl+Shift+Space"
-      },
       "description": "__MSG_KbOpenNewTabAfter__"
     },
     "new_tab_as_first_child": {
@@ -91,39 +87,21 @@
       "description": "__MSG_KbSelectAll__"
     },
     "up": {
-      "suggested_key": {
-        "default": "Alt+Up"
-      },
       "description": "__MSG_KbUp__"
     },
     "down": {
-      "suggested_key": {
-        "default": "Alt+Down"
-      },
       "description": "__MSG_KbDown__"
     },
     "up_shift": {
-      "suggested_key": {
-        "default": "Alt+Shift+Up"
-      },
       "description": "__MSG_KbUpShift__"
     },
     "down_shift": {
-      "suggested_key": {
-        "default": "Alt+Shift+Down"
-      },
       "description": "__MSG_KbDownShift__"
     },
     "activate": {
-      "suggested_key": {
-        "default": "Alt+Space"
-      },
       "description": "__MSG_KbActivate__"
     },
     "reset_selection": {
-      "suggested_key": {
-        "default": "Alt+R"
-      },
       "description": "__MSG_KbResetSelection__"
     },
     "lock_selection": {

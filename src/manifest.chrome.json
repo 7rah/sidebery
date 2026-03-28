@@ -438,8 +438,7 @@
     "_execute_action": {
       "suggested_key": {
         "default": "Ctrl+E",
-        "mac": "MacCtrl+E",
-        "windows": "F1"
+        "mac": "MacCtrl+E"
       },
       "description": "__MSG_KbOpenSidebarPanel__"
     }

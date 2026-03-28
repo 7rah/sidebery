@@ -20,6 +20,7 @@ import { SetupPage } from './setup-page'
 import { SidebarConfig, Sync } from './_services'
 import { Notifications } from './notifications'
 import { createTab } from './platform.actions'
+import { applyDefaultNewTabUrl } from './tabs.fg.create'
 import { translate } from 'src/dict'
 
 const VALID_SHORTCUT =
@@ -593,6 +594,7 @@ function onKeyNewTabAfter(): void {
     windowId: Windows.id,
   }
 
+  applyDefaultNewTabUrl(conf)
   void createTab(conf)
 }
 
@@ -1300,12 +1302,14 @@ function onKeyNewTabAsFirstChild(): void {
   if (!activeTab) return
 
   Tabs.setNewTabPosition(activeTab.index + 1, activeTab.id, activeTab.panelId)
-  void createTab({
+  const conf: browser.tabs.CreateProperties = {
     index: activeTab.index + 1,
     cookieStoreId: activeTab.cookieStoreId,
     windowId: Windows.id,
     openerTabId: activeTab.id,
-  })
+  }
+  applyDefaultNewTabUrl(conf)
+  void createTab(conf)
 }
 
 function onKeyNewTabAsLastChild(): void {
@@ -1319,12 +1323,14 @@ function onKeyNewTabAsLastChild(): void {
   }
 
   Tabs.setNewTabPosition(activeTab.index + 1, activeTab.id, activeTab.panelId)
-  void createTab({
+  const conf: browser.tabs.CreateProperties = {
     index,
     cookieStoreId: activeTab.cookieStoreId,
     windowId: Windows.id,
     openerTabId: activeTab.id,
-  })
+  }
+  applyDefaultNewTabUrl(conf)
+  void createTab(conf)
 }
 
 function onKeyRAIP() {

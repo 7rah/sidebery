@@ -87,6 +87,7 @@ export interface SettingsState {
   tabsReloadLimitNotif: boolean
   showNewTabBtns: boolean
   newTabBarPosition: (typeof SETTINGS_OPTIONS.newTabBarPosition)[number]
+  defaultNewTabUrl: string
   tabsPanelSwitchActMove: boolean
   tabsPanelSwitchActMoveAuto: boolean
   tabsUrlInTooltip: (typeof SETTINGS_OPTIONS.tabsUrlInTooltip)[number]

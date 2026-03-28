@@ -11,6 +11,31 @@ import * as Logs from 'src/services/logs'
 import * as Utils from 'src/utils'
 import { createTab, search } from 'src/services/platform.actions'
 
+function getConfiguredDefaultNewTabUrl(): string | undefined {
+  const value = Settings.state.defaultNewTabUrl?.trim()
+  if (!value) return
+
+  try {
+    return new URL(value).href
+  } catch {
+    return
+  }
+}
+
+export function applyDefaultNewTabUrl(
+  config: browser.tabs.CreateProperties,
+  url?: string
+): void {
+  const explicitUrl = url?.trim()
+  if (explicitUrl) {
+    config.url = explicitUrl
+    return
+  }
+
+  const defaultUrl = getConfiguredDefaultNewTabUrl()
+  if (defaultUrl) config.url = defaultUrl
+}
+
 /**
  * Create tab after another tab
  */
@@ -28,15 +53,17 @@ export function createTabAfter(tabId: ID): void {
 
   Tabs.setNewTabPosition(index, parentId, targetTab.panelId)
 
-  browser.tabs
-    .create({
-      index,
-      cookieStoreId: targetTab.cookieStoreId,
-      windowId: Windows.id,
-    })
-    .catch(err => {
-      Logs.err('Tabs.createTabAfter: Cannot create tab:', err)
-    })
+  const config: browser.tabs.CreateProperties = {
+    index,
+    cookieStoreId: targetTab.cookieStoreId,
+    windowId: Windows.id,
+  }
+
+  applyDefaultNewTabUrl(config)
+
+  createTab(config).catch(err => {
+    Logs.err('Tabs.createTabAfter: Cannot create tab:', err)
+  })
 }
 
 /**
@@ -60,8 +87,8 @@ export function createChildTab(tabId: ID, url?: string, containerId?: string): v
     windowId: Windows.id,
   }
 
-  if (url) config.url = url
   if (containerId) config.cookieStoreId = containerId
+  applyDefaultNewTabUrl(config, url)
 
   createTab(config).catch(err => {
     Logs.err('Tabs.createChildTab: Cannot create tab:', err)
@@ -100,7 +127,7 @@ export async function createTabInPanel(panel: Panel, conf?: browser.tabs.CreateP
     cookieStoreId: conf?.cookieStoreId,
   }
 
-  if (conf?.url) config.url = conf.url
+  applyDefaultNewTabUrl(config, conf?.url)
   if (conf?.active !== undefined) config.active = conf.active
   if (index !== undefined) Tabs.setNewTabPosition(index, parentId ?? NOID, panel.id)
   if (panel.newTabCtx !== 'none' && !conf?.cookieStoreId) config.cookieStoreId = panel.newTabCtx
@@ -533,7 +560,7 @@ export async function createTabInNewContainer(): Promise<void> {
   if (!container) return
 
   const dst: DstPlaceInfo = { panelId: panel.id, containerId: container.id }
-  await Tabs.open([{ id: -1, url: 'about:newtab' }], dst)
+  await Tabs.open([{ id: -1, url: getConfiguredDefaultNewTabUrl() ?? 'about:newtab' }], dst)
 }
 
 export async function reopenTabsInNewContainer(tabIds: ID[]): Promise<void> {

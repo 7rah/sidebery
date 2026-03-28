@@ -88,6 +88,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   tabsReloadLimitNotif: true,
   showNewTabBtns: true,
   newTabBarPosition: 'after_tabs',
+  defaultNewTabUrl: '',
   tabsPanelSwitchActMove: false,
   tabsPanelSwitchActMoveAuto: true,
   tabsUrlInTooltip: 'full',

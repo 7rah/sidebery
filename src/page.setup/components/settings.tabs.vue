@@ -126,6 +126,13 @@ section(ref="el")
       :inactive="!Settings.state.showNewTabBtns"
       :opts="Settings.getOpts('newTabBarPosition')"
       @update:value="Settings.saveDebounced(150)")
+  TextField.-inline(
+    label="settings.default_new_tab_url"
+    or="https://example.com"
+    :note="translate('settings.default_new_tab_url_note')"
+    :valid="defaultNewTabUrlValid"
+    v-model:value="Settings.state.defaultNewTabUrl"
+    @update:value="Settings.saveDebounced(500)")
   //- ToggleField(
   //-   label="settings.tab_warmup_on_hover"
   //-   v-model:value="Settings.state.tabWarmupOnHover"
@@ -492,6 +499,7 @@ import { Permissions } from 'src/services/permissions'
 import { SetupPage } from 'src/services/setup-page'
 import { Platform } from 'src/services/platform'
 import CountField from '../../components/count-field.vue'
+import TextField from '../../components/text-field.vue'
 import ToggleField from '../../components/toggle-field.vue'
 import SelectField from '../../components/select-field.vue'
 import NumField from '../../components/num-field.vue'
@@ -511,6 +519,18 @@ const relativeToActiveTab = computed<boolean>(() => {
     Settings.state.moveNewTab === 'first_child' ||
     Settings.state.moveNewTab === 'last_child'
   )
+})
+
+const defaultNewTabUrlValid = computed<string>(() => {
+  const value = Settings.state.defaultNewTabUrl?.trim()
+  if (!value) return ''
+
+  try {
+    new URL(value)
+    return 'valid'
+  } catch {
+    return 'invalid'
+  }
 })
 
 function toggleActivateLastTabOnPanelSwitching(): void {

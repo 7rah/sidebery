@@ -6,6 +6,7 @@ import { Containers } from 'src/services/containers'
 import { Sidebar } from 'src/services/sidebar'
 import { Tabs } from 'src/services/tabs.fg'
 import { Settings } from 'src/services/settings'
+import { Info } from 'src/services/info'
 import { SidebarConfigRState } from './sidebar-config'
 
 let isReady = false
@@ -215,9 +216,11 @@ export function updateActiveSection(scrollTop: number): void {
 export async function getDbgDetails(): Promise<DbgInfo> {
   const dbg: DbgInfo = {
     addonVersion: browser.runtime.getManifest().version,
-    firefoxVersion: (await browser.runtime.getBrowserInfo()).version,
     settings: Utils.cloneObject(Settings.state),
   }
+
+  const browserVersion = await Info.getBrowserVersion()
+  if (browserVersion) dbg.firefoxVersion = browserVersion
 
   try {
     const perms = await Promise.all([

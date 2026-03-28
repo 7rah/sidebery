@@ -12,6 +12,29 @@ import { Sidebar } from './sidebar'
 import { Info } from './info'
 import { translate } from 'src/dict'
 
+function hasWindowSessionValues(): boolean {
+  return (
+    typeof browser.sessions.getWindowValue === 'function' &&
+    typeof browser.sessions.setWindowValue === 'function'
+  )
+}
+
+function hasTabSessionValues(): boolean {
+  return typeof browser.sessions.setTabValue === 'function'
+}
+
+function hasMoveInSuccession(): boolean {
+  return typeof browser.tabs.moveInSuccession === 'function'
+}
+
+function canUseCookieStoreId(): boolean {
+  return Info.isFirefox && typeof browser.contextualIdentities !== 'undefined'
+}
+
+function canSetWindowTitlePreface(): boolean {
+  return Info.isFirefox
+}
+
 export async function loadWindows(): Promise<void> {
   const windows = await browser.windows.getAll({ windowTypes: ['normal'], populate: false })
   Windows.byId = {}
@@ -22,12 +45,15 @@ export async function loadWindows(): Promise<void> {
 }
 
 export async function loadWindowInfo(): Promise<void> {
-  const winData = await Promise.all([
-    browser.windows.getCurrent({ populate: false }),
-    browser.sessions.getWindowValue(browser.windows.WINDOW_ID_CURRENT, 'uniqWinId'),
-  ])
-  const currentWindow = winData[0]
-  let uniqWinId = winData[1] as string | undefined
+  const currentWindow = await browser.windows.getCurrent({ populate: false })
+  let uniqWinId: string | undefined
+
+  if (hasWindowSessionValues()) {
+    uniqWinId = (await browser.sessions.getWindowValue(
+      browser.windows.WINDOW_ID_CURRENT,
+      'uniqWinId'
+    )) as string | undefined
+  }
 
   // Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1660564
   if (Info.isSidebar && currentWindow.type !== 'normal') {
@@ -37,8 +63,11 @@ See https://bugzilla.mozilla.org/show_bug.cgi?id=1660564`
 
   // Generate unique window id
   if (!uniqWinId) {
-    uniqWinId = Utils.uid()
-    browser.sessions.setWindowValue(browser.windows.WINDOW_ID_CURRENT, 'uniqWinId', uniqWinId)
+    uniqWinId = currentWindow.id !== undefined ? String(currentWindow.id) : Utils.uid()
+
+    if (hasWindowSessionValues()) {
+      browser.sessions.setWindowValue(browser.windows.WINDOW_ID_CURRENT, 'uniqWinId', uniqWinId)
+    }
   }
 
   Windows.incognito = currentWindow.incognito
@@ -208,7 +237,12 @@ export async function createWithTabs(
 
       if (info.url && !info.pinned && !info.active) conf.discarded = true
       if (info.title && conf.discarded) conf.title = info.title
-      if (!isPrivate && info.container !== undefined && Containers.reactive.byId[info.container]) {
+      if (
+        canUseCookieStoreId() &&
+        !isPrivate &&
+        info.container !== undefined &&
+        Containers.reactive.byId[info.container]
+      ) {
         conf.cookieStoreId = info.container
       }
 
@@ -264,9 +298,11 @@ export async function createWithTabs(
     }
     if (srcInfo.customTitle) sessionData.customTitle = srcInfo.customTitle
     if (srcInfo.customColor) sessionData.customColor = srcInfo.customColor
-    browser.sessions.setTabValue(tab.id, 'data', sessionData).catch(err => {
-      Logs.err('Windows.createWithTabs: Cannot set session data:', err)
-    })
+    if (hasTabSessionValues()) {
+      browser.sessions.setTabValue(tab.id, 'data', sessionData).catch(err => {
+        Logs.err('Windows.createWithTabs: Cannot set session data:', err)
+      })
+    }
 
     idsMap[srcInfo.id] = tab.id
   }
@@ -275,7 +311,7 @@ export async function createWithTabs(
 
   // Update succession for the initial tab
   const firstTab = processedTabs[0]
-  if (firstTab && moveTabs) {
+  if (firstTab && moveTabs && hasMoveInSuccession()) {
     if (activeTabId === NOID) activeTabId = firstTab.id
     await browser.tabs.moveInSuccession([initialTabId], activeTabId).catch(err => {
       Logs.err('Windows.createWithTabs: Cannot update succession for initial tab:', err)
@@ -296,6 +332,7 @@ export async function createWithTabs(
 }
 
 export function updWindowPreface(preface?: string) {
+  if (!canSetWindowTitlePreface()) return
   if (preface === undefined) preface = Settings.state.markWindowPreface
 
   preface = preface.replace('%PN', Sidebar.panelsById[Sidebar.activePanelId]?.name ?? '')

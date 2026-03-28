@@ -9,6 +9,18 @@ export async function loadPlatformInfo(): Promise<void> {
   Info.reactive.os = info.os
 }
 
+export function getBrowserName(): 'firefox' | 'chrome' {
+  return Info.reactive.browserName
+}
+
+export async function getBrowserVersion(): Promise<string | undefined> {
+  const getBrowserInfo = browser.runtime.getBrowserInfo
+  if (typeof getBrowserInfo !== 'function') return
+
+  const browserInfo = await getBrowserInfo()
+  return browserInfo.version
+}
+
 export async function loadVersionInfo(): Promise<void> {
   const stored = await browser.storage.local.get<Stored>('ver')
 

@@ -29,6 +29,22 @@ const PROD_ESBUILD_BASE_CONF = {
   format: 'esm',
   define: ESBUILD_DEFINE,
 }
+const SPLITTED_ENTRY_POINTS = [
+  'src/bg/background.ts',
+  'src/sidebar/sidebar.ts',
+  'src/page.setup/setup.ts',
+  'src/popup.sync/sync.ts',
+  'src/popup.panel-config/panel-config.ts',
+  'src/popup.proxy/proxy.ts',
+  'src/popup.search/search.ts',
+  'src/popup.editing/editing.ts',
+  'src/_locales/dict.common.ts',
+  'src/_locales/dict.sidebar.ts',
+  'src/_locales/dict.setup-page.ts',
+]
+if (forChromium) {
+  SPLITTED_ENTRY_POINTS.unshift('src/bg/background.chrome.ts')
+}
 
 function fixModuleImports(data) {
   return data.replace(IMPORT_RE, (match, p1, p2, p3, p4, p5) => {
@@ -308,19 +324,7 @@ async function main() {
     // Splitting allowed code
     const buildingSplittedScripts = esbuild.build({
       ...PROD_ESBUILD_BASE_CONF,
-      entryPoints: [
-        'src/bg/background.ts',
-        'src/sidebar/sidebar.ts',
-        'src/page.setup/setup.ts',
-        'src/popup.sync/sync.ts',
-        'src/popup.panel-config/panel-config.ts',
-        'src/popup.proxy/proxy.ts',
-        'src/popup.search/search.ts',
-        'src/popup.editing/editing.ts',
-        'src/_locales/dict.common.ts',
-        'src/_locales/dict.sidebar.ts',
-        'src/_locales/dict.setup-page.ts',
-      ],
+      entryPoints: SPLITTED_ENTRY_POINTS,
       splitting: true,
       outdir: ADDON_PATH,
       plugins: [vueComponentsPlugin],

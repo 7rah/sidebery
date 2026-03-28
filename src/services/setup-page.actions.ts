@@ -8,6 +8,7 @@ import { Tabs } from 'src/services/tabs.fg'
 import { Settings } from 'src/services/settings'
 import { Info } from 'src/services/info'
 import { SidebarConfigRState } from './sidebar-config'
+import { Platform } from './platform'
 
 let isReady = false
 let readyStateResolve: (() => void)[] = []
@@ -75,6 +76,11 @@ export async function updateActiveView(): Promise<void> {
   hash = hashArg[0]
   const arg = hashArg[1]
   const scrollSectionConf: ScrollIntoViewOptions = { behavior: 'smooth', block: 'start' }
+
+  if (hash === 'settings_containers' && !Platform.hasContextualIdentities) {
+    hash = 'settings_general'
+    location.hash = hash
+  }
 
   if (navLockTimeout) clearTimeout(navLockTimeout)
   SetupPage.navLock = true

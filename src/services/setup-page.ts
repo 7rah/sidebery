@@ -1,5 +1,6 @@
 import { Container, BackupData, PanelConfig } from 'src/types'
 import * as SetupPageActions from 'src/services/setup-page.actions'
+import { Platform } from 'src/services/platform'
 
 export type SetupPageView =
   | 'settings'
@@ -35,7 +36,7 @@ export interface SetupPageState {
   permissions: string | boolean
 }
 
-export const nav: SetupPageNavOption[] = [
+const BASE_NAV: SetupPageNavOption[] = [
   { active: false, name: 'settings', lvl: 0 },
   { active: false, name: 'settings_general', lvl: 1 },
   { active: false, name: 'settings_menu', lvl: 1 },
@@ -73,6 +74,10 @@ export const nav: SetupPageNavOption[] = [
   { active: false, name: 'styles_editor', lvl: 0 },
   { active: false, name: 'snapshots', lvl: 0 },
 ]
+
+export const nav: SetupPageNavOption[] = Platform.hasContextualIdentities
+  ? BASE_NAV
+  : BASE_NAV.filter(item => item.name !== 'settings_containers')
 
 export const SetupPage = {
   reactive: {

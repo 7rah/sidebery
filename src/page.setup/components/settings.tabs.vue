@@ -348,7 +348,7 @@ section(ref="el")
       v-model:value="Settings.state.inheritCustomColor"
       @update:value="Settings.saveDebounced(150)")
 
-  .wrapper(ref="tabsPreviewEl")
+  .wrapper(v-if="Platform.browserName === 'firefox'" ref="tabsPreviewEl")
     .sub-title: .text {{translate('settings.nav_settings_tabs_preview')}}
     ToggleField.-no-separator(
       label="settings.tabs.preview"
@@ -452,7 +452,7 @@ section(ref="el")
       :inactive="!Settings.state.previewTabs || Settings.state.previewTabsMode !== 'p'"
       @update:value="Settings.saveDebounced(500)")
 
-  .wrapper(ref="nativeTabsEl")
+  .wrapper(v-if="Platform.hasTabHide" ref="nativeTabsEl")
     .sub-title: .text {{translate('settings.nav_settings_tabs_native')}}
     ToggleField.-no-separator(
       label="settings.hide_inactive_panel_tabs"
@@ -490,6 +490,7 @@ import { SETTINGS_OPTIONS } from 'src/defaults'
 import { Settings } from 'src/services/settings'
 import { Permissions } from 'src/services/permissions'
 import { SetupPage } from 'src/services/setup-page'
+import { Platform } from 'src/services/platform'
 import CountField from '../../components/count-field.vue'
 import ToggleField from '../../components/toggle-field.vue'
 import SelectField from '../../components/select-field.vue'
@@ -615,7 +616,11 @@ onMounted(() => {
   SetupPage.registerEl('settings_pinned_tabs', pinTabsEl.value)
   SetupPage.registerEl('settings_tabs_tree', tabsTreeEl.value)
   SetupPage.registerEl('settings_tabs_colorization', tabsColorEl.value)
-  SetupPage.registerEl('settings_tabs_preview', tabsPreviewEl.value)
-  SetupPage.registerEl('settings_tabs_native', nativeTabsEl.value)
+  if (Platform.browserName === 'firefox') {
+    SetupPage.registerEl('settings_tabs_preview', tabsPreviewEl.value)
+  }
+  if (Platform.hasTabHide) {
+    SetupPage.registerEl('settings_tabs_native', nativeTabsEl.value)
+  }
 })
 </script>

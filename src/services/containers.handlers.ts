@@ -5,8 +5,14 @@ import { Store } from 'src/services/storage'
 import { Sidebar } from 'src/services/sidebar'
 import { Tabs } from 'src/services/tabs.fg'
 import { Info } from 'src/services/info'
+import { Platform } from './platform'
 
 export function setupContainersListeners(): void {
+  if (!Platform.hasContextualIdentities) {
+    Store.onKeyChange('containers', Containers.updateContainers)
+    return
+  }
+
   if (Info.isBg) {
     browser.contextualIdentities.onCreated.addListener(onContainerCreated)
     browser.contextualIdentities.onRemoved.addListener(onContainerRemovedBg)

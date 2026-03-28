@@ -12,24 +12,27 @@ section(ref="el")
       :inactive="!Settings.state.nativeScrollbars"
       v-model:value="Settings.state.nativeScrollbarsThin"
       @update:value="Settings.saveDebounced(150)")
-    ToggleField(
-      label="settings.native_scrollbars_left"
-      :inactive="!Settings.state.nativeScrollbars"
-      v-model:value="Settings.state.nativeScrollbarsLeft"
-      @update:value="Settings.saveDebounced(150)")
   ToggleField(
+    label="settings.native_scrollbars_left"
+    :inactive="!Settings.state.nativeScrollbars"
+    v-model:value="Settings.state.nativeScrollbarsLeft"
+    @update:value="Settings.saveDebounced(150)")
+  ToggleField(
+    v-if="Platform.browserName === 'firefox'"
     label="settings.sel_win_screenshots"
     :value="Settings.state.selWinScreenshots"
     @update:value="toggleSelWinScreenshots")
   ToggleField(
+    v-if="Platform.browserName === 'firefox'"
     label="settings.update_sidebar_title"
     v-model:value="Settings.state.updateSidebarTitle"
     @update:value="Settings.saveDebounced(150)")
   ToggleField(
+    v-if="Platform.browserName === 'firefox'"
     label="settings.mark_window"
     v-model:value="Settings.state.markWindow"
     @update:value="Settings.saveDebounced(150)")
-  .sub-fields
+  .sub-fields(v-if="Platform.browserName === 'firefox'")
     TextField.-inline(
       label="settings.mark_window_preface"
       or="---"
@@ -69,6 +72,7 @@ import TextField from '../../components/text-field.vue'
 import { Stored } from 'src/types'
 import * as Utils from 'src/utils'
 import { Permissions } from 'src/services/permissions'
+import { Platform } from 'src/services/platform'
 
 const el = ref<HTMLElement | null>(null)
 const state = reactive({

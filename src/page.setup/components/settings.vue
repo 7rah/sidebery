@@ -4,7 +4,7 @@
   MenuSection
   NavbarSection
   GroupSection
-  ContainersSection
+  ContainersSection(v-if="Platform.hasContextualIdentities")
   DndSection
   SearchSection
   TabsSection
@@ -31,6 +31,7 @@
 import { ref, onActivated } from 'vue'
 import { SetupPage } from 'src/services/setup-page'
 import { Info } from 'src/services/info'
+import { Platform } from 'src/services/platform'
 import GeneralSection from './settings.general.vue'
 import MenuSection from './settings.menu.vue'
 import NavbarSection from './settings.navbar.vue'

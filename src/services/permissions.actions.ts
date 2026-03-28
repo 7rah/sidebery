@@ -8,33 +8,54 @@ import { Sidebar } from 'src/services/sidebar'
 import { History } from 'src/services/history'
 import { Bookmarks } from 'src/services/bookmarks'
 import { SetupPage } from './setup-page'
+import { Platform } from './platform'
 
 /**
  * Retrieve current permissions
  */
 export async function loadPermissions(): Promise<void> {
-  const perms = await Promise.all([
-    browser.permissions.contains({ origins: ['<all_urls>'] }),
-    browser.permissions.contains({ permissions: ['webRequest'] }),
-    browser.permissions.contains({ permissions: ['webRequestBlocking'] }),
-    browser.permissions.contains({ permissions: ['proxy'] }),
-    browser.permissions.contains({ permissions: ['tabHide'] }),
-    browser.permissions.contains({ permissions: ['clipboardWrite'] }),
-    browser.permissions.contains({ permissions: ['clipboardRead'] }),
-    browser.permissions.contains({ permissions: ['history'] }),
-    browser.permissions.contains({ permissions: ['bookmarks'] }),
-    browser.permissions.contains({ permissions: ['downloads'] }),
-  ])
-  Permissions.allUrls = perms[0]
-  Permissions.webRequest = perms[1]
-  Permissions.webRequestBlocking = perms[2]
-  Permissions.proxy = perms[3]
-  Permissions.tabHide = perms[4]
-  Permissions.clipboardWrite = perms[5]
-  Permissions.clipboardRead = perms[6]
-  Permissions.history = perms[7]
-  Permissions.bookmarks = perms[8]
-  Permissions.downloads = perms[9]
+  if (Platform.browserName === 'firefox') {
+    const perms = await Promise.all([
+      browser.permissions.contains({ origins: ['<all_urls>'] }),
+      browser.permissions.contains({ permissions: ['webRequest'] }),
+      browser.permissions.contains({ permissions: ['webRequestBlocking'] }),
+      browser.permissions.contains({ permissions: ['proxy'] }),
+      browser.permissions.contains({ permissions: ['tabHide'] }),
+      browser.permissions.contains({ permissions: ['clipboardWrite'] }),
+      browser.permissions.contains({ permissions: ['clipboardRead'] }),
+      browser.permissions.contains({ permissions: ['history'] }),
+      browser.permissions.contains({ permissions: ['bookmarks'] }),
+      browser.permissions.contains({ permissions: ['downloads'] }),
+    ])
+    Permissions.allUrls = perms[0]
+    Permissions.webRequest = perms[1]
+    Permissions.webRequestBlocking = perms[2]
+    Permissions.proxy = perms[3]
+    Permissions.tabHide = perms[4]
+    Permissions.clipboardWrite = perms[5]
+    Permissions.clipboardRead = perms[6]
+    Permissions.history = perms[7]
+    Permissions.bookmarks = perms[8]
+    Permissions.downloads = perms[9]
+  } else {
+    const perms = await Promise.all([
+      browser.permissions.contains({ permissions: ['clipboardWrite'] }),
+      browser.permissions.contains({ permissions: ['clipboardRead'] }),
+      browser.permissions.contains({ permissions: ['history'] }),
+      browser.permissions.contains({ permissions: ['bookmarks'] }),
+      browser.permissions.contains({ permissions: ['downloads'] }),
+    ])
+    Permissions.allUrls = false
+    Permissions.webRequest = false
+    Permissions.webRequestBlocking = false
+    Permissions.proxy = false
+    Permissions.tabHide = false
+    Permissions.clipboardWrite = perms[0]
+    Permissions.clipboardRead = perms[1]
+    Permissions.history = perms[2]
+    Permissions.bookmarks = perms[3]
+    Permissions.downloads = perms[4]
+  }
 
   Permissions.reactive.webData =
     Permissions.allUrls &&
@@ -65,6 +86,10 @@ export type RequestablePermission =
   | 'downloads'
 
 export async function request(...perms: RequestablePermission[]): Promise<boolean> {
+  if (Platform.browserName !== 'firefox' && (perms.includes('<all_urls>') || perms.includes('tabHide'))) {
+    return false
+  }
+
   try {
     const origins: string[] = []
     const permissions: string[] = []

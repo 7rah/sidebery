@@ -17,6 +17,7 @@
     :inactive="menuInactive || !!state.errorMsg")
     .error-note(v-if="state.menuError") {{state.menuError}}
   ToggleField(
+    v-if="Platform.hasContextualIdentities"
     label="settings.backup_containers"
     v-model:value="state.containers"
     :data-done="state.containersDone"
@@ -88,6 +89,7 @@ import { Keybindings } from 'src/services/keybindings'
 import { Settings } from 'src/services/settings'
 import { SidebarConfig, Sync } from 'src/services/_services'
 import { SetupPage } from 'src/services/setup-page'
+import { Platform } from 'src/services/platform'
 
 const props = defineProps({
   importedData: {
@@ -209,7 +211,7 @@ onMounted(() => {
   if (!navInactive.value) state.nav = true
   if (!menuInactive.value) state.menu = true
   if (!stylesInactive.value) state.styles = true
-  if (!containersInactive.value) state.containers = true
+  if (Platform.hasContextualIdentities && !containersInactive.value) state.containers = true
   if (!snapshotsInactive.value) state.snapshots = true
   if (!faviconsInactive.value) state.favicons = true
   if (!keybindingsInactive.value) state.keybindings = true
@@ -373,7 +375,7 @@ function checkPermissions(): void {
   state.permNeeded = false
 
   const containers = backup.containers
-  if (state.containers && containers) {
+  if (Platform.browserName === 'firefox' && state.containers && containers) {
     for (let ctr of Object.values(containers)) {
       if (ctr.proxified) webData = true
       if (ctr.reopenRulesActive) webData = true
@@ -388,6 +390,11 @@ function checkPermissions(): void {
     if (backup.settings.hideFoldedTabs) tabsHide = true
     if (backup.settings.newTabCtxReopen) webData = true
     if (backup.settings.snapAutoExport) downloads = true
+  }
+
+  if (Platform.browserName !== 'firefox') {
+    webData = false
+    tabsHide = false
   }
 
   if (webData && !Permissions.reactive.webData) {
@@ -405,6 +412,15 @@ function checkPermissions(): void {
 }
 
 function requestPermissions(): void {
+  if (Platform.browserName !== 'firefox') {
+    if (!permDownloads) return
+    browser.permissions.request({ origins: [], permissions: ['downloads'] }).then((allowed: boolean) => {
+      if (permDownloads) permDownloads = !allowed
+      state.permNeeded = !allowed
+    })
+    return
+  }
+
   const origins = ['<all_urls>']
   const permissions = ['webRequest', 'webRequestBlocking', 'proxy']
   if (permWebData) {
@@ -425,6 +441,7 @@ function requestPermissions(): void {
 
 type OldNewIds = Record<string, string>
 async function importContainers(backup: BackupData): Promise<OldNewIds> {
+  if (!Platform.hasContextualIdentities) return {}
   if (!backup.containers) throw 'No containers data'
 
   let ffContainers = await browser.contextualIdentities.query({})

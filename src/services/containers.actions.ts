@@ -9,8 +9,14 @@ import { Menu } from 'src/services/menu'
 import { Info } from 'src/services/info'
 import { Settings } from './settings'
 import { Tabs } from './tabs.fg'
+import { Platform } from './platform'
 
 export async function load(): Promise<void> {
+  if (!Platform.hasContextualIdentities) {
+    Containers.reactive.byId = {}
+    return
+  }
+
   if (Info.isBg) {
     const [ffContainers, storage] = await Promise.all([
       browser.contextualIdentities.query({}),
@@ -97,6 +103,8 @@ export function updateContainers(newContainers?: Record<ID, Container> | null): 
 }
 
 export async function create(name: string, color: string, icon: string): Promise<Container> {
+  if (!Platform.hasContextualIdentities) throw new Error('Containers are not supported in Chrome core')
+
   const newRawContainer = await browser.contextualIdentities.create({ name, color, icon })
   const newContainer = Utils.recreateNormalizedObject(
     newRawContainer as Container,
@@ -138,6 +146,7 @@ export function parseCUID(cuid: string): browser.contextualIdentities.CreateDeta
 export function findUnique(
   props?: Partial<browser.contextualIdentities.CreateDetails>
 ): Container | undefined {
+  if (!Platform.hasContextualIdentities) return
   if (!props) return
 
   let container: Container | undefined

@@ -6,6 +6,7 @@ import { Tabs } from 'src/services/tabs.bg'
 import * as IPC from 'src/services/ipc'
 import * as Logs from 'src/services/logs'
 import { RE_STR_RE } from 'src/defaults'
+import { Platform } from './platform'
 
 type optBlockingResponse = browser.webRequest.BlockingResponse | void
 
@@ -123,6 +124,8 @@ async function checkIpInfoWithEXTREME_IP_LOOKUP_COM(
 }
 
 export async function checkIpInfo(cookieStoreId: ID): Promise<IPCheckResult | null> {
+  if (!Platform.hasContextualIdentities) return null
+
   let result: IPCheckResult | null
 
   result = await checkIpInfoWithEXTREME_IP_LOOKUP_COM(cookieStoreId)
@@ -144,6 +147,8 @@ export function updateReqHandlers(): void {
   proxyAuthCredentials = {}
   pendingProxyAuthRequests.clear()
   userAgents = {}
+
+  if (!Platform.hasContextualIdentities) return
 
   // Check containers config
   for (const ctr of Object.values(Containers.reactive.byId)) {

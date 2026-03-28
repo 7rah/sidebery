@@ -2,6 +2,7 @@
 .ConfigPopup(ref="rootEl" @wheel="onWheel")
   h2 {{translate('settings.permissions_title')}}
   .permission(
+    v-if="Platform.browserName === 'firefox'"
     ref="all_urls"
     :data-highlight="SetupPage.reactive.permissions === 'all_urls'"
     @click="onHighlighClick('all_urls')")
@@ -20,6 +21,7 @@
       :note="translate('settings.perm.bookmarks_info')"
       @update:value="togglePermBookmarks")
   .permission(
+    v-if="Platform.hasTabHide"
     ref="tab_hide"
     :data-highlight="SetupPage.reactive.permissions === 'tab_hide'"
     @click="onHighlighClick('tab_hide')")
@@ -71,6 +73,7 @@ import { ref, onMounted } from 'vue'
 import { translate } from 'src/dict'
 import { Permissions } from 'src/services/permissions'
 import { SetupPage } from 'src/services/setup-page'
+import { Platform } from 'src/services/platform'
 import ToggleField from '../../components/toggle-field.vue'
 
 const rootEl = ref<HTMLElement | null>(null)
@@ -108,6 +111,7 @@ function onHighlighClick(name: string): void {
 }
 
 function togglePermAllUrls(): void {
+  if (Platform.browserName !== 'firefox') return
   const origins = ['<all_urls>']
   const p = ['webRequest', 'webRequestBlocking', 'proxy']
   if (Permissions.reactive.webData) browser.permissions.remove({ origins, permissions: p })
@@ -120,6 +124,7 @@ function togglePermBookmarks(): void {
 }
 
 function togglePermTabHide(): void {
+  if (!Platform.hasTabHide) return
   if (Permissions.reactive.tabHide) browser.permissions.remove({ permissions: ['tabHide'] })
   else browser.permissions.request({ origins: [], permissions: ['tabHide'] })
 }

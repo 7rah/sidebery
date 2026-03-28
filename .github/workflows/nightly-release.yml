@@ -3,6 +3,9 @@ name: nightly-release
 on:
   workflow_dispatch
 
+permissions:
+  contents: write
+
 jobs:
   build-and-sign:
     runs-on: ubuntu-latest
@@ -10,11 +13,13 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       WEB_EXT_API_KEY: ${{ secrets.WEB_EXT_API_KEY }}
       WEB_EXT_API_SECRET: ${{ secrets.WEB_EXT_API_SECRET }}
+      NIGHTLY_REPOSITORY: ${{ github.repository }}
+      NIGHTLY_BRANCH: ${{ github.ref_name }}
     steps:
       - name: Check out the repository to the runner
         uses: actions/checkout@v4
         with:
-          ref: 'v5'
+          ref: ${{ github.ref_name }}
           fetch-depth: 0
       - name: Setup nodejs
         uses: actions/setup-node@v4

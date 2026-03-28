@@ -4,9 +4,9 @@ import fs from 'fs/promises'
 import { Blob } from 'buffer'
 import { execSync } from 'child_process'
 
-const OWNER = 'mbnuqw'
-const REPO = 'sidebery'
-const BRANCH = 'v5'
+const NIGHTLY_REPOSITORY = process.env.NIGHTLY_REPOSITORY ?? process.env.GITHUB_REPOSITORY ?? 'mbnuqw/sidebery'
+const [OWNER = 'mbnuqw', REPO = 'sidebery'] = NIGHTLY_REPOSITORY.split('/')
+const BRANCH = process.env.NIGHTLY_BRANCH ?? process.env.GITHUB_REF_NAME ?? 'v5'
 const MAX_ASSETS_COUNT = 10
 const ADDON_ID = '{3c078156-979c-498b-8990-85f7987dd929}'
 const CONSIDERED_COMMIT_PREFIXES_RE = /^(fix|feat|perf)/
@@ -287,7 +287,7 @@ async function updateFiles(updates, newVersion, newVersionLink) {
     `**Nightly** (v${newVersion}):`
   )
   readmeContent = readmeContent.replace(
-    /\[Install\]\(https:\/\/github\.com\/mbnuqw\/sidebery\/releases\/download.*\)/g,
+    /\[Install\]\(https:\/\/github\.com\/[^/]+\/[^/]+\/releases\/download.*\)/g,
     `[Install](${newVersionLink})`
   )
   await fs.writeFile('./README.md', readmeContent, { encoding: 'utf-8' })

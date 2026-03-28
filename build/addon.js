@@ -3,8 +3,10 @@
 import fs from 'fs/promises'
 import { execSync } from 'child_process'
 
-const UPDATE_URL = 'https://raw.githubusercontent.com/mbnuqw/sidebery/v5/updates.json'
 const FOR_CHROMIUM = process.argv.includes('--chromium')
+const NIGHTLY_REPOSITORY = process.env.NIGHTLY_REPOSITORY ?? process.env.GITHUB_REPOSITORY ?? 'mbnuqw/sidebery'
+const NIGHTLY_BRANCH = process.env.NIGHTLY_BRANCH ?? process.env.GITHUB_REF_NAME ?? 'v5'
+const UPDATE_URL = `https://raw.githubusercontent.com/${NIGHTLY_REPOSITORY}/${NIGHTLY_BRANCH}/updates.json`
 
 async function main() {
   // Parse arguments

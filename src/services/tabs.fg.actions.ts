@@ -17,6 +17,13 @@ import { Permissions } from 'src/services/permissions'
 import { Notifications } from 'src/services/notifications'
 import * as Selection from './selection'
 import { Favicons } from './_services.fg'
+import {
+  getTabState,
+  moveTabsInSuccession,
+  search,
+  setTabState,
+  updateNativeTabsVisibility as applyNativeTabsVisibility,
+} from './platform.actions'
 
 const URL_WITHOUT_PROTOCOL_RE = /^(.+\.)\/?(.+\/)?\w+/
 
@@ -309,9 +316,7 @@ async function restoreTabsState(ignoreLockedTabs?: boolean): Promise<void> {
 
   // From session data
   else {
-    const querying = nativeTabs.map(t =>
-      browser.sessions.getTabValue<TabSessionData | undefined>(t.id, 'data').catch(() => undefined)
-    )
+    const querying = nativeTabs.map(t => getTabState<TabSessionData | undefined>(t.id, 'data'))
     try {
       tabsSessionData = (await Promise.all(querying)) ?? []
     } catch (err) {
@@ -671,7 +676,7 @@ function _saveTabData(tabId: ID, forced?: boolean): void {
   else delete data.customColor
 
   // Logs.info('Tabs.saveTabData: Saving...', tabId, { ...data })
-  browser.sessions.setTabValue(tabId, 'data', data).catch(err => {
+  setTabState(tabId, 'data', data).catch(err => {
     Logs.err('Tabs.saveTabData: Cannot set value in session:', err)
   })
 }
@@ -1171,9 +1176,7 @@ export async function discardTabs(tabIds: ID[] = []): Promise<void> {
       if (tabIds.includes(Tabs.activeId)) {
         await browser.tabs.update(target.id, { active: true })
       } else if (activeTab.successorTabId !== target.id) {
-        browser.tabs.moveInSuccession([activeTab.id], target.id).catch(err => {
-          Logs.err('Tabs.discardTabs: Cannot update succession:', err)
-        })
+        void moveTabsInSuccession([activeTab.id], target.id)
         activeTab.successorTabId = target.id
       }
     }
@@ -1621,8 +1624,7 @@ export function updateNativeTabsVisibility(): void {
     if (tab.hidden) toShow.push(tab.id)
   }
 
-  if (toShow.length) browser.tabs.show(toShow)
-  if (toHide.length) browser.tabs.hide(toHide)
+  void applyNativeTabsVisibility(toShow, toHide)
 }
 
 /**
@@ -2754,7 +2756,7 @@ export async function paste(dst: DstPlaceInfo) {
     const query = items[0]?.title
 
     if (dst.pinned) {
-      browser.search.search({ query, disposition: 'NEW_TAB' })
+      void search(query)
     } else {
       const conf: browser.tabs.CreateProperties = {
         active: false,
@@ -2763,7 +2765,7 @@ export async function paste(dst: DstPlaceInfo) {
       }
       Tabs.setNewTabPosition(dst.index, dst.parentId, dst.panelId)
       const tabWithSearch = await browser.tabs.create(conf)
-      browser.search.search({ query, tabId: tabWithSearch.id })
+      void search(query, tabWithSearch.id)
     }
   }
 
@@ -2940,9 +2942,7 @@ function updateSuccession(exclude?: readonly ID[]) {
     }
 
     if (suc.length > 1) {
-      browser.tabs.moveInSuccession(suc).catch(err => {
-        Logs.err('Tabs.updateSuccession: Cannot update succession:', err, suc)
-      })
+      void moveTabsInSuccession(suc)
     }
   }
 

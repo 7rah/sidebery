@@ -93,6 +93,7 @@ import { NOID, RGB_COLORS } from 'src/defaults'
 import * as Utils from 'src/utils'
 import * as Logs from 'src/services/logs'
 import * as Preview from 'src/services/tabs.preview'
+import { overrideContext } from 'src/services/platform.actions'
 
 const props = defineProps<{ tabId: ID }>()
 const tab = Tabs.byId[props.tabId] as Tab
@@ -433,7 +434,7 @@ function onCtxMenu(e: MouseEvent): void {
     return
   }
 
-  browser.menus.overrideContext({ context: 'tab', tabId: tab.id })
+  overrideContext({ context: 'tab', tabId: tab.id })
 
   if (!Selection.isSet()) select()
 

@@ -50,6 +50,7 @@ import { NOID } from 'src/defaults'
 import * as Favicons from 'src/services/favicons.fg'
 import * as Utils from 'src/utils'
 import * as Logs from 'src/services/logs'
+import { overrideContext } from 'src/services/platform.actions'
 
 const props = defineProps<{
   node: Bookmark
@@ -310,7 +311,7 @@ function onCtxMenu(e: MouseEvent): void {
   }
 
   let nativeCtx = { context: 'bookmark', bookmarkId: props.node.id } as const
-  browser.menus.overrideContext(nativeCtx)
+  overrideContext(nativeCtx)
 
   if (!Selection.isBookmarks()) Selection.selectBookmark(props.node.id)
 

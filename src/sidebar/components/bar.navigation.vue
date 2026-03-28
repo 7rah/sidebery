@@ -97,6 +97,7 @@ import { Search } from 'src/services/search'
 import { Snapshots } from 'src/services/snapshots'
 import NavItemComponent from './nav-item.vue'
 import { Logs, Sync, Popups } from 'src/services/_services'
+import { overrideContext } from 'src/services/platform.actions'
 
 const HIDDEN_PANELS_BTN: NavBtn = {
   id: 'hidden_panels_btn',
@@ -446,7 +447,7 @@ function onNavCtxMenu(e: MouseEvent, item: NavItem) {
   Menu.blockCtxMenu()
 
   let nativeCtx = { showDefaults: false }
-  browser.menus.overrideContext(nativeCtx)
+  overrideContext(nativeCtx)
 
   let type: MenuType
   if (panel.type === PanelType.bookmarks) type = MenuType.BookmarksPanel

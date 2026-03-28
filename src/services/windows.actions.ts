@@ -11,21 +11,7 @@ import { Containers } from './containers'
 import { Sidebar } from './sidebar'
 import { Info } from './info'
 import { translate } from 'src/dict'
-
-function hasWindowSessionValues(): boolean {
-  return (
-    typeof browser.sessions.getWindowValue === 'function' &&
-    typeof browser.sessions.setWindowValue === 'function'
-  )
-}
-
-function hasTabSessionValues(): boolean {
-  return typeof browser.sessions.setTabValue === 'function'
-}
-
-function hasMoveInSuccession(): boolean {
-  return typeof browser.tabs.moveInSuccession === 'function'
-}
+import { getWindowState, moveTabsInSuccession, setTabState, setWindowState } from './platform.actions'
 
 function canUseCookieStoreId(): boolean {
   return Info.isFirefox && typeof browser.contextualIdentities !== 'undefined'
@@ -46,14 +32,7 @@ export async function loadWindows(): Promise<void> {
 
 export async function loadWindowInfo(): Promise<void> {
   const currentWindow = await browser.windows.getCurrent({ populate: false })
-  let uniqWinId: string | undefined
-
-  if (hasWindowSessionValues()) {
-    uniqWinId = (await browser.sessions.getWindowValue(
-      browser.windows.WINDOW_ID_CURRENT,
-      'uniqWinId'
-    )) as string | undefined
-  }
+  let uniqWinId = await getWindowState<string>(browser.windows.WINDOW_ID_CURRENT, 'uniqWinId')
 
   // Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1660564
   if (Info.isSidebar && currentWindow.type !== 'normal') {
@@ -64,10 +43,7 @@ See https://bugzilla.mozilla.org/show_bug.cgi?id=1660564`
   // Generate unique window id
   if (!uniqWinId) {
     uniqWinId = currentWindow.id !== undefined ? String(currentWindow.id) : Utils.uid()
-
-    if (hasWindowSessionValues()) {
-      browser.sessions.setWindowValue(browser.windows.WINDOW_ID_CURRENT, 'uniqWinId', uniqWinId)
-    }
+    void setWindowState(browser.windows.WINDOW_ID_CURRENT, 'uniqWinId', uniqWinId)
   }
 
   Windows.incognito = currentWindow.incognito
@@ -298,11 +274,9 @@ export async function createWithTabs(
     }
     if (srcInfo.customTitle) sessionData.customTitle = srcInfo.customTitle
     if (srcInfo.customColor) sessionData.customColor = srcInfo.customColor
-    if (hasTabSessionValues()) {
-      browser.sessions.setTabValue(tab.id, 'data', sessionData).catch(err => {
-        Logs.err('Windows.createWithTabs: Cannot set session data:', err)
-      })
-    }
+    setTabState(tab.id, 'data', sessionData).catch(err => {
+      Logs.err('Windows.createWithTabs: Cannot set session data:', err)
+    })
 
     idsMap[srcInfo.id] = tab.id
   }
@@ -311,11 +285,9 @@ export async function createWithTabs(
 
   // Update succession for the initial tab
   const firstTab = processedTabs[0]
-  if (firstTab && moveTabs && hasMoveInSuccession()) {
+  if (firstTab && moveTabs) {
     if (activeTabId === NOID) activeTabId = firstTab.id
-    await browser.tabs.moveInSuccession([initialTabId], activeTabId).catch(err => {
-      Logs.err('Windows.createWithTabs: Cannot update succession for initial tab:', err)
-    })
+    await moveTabsInSuccession([initialTabId], activeTabId)
   }
 
   try {

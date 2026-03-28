@@ -63,6 +63,7 @@ import NewTabBar from './bar.new-tab.vue'
 import DragAndDropPointer from './dnd-pointer.vue'
 import AnimatedTabList from './animated-tab-list.vue'
 import * as Preview from 'src/services/tabs.preview'
+import { overrideContext } from 'src/services/platform.actions'
 
 const props = defineProps<{ panel: TabsPanel }>()
 const scrollBox = ref<ScrollBoxComponent | null>(null)
@@ -189,7 +190,7 @@ function onNavCtxMenu(e: MouseEvent): void {
   }
 
   let nativeCtx = { showDefaults: false }
-  browser.menus.overrideContext(nativeCtx)
+  overrideContext(nativeCtx)
 
   if (!Selection.isSet()) Selection.selectNavItem(props.panel.id)
   Menu.open(MenuType.TabsPanel)

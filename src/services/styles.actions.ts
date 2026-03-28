@@ -11,6 +11,7 @@ import * as Logs from 'src/services/logs'
 import { Sync } from './_services'
 import { Notifications } from './notifications'
 import { translate } from 'src/dict'
+import { Platform } from './platform'
 
 const SRC_VARS: (keyof SrcVars)[] = [
   'frame_bg',
@@ -37,21 +38,23 @@ export async function initColorScheme(): Promise<void> {
   await updateColorScheme()
 
   setupAutoColorSchemeListener(() => updateColorScheme())
-  browser.theme.onUpdated.addListener(upd => {
-    // Ignore update for different window
-    if (upd && upd.windowId !== undefined && Windows.id !== NOID && upd.windowId !== Windows.id) {
-      return
-    }
+  if (Platform.hasFirefoxThemeApi) {
+    browser.theme.onUpdated.addListener(upd => {
+      // Ignore update for different window
+      if (upd && upd.windowId !== undefined && Windows.id !== NOID && upd.windowId !== Windows.id) {
+        return
+      }
 
-    // Use fallback theme for Group and Url pages if an update
-    // comes for a specific window
-    if (Info.isBg && upd && upd.windowId !== undefined) {
-      updateColorScheme({})
-      return
-    }
+      // Use fallback theme for Group and Url pages if an update
+      // comes for a specific window
+      if (Info.isBg && upd && upd.windowId !== undefined) {
+        updateColorScheme({})
+        return
+      }
 
-    updateColorScheme(upd?.theme)
-  })
+      updateColorScheme(upd?.theme)
+    })
+  }
 }
 
 export function getColorSchemeName(colorScheme?: ColorSchemeVariant): 'dark' | 'light' {
@@ -60,7 +63,7 @@ export function getColorSchemeName(colorScheme?: ColorSchemeVariant): 'dark' | '
 }
 
 export async function updateColorScheme(theme?: browser.theme.Theme): Promise<void> {
-  if (Settings.state.colorScheme === 'ff') {
+  if (Settings.state.colorScheme === 'ff' && Platform.hasFirefoxThemeApi) {
     if (!theme) {
       theme = await browser.theme.getCurrent(Windows.id !== NOID ? Windows.id : undefined)
     }
@@ -87,6 +90,10 @@ export async function updateColorScheme(theme?: browser.theme.Theme): Promise<vo
 
     Styles.theme = {}
     Styles.parsedTheme = undefined
+
+    if (Settings.state.colorScheme === 'ff') {
+      useAutoColorScheme()
+    }
   }
 
   if (Settings.state.colorScheme === 'sys') {

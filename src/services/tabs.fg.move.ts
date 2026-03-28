@@ -12,6 +12,7 @@ import * as IPC from 'src/services/ipc'
 import * as Popups from 'src/services/popups'
 import * as Logs from 'src/services/logs'
 import * as Utils from 'src/utils'
+import { isPrimarySidebarOpen, moveTabsInSuccession } from 'src/services/platform.actions'
 
 export async function move(
   tabsInfo: DeepReadonly<ItemInfo[]>,
@@ -377,7 +378,7 @@ async function moveTabsToWin(tabIds: ID[], dst: DstPlaceInfo): Promise<void> {
   const activeTab = activeTabId !== undefined ? Tabs.byId[activeTabId] : undefined
   if (activeTab) {
     const target = Tabs.findSuccessorTab(activeTab, tabIds)
-    if (target) await browser.tabs.moveInSuccession([activeTab.id], target.id)
+    if (target) await moveTabsInSuccession([activeTab.id], target.id)
   }
 
   const detachedTabsInfo = Tabs.detachTabs(tabIds)
@@ -386,9 +387,7 @@ async function moveTabsToWin(tabIds: ID[], dst: DstPlaceInfo): Promise<void> {
 
   let sidebarIsOpen
   if (dst.windowId !== Windows.id) {
-    sidebarIsOpen = await browser.sidebarAction
-      .isOpen({ windowId: dst.windowId })
-      .catch(() => false)
+    sidebarIsOpen = await isPrimarySidebarOpen(dst.windowId)
   }
 
   let moved

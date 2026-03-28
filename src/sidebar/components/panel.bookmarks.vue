@@ -56,6 +56,7 @@ import BookmarkCard from './bookmark-card.vue'
 import PanelPlaceholder from './panel-placeholder.vue'
 import SubListTitle from './sub-list-title.vue'
 import DragAndDropPointer from './dnd-pointer.vue'
+import { overrideContext } from 'src/services/platform.actions'
 
 interface BookmarksGroup {
   id: ID
@@ -284,7 +285,7 @@ function onNavCtxMenu(e: MouseEvent): void {
   }
 
   let nativeCtx = { showDefaults: false }
-  browser.menus.overrideContext(nativeCtx)
+  overrideContext(nativeCtx)
 
   if (!Selection.isSet()) Selection.selectNavItem(props.panel.id)
   Menu.open(MenuType.BookmarksPanel)

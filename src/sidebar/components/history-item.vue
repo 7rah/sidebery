@@ -48,6 +48,7 @@ import { Sidebar } from 'src/services/sidebar'
 import { DnD } from 'src/services/drag-and-drop'
 import { Windows } from 'src/services/windows'
 import * as Favicons from 'src/services/favicons.fg'
+import { overrideContext } from 'src/services/platform.actions'
 
 const props = defineProps<{ visit: Visit }>()
 const rootEl = ref<HTMLElement | null>(null)
@@ -162,7 +163,7 @@ function onCtxMenu(e: MouseEvent, visit: Visit): void {
     return
   }
 
-  browser.menus.overrideContext({ showDefaults: false })
+  overrideContext({ showDefaults: false })
 
   if (!Selection.isSet()) Selection.selectHistory(visit.id)
 

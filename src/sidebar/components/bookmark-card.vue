@@ -37,6 +37,7 @@ import { Mouse } from 'src/services/mouse'
 import { DnD } from 'src/services/drag-and-drop'
 import { FOLDER_NAME_DATA_RE } from 'src/defaults'
 import { Search } from 'src/services/search'
+import { overrideContext } from 'src/services/platform.actions'
 
 const props = defineProps<{ node: Bookmark; panelId: ID }>()
 
@@ -159,7 +160,7 @@ function onCtxMenu(e: MouseEvent): void {
   }
 
   let nativeCtx = { context: 'bookmark', bookmarkId: props.node.id } as const
-  browser.menus.overrideContext(nativeCtx)
+  overrideContext(nativeCtx)
 
   if (!Selection.isBookmarks()) Selection.selectBookmark(props.node.id)
 

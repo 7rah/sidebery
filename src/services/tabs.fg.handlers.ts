@@ -17,6 +17,7 @@ import * as Preview from 'src/services/tabs.preview'
 import { Search } from './search'
 import { Containers } from './containers'
 import { Mouse } from './mouse'
+import { getTabState } from './platform.actions'
 
 const EXT_HOST = browser.runtime.getURL('').slice(16)
 const URL_HOST_PATH_RE = /^([a-z0-9-]{1,63}\.)+\w+(:\d+)?\/[A-Za-z0-9-._~:/?#[\]%@!$&'()*+,;=]*$/
@@ -61,8 +62,7 @@ function waitForOtherReopenedTabs(tab: Tab): void {
 
   // Get session data of probably reopened tab
   // to check if it was actually reopened
-  browser.sessions
-    .getTabValue(tab.id, 'data')
+  getTabState<TabSessionData | undefined>(tab.id, 'data')
     .then(data => {
       tab.reopened = !!data
       if (!waitForOtherReopenedTabsBuffer) return
@@ -115,9 +115,7 @@ function checkIfSessionRestoring(newTab: Tab) {
     suspectTabs.length >= SR_GET_TAB_SESSION_DATA_THRESHOLD
   ) {
     suspectTabsDataQuerying = suspectTabs.map(t => {
-      return browser.sessions
-        .getTabValue<TabSessionData | undefined>(t.id, 'data')
-        .catch(() => undefined)
+      return getTabState<TabSessionData | undefined>(t.id, 'data').catch(() => undefined)
     })
   }
 
@@ -126,7 +124,7 @@ function checkIfSessionRestoring(newTab: Tab) {
 
   // Get tab session data
   if (suspectTabsDataQuerying) {
-    const dataQuerying = browser.sessions.getTabValue<TabSessionData | undefined>(newTab.id, 'data')
+    const dataQuerying = getTabState<TabSessionData | undefined>(newTab.id, 'data')
     suspectTabsDataQuerying.push(dataQuerying.catch(() => undefined))
   }
 

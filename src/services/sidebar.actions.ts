@@ -27,6 +27,7 @@ import { Permissions } from './permissions'
 import { ItemInfo } from 'src/types/tabs'
 import { Notifications } from './notifications'
 import * as Popups from './popups'
+import { getWindowState, setSidebarTitle, setWindowState } from './platform.actions'
 import { turnOffBeforeRequestHandler, turnOnBeforeRequestHandler } from './web-req.fg'
 import { createDefaultSidebarConfig } from './sidebar-config'
 import { Sync } from './_services'
@@ -68,8 +69,8 @@ export async function loadPanels(): Promise<void> {
   const ts = performance.now()
   Logs.info('Sidebar.loadPanels')
 
-  const gettingActiveId = browser.sessions.getWindowValue<ID>(Windows.id, 'activePanelId')
-  const gettingHiddenPanels = browser.sessions.getWindowValue<ID[]>(Windows.id, 'hiddenPanels')
+  const gettingActiveId = getWindowState<ID>(Windows.id, 'activePanelId')
+  const gettingHiddenPanels = getWindowState<ID[]>(Windows.id, 'hiddenPanels')
   const gettingStorage = browser.storage.managed
     .get<Stored>('sidebar')
     .catch(() => {})
@@ -1177,7 +1178,7 @@ let prevSavedActPanelId = NOID
 export function saveActivePanel(): void {
   if (Windows.incognito || prevSavedActPanelId === Sidebar.activePanelId) return
   prevSavedActPanelId = Sidebar.activePanelId
-  browser.sessions.setWindowValue(Windows.id, 'activePanelId', Sidebar.activePanelId)
+  void setWindowState(Windows.id, 'activePanelId', Sidebar.activePanelId)
 }
 export const saveActivePanelDebounced = Utils.debounce(saveActivePanel)
 
@@ -1604,7 +1605,7 @@ export function saveHiddenPanels() {
   for (const panel of Sidebar.panels) {
     if (panel.hidden) hiddenPanels.push(panel.id)
   }
-  browser.sessions.setWindowValue(Windows.id, 'hiddenPanels', hiddenPanels)
+  void setWindowState(Windows.id, 'hiddenPanels', hiddenPanels)
 }
 
 interface RemovingPanelConf {
@@ -2235,9 +2236,9 @@ export function updateSidebarTitle(delay = 456): void {
       const panel = Sidebar.panelsById[Sidebar.activePanelId]
       if (!panel) return
 
-      browser.sidebarAction.setTitle({ title: panel.name, windowId: Windows.id })
+      void setSidebarTitle(panel.name, Windows.id)
     } else {
-      browser.sidebarAction.setTitle({ title: 'Sidebery', windowId: Windows.id })
+      void setSidebarTitle('Sidebery', Windows.id)
     }
   }, delay)
 }

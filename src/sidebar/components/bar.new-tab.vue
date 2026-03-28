@@ -53,6 +53,7 @@ import { Windows } from 'src/services/windows'
 import { translate } from 'src/dict'
 import { DnD } from 'src/services/drag-and-drop'
 import { Sidebar } from 'src/services/sidebar'
+import { overrideContext } from 'src/services/platform.actions'
 
 interface NewTabBtn {
   id: string
@@ -293,7 +294,7 @@ function onNewTabCtxMenu(e: MouseEvent): void {
   }
 
   let nativeCtx = { showDefaults: false }
-  browser.menus.overrideContext(nativeCtx)
+  overrideContext(nativeCtx)
 
   if (!Selection.isSet()) Selection.selectNewTabBtn(props.panel.id)
 

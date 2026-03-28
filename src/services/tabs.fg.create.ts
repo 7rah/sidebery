@@ -9,6 +9,7 @@ import * as IPC from 'src/services/ipc'
 import * as Popups from 'src/services/popups'
 import * as Logs from 'src/services/logs'
 import * as Utils from 'src/utils'
+import { search } from 'src/services/platform.actions'
 
 /**
  * Create tab after another tab
@@ -249,7 +250,7 @@ export async function createFromDragEvent(e: DragEvent, dst: DstPlaceInfo): Prom
       const tab = await browser.tabs.create(conf)
       tabId = tab.id
     }
-    browser.search.search({ query: result.text, tabId })
+    void search(result.text, tabId)
   }
 }
 

@@ -14,6 +14,7 @@ import { Settings } from './settings'
 import * as Logs from './logs'
 import { ParsedTheme, Styles } from './styles'
 import { DetachedTabsInfo } from './tabs.fg.move'
+import { hidePageAction, showPageAction } from './platform.actions'
 
 /**
  * Load tabs
@@ -259,10 +260,7 @@ export function showProxyBadge(tabId: ID): void {
   const titlePre = browser.i18n.getMessage('proxy_popup_title_prefix')
   const titlePost = browser.i18n.getMessage('proxy_popup_title_postfix')
   const title = titlePre + container.name + titlePost
-  browser.pageAction.setTitle({ title, tabId })
-  browser.pageAction.show(tabId).catch(err => {
-    Logs.err('Tabs.showProxyBadge: Cannot show proxy badge:', err)
-  })
+  void showPageAction(tabId, title)
 }
 let showProxyBadgeTimeout: number | undefined
 function showProxyBadgeDebounced(tabId: ID, delay = 500): void {
@@ -276,10 +274,7 @@ function showProxyBadgeDebounced(tabId: ID, delay = 500): void {
  * Hide proxy badge (pageActive) for given tab
  */
 export function hideProxyBadge(tabId: ID): void {
-  browser.pageAction.hide(tabId).catch(err => {
-    Logs.err('Tabs.hideProxyBadge: Cannot hide proxy badge:', err)
-  })
-  browser.pageAction.setTitle({ title: 'Sidebery proxy off', tabId })
+  void hidePageAction(tabId, 'Sidebery proxy off')
 }
 
 /**

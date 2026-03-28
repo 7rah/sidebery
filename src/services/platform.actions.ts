@@ -32,6 +32,31 @@ export async function openPrimarySidebar(windowId?: ID): Promise<void> {
   }
 }
 
+export async function isPrimarySidebarOpen(windowId: ID): Promise<boolean> {
+  if (!Platform.hasFirefoxSidebarAction || typeof browser.sidebarAction.isOpen !== 'function') {
+    return false
+  }
+
+  try {
+    return await browser.sidebarAction.isOpen({ windowId })
+  } catch (err) {
+    logError('Platform.isPrimarySidebarOpen: Cannot read sidebar state:', err)
+    return false
+  }
+}
+
+export async function setSidebarTitle(title: string, windowId?: ID): Promise<void> {
+  if (!Platform.hasFirefoxSidebarAction || typeof browser.sidebarAction.setTitle !== 'function') {
+    return
+  }
+
+  try {
+    await browser.sidebarAction.setTitle({ title, windowId })
+  } catch (err) {
+    logError('Platform.setSidebarTitle: Cannot set sidebar title:', err)
+  }
+}
+
 export async function ensureActionContextMenu(): Promise<void> {
   const menusApi = Platform.hasContextMenus ? browser.contextMenus : browser.menus
   if (!menusApi) return
@@ -126,6 +151,50 @@ export async function setTabState<T>(tabId: ID, key: string, value: T): Promise<
 
   const storageKey = getStorageKey('tab', tabId, key)
   await browser.storage.local.set({ [storageKey]: value })
+}
+
+export async function moveTabsInSuccession(tabIds: ID[], successorTabId?: ID): Promise<boolean> {
+  if (typeof browser.tabs.moveInSuccession !== 'function') return false
+
+  try {
+    if (successorTabId !== undefined) await browser.tabs.moveInSuccession(tabIds, successorTabId)
+    else await browser.tabs.moveInSuccession(tabIds)
+    return true
+  } catch (err) {
+    logError('Platform.moveTabsInSuccession: Cannot update succession:', err)
+    return false
+  }
+}
+
+export async function updateNativeTabsVisibility(toShow: ID[], toHide: ID[]): Promise<void> {
+  if (typeof browser.tabs.show !== 'function' || typeof browser.tabs.hide !== 'function') return
+
+  const tasks: Promise<any>[] = []
+  if (toShow.length) tasks.push(browser.tabs.show(toShow))
+  if (toHide.length) tasks.push(browser.tabs.hide(toHide))
+  if (tasks.length) await Promise.allSettled(tasks)
+}
+
+export async function showPageAction(tabId: ID, title: string): Promise<void> {
+  if (!Platform.hasPageAction) return
+
+  try {
+    browser.pageAction.setTitle({ title, tabId })
+    await browser.pageAction.show(tabId)
+  } catch (err) {
+    logError('Platform.showPageAction: Cannot show page action:', err)
+  }
+}
+
+export async function hidePageAction(tabId: ID, title?: string): Promise<void> {
+  if (!Platform.hasPageAction) return
+
+  try {
+    await browser.pageAction.hide(tabId)
+    if (title !== undefined) browser.pageAction.setTitle({ title, tabId })
+  } catch (err) {
+    logError('Platform.hidePageAction: Cannot hide page action:', err)
+  }
 }
 
 function onActionMenuClicked(info: browser.menus.OnClickData): void {

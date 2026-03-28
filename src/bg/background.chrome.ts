@@ -1,14 +1,15 @@
+import { InstanceType } from 'src/types'
 import { SettingsBg } from 'src/services/settings.bg'
 import { SidebarBg } from 'src/services/sidebar.bg'
 import { configureSidePanel, ensureActionContextMenu } from 'src/services/platform.actions'
 
 const SIDEBAR_PATH = 'sidebar/sidebar.html'
 const ts = performance.now()
-const BG_INSTANCE_TYPE = 0
-const SIDEBAR_INSTANCE_TYPE = 2
 const BG_CONNECTION_CONFIRM_ID = -1
 const cacheByWindow: Record<ID, TabCacheLike[]> = {}
 const sidebarPorts = new Map<ID, browser.runtime.Port>()
+const setupPagePorts = new Map<ID, browser.runtime.Port>()
+const panelConfigPorts = new Map<ID, browser.runtime.Port>()
 
 const actions: Record<string, (...args: any[]) => any> = {
   cacheTabsData,
@@ -37,6 +38,8 @@ browser.runtime.onUpdateAvailable.addListener(details => {
 void (async function main() {
   await setupChromeUi()
   await Promise.all([SettingsBg.loadSettings(), SidebarBg.loadState()])
+  SettingsBg.setupSettingsChangeListener()
+  SidebarBg.setupSidebarChangeListener()
   console.info(`Chrome bg init end: ${performance.now() - ts}ms`)
 })()
 
@@ -86,7 +89,7 @@ function isWindowTabsLocked(): boolean {
 
 async function saveInLocalStorage(
   newValues: Record<string, unknown>,
-  srcInfo?: { type?: number; winId?: ID }
+  srcInfo?: { type?: number; winId?: ID; tabId?: ID }
 ): Promise<void> {
   await browser.storage.local.set(newValues)
   broadcastStorageChange(newValues, srcInfo)
@@ -94,10 +97,20 @@ async function saveInLocalStorage(
 
 function broadcastStorageChange(
   newValues: Record<string, unknown>,
-  srcInfo?: { type?: number; winId?: ID }
+  srcInfo?: { type?: number; winId?: ID; tabId?: ID }
 ): void {
   for (const [winId, port] of sidebarPorts) {
-    if (srcInfo?.type === SIDEBAR_INSTANCE_TYPE && srcInfo.winId === winId) continue
+    if (srcInfo?.type === InstanceType.sidebar && srcInfo.winId === winId) continue
+    postMessageSafely(port, { action: 'storageChanged', args: [newValues] })
+  }
+
+  for (const [tabId, port] of setupPagePorts) {
+    if (srcInfo?.type === InstanceType.setup && srcInfo.tabId === tabId) continue
+    postMessageSafely(port, { action: 'storageChanged', args: [newValues] })
+  }
+
+  for (const [winId, port] of panelConfigPorts) {
+    if (srcInfo?.type === InstanceType.panelConfig && srcInfo.winId === winId) continue
     postMessageSafely(port, { action: 'storageChanged', args: [newValues] })
   }
 }
@@ -105,19 +118,33 @@ function broadcastStorageChange(
 function onConnect(port: browser.runtime.Port): void {
   const portNameData = parsePortName(port.name)
   if (!portNameData) return
-  if (portNameData.dstType !== BG_INSTANCE_TYPE) return
+  if (portNameData.dstType !== InstanceType.bg) return
 
-  if (portNameData.srcType === SIDEBAR_INSTANCE_TYPE && portNameData.srcWinId !== undefined) {
+  if (portNameData.srcType === InstanceType.sidebar && portNameData.srcWinId !== undefined) {
     sidebarPorts.set(portNameData.srcWinId, port)
+  }
+  if (portNameData.srcType === InstanceType.setup && portNameData.srcTabId !== undefined) {
+    setupPagePorts.set(portNameData.srcTabId, port)
+  }
+  if (portNameData.srcType === InstanceType.panelConfig && portNameData.srcWinId !== undefined) {
+    panelConfigPorts.set(portNameData.srcWinId, port)
   }
 
   port.onMessage.addListener(msg => {
     void onPortMessage(msg, port)
   })
   port.onDisconnect.addListener(() => {
-    if (portNameData.srcType === SIDEBAR_INSTANCE_TYPE && portNameData.srcWinId !== undefined) {
+    if (portNameData.srcType === InstanceType.sidebar && portNameData.srcWinId !== undefined) {
       const activePort = sidebarPorts.get(portNameData.srcWinId)
       if (activePort === port) sidebarPorts.delete(portNameData.srcWinId)
+    }
+    if (portNameData.srcType === InstanceType.setup && portNameData.srcTabId !== undefined) {
+      const activePort = setupPagePorts.get(portNameData.srcTabId)
+      if (activePort === port) setupPagePorts.delete(portNameData.srcTabId)
+    }
+    if (portNameData.srcType === InstanceType.panelConfig && portNameData.srcWinId !== undefined) {
+      const activePort = panelConfigPorts.get(portNameData.srcWinId)
+      if (activePort === port) panelConfigPorts.delete(portNameData.srcWinId)
     }
   })
 
@@ -125,7 +152,7 @@ function onConnect(port: browser.runtime.Port): void {
 }
 
 function onMessage(msg: IPCMessage): Promise<any> | undefined {
-  if (msg.dstType !== undefined && msg.dstType !== BG_INSTANCE_TYPE) return
+  if (msg.dstType !== undefined && msg.dstType !== InstanceType.bg) return
   return runAction(msg)
 }
 

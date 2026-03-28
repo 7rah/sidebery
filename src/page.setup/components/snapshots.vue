@@ -109,6 +109,7 @@ import * as Logs from 'src/services/logs'
 import { Windows } from 'src/services/windows'
 import { Store } from 'src/services/storage'
 import { Snapshots } from 'src/services/snapshots'
+import { createTab } from 'src/services/platform.actions'
 import DropDownButton from 'src/components/drop-down-button.vue'
 import SnapTab from './snapshots.tab.vue'
 
@@ -286,7 +287,7 @@ async function openSelectedTabs(how: SnapOpenType): Promise<void> {
           conf.active = false
         }
 
-        creating.push(browser.tabs.create(conf))
+        creating.push(createTab(conf))
       }
       try {
         await Promise.all(creating)

@@ -5,6 +5,7 @@ import * as Utils from 'src/utils'
 import { Settings } from './settings'
 import { Sidebar } from './sidebar'
 import { Containers } from './containers'
+import { Platform } from './platform'
 
 type optBlockingResponse = browser.webRequest.BlockingResponse | void
 
@@ -36,7 +37,7 @@ function onBeforeRequestHandler(info: browser.webRequest.ReqDetails): optBlockin
 }
 
 export function turnOnBeforeRequestHandler() {
-  if (!browser.webRequest) return
+  if (!Platform.hasContextualIdentities || !browser.webRequest) return
   const eventTarget = browser.webRequest.onBeforeRequest
   if (!eventTarget.hasListener(onBeforeRequestHandler)) {
     const filter: browser.webRequest.RequestFilter = {
@@ -58,7 +59,10 @@ export function turnOffBeforeRequestHandler() {
 }
 
 export function updateWebReqHandlers() {
-  if (Windows.incognito) return
+  if (!Platform.hasContextualIdentities || Windows.incognito) {
+    turnOffBeforeRequestHandler()
+    return
+  }
 
   let listen = false
 

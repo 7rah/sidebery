@@ -9,7 +9,7 @@ import * as IPC from 'src/services/ipc'
 import * as Popups from 'src/services/popups'
 import * as Logs from 'src/services/logs'
 import * as Utils from 'src/utils'
-import { search } from 'src/services/platform.actions'
+import { createTab, search } from 'src/services/platform.actions'
 
 /**
  * Create tab after another tab
@@ -63,7 +63,7 @@ export function createChildTab(tabId: ID, url?: string, containerId?: string): v
   if (url) config.url = url
   if (containerId) config.cookieStoreId = containerId
 
-  browser.tabs.create(config).catch(err => {
+  createTab(config).catch(err => {
     Logs.err('Tabs.createChildTab: Cannot create tab:', err)
   })
 }
@@ -106,7 +106,7 @@ export async function createTabInPanel(panel: Panel, conf?: browser.tabs.CreateP
   if (panel.newTabCtx !== 'none' && !conf?.cookieStoreId) config.cookieStoreId = panel.newTabCtx
 
   _creatingTabInPanel = true
-  await browser.tabs.create(config).catch(err => {
+  await createTab(config).catch(err => {
     Logs.err('Tabs.createTabInPanel: Cannot create tab:', err)
   })
   _creatingTabInPanel = false
@@ -223,7 +223,7 @@ export async function createFromDragEvent(e: DragEvent, dst: DstPlaceInfo): Prom
       }
 
       Tabs.setNewTabPosition(dst.index ?? 0, dst.parentId, panel.id)
-      browser.tabs.create(conf).catch(err => {
+      createTab(conf).catch(err => {
         Logs.err('Tabs.createFromDragEvent: Cannot create tab:', err)
       })
     }
@@ -247,7 +247,7 @@ export async function createFromDragEvent(e: DragEvent, dst: DstPlaceInfo): Prom
       if (e.ctrlKey) conf.active = false
 
       Tabs.setNewTabPosition(dst.index ?? 0, dst.parentId, panel.id)
-      const tab = await browser.tabs.create(conf)
+      const tab = await createTab(conf)
       tabId = tab.id
     }
     void search(result.text, tabId)
@@ -446,7 +446,7 @@ export async function open(
       Tabs.setNewTabPosition(index, parentId, dstPanel?.id ?? NOID)
     }
 
-    const tab = await browser.tabs.create(conf)
+    const tab = await createTab(conf)
     idsMap[item.id] = tab.id
 
     if (item.customTitle) {

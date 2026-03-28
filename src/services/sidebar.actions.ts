@@ -27,7 +27,7 @@ import { Permissions } from './permissions'
 import { ItemInfo } from 'src/types/tabs'
 import { Notifications } from './notifications'
 import * as Popups from './popups'
-import { getWindowState, setSidebarTitle, setWindowState } from './platform.actions'
+import { createTab, getWindowState, setSidebarTitle, setWindowState } from './platform.actions'
 import { turnOffBeforeRequestHandler, turnOnBeforeRequestHandler } from './web-req.fg'
 import { createDefaultSidebarConfig } from './sidebar-config'
 import { Sync } from './_services'
@@ -2129,7 +2129,7 @@ export async function restoreFromBookmarks(panel: TabsPanel, silent?: boolean): 
         const containerId = Containers.getContainerFor(info.url)
         if (containerId) conf.cookieStoreId = containerId
       }
-      const newNativeTab = await browser.tabs.create(conf)
+      const newNativeTab = await createTab(conf)
       idsMap[info.id] = newNativeTab.id
       indexPinned++
       index++
@@ -2192,7 +2192,7 @@ export async function restoreFromBookmarks(panel: TabsPanel, silent?: boolean): 
         conf.title = info.title
       }
       Tabs.setNewTabPosition(index, parentId, panel.id, false)
-      const newNativeTab = await browser.tabs.create(conf)
+      const newNativeTab = await createTab(conf)
       idsMap[info.id] = newNativeTab.id
 
       if (info.customColor) {

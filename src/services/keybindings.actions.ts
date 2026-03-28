@@ -19,6 +19,7 @@ import { By as SortBy, sort as sortTabs } from 'src/services/tabs.fg.sorting'
 import { SetupPage } from './setup-page'
 import { SidebarConfig, Sync } from './_services'
 import { Notifications } from './notifications'
+import { createTab } from './platform.actions'
 import { translate } from 'src/dict'
 
 const VALID_SHORTCUT =
@@ -568,7 +569,7 @@ function onKeyNewTabAfter(): void {
     windowId: Windows.id,
   }
 
-  browser.tabs.create(conf)
+  void createTab(conf)
 }
 
 /**
@@ -1275,7 +1276,7 @@ function onKeyNewTabAsFirstChild(): void {
   if (!activeTab) return
 
   Tabs.setNewTabPosition(activeTab.index + 1, activeTab.id, activeTab.panelId)
-  browser.tabs.create({
+  void createTab({
     index: activeTab.index + 1,
     cookieStoreId: activeTab.cookieStoreId,
     windowId: Windows.id,
@@ -1294,7 +1295,7 @@ function onKeyNewTabAsLastChild(): void {
   }
 
   Tabs.setNewTabPosition(activeTab.index + 1, activeTab.id, activeTab.panelId)
-  browser.tabs.create({
+  void createTab({
     index,
     cookieStoreId: activeTab.cookieStoreId,
     windowId: Windows.id,

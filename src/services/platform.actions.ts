@@ -110,7 +110,19 @@ export async function search(query: string, tabId?: ID): Promise<void> {
 
   const url = `https://www.google.com/search?q=${encodeURIComponent(query)}`
   if (tabId !== undefined) await browser.tabs.update(tabId, { url })
-  else await browser.tabs.create({ url })
+  else await createTab({ url })
+}
+
+export async function createTab(
+  createProperties: browser.tabs.CreateProperties = {}
+): Promise<browser.tabs.Tab> {
+  const normalized = { ...createProperties }
+
+  if (!Platform.hasContextualIdentities && 'cookieStoreId' in normalized) {
+    delete normalized.cookieStoreId
+  }
+
+  return browser.tabs.create(normalized)
 }
 
 export async function getWindowState<T>(windowId: ID, key: string): Promise<T | undefined> {

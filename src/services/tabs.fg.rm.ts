@@ -12,6 +12,7 @@ import * as Popups from 'src/services/popups'
 import * as Favicons from 'src/services/favicons.fg'
 import * as Logs from 'src/services/logs'
 import * as Utils from 'src/utils'
+import { createTab } from './platform.actions'
 
 export function removeBranches(ids: ID[]): void {
   for (const tab of Tabs.list) {
@@ -401,7 +402,7 @@ export async function undoRemove(tabs: ItemInfo[], parents: Record<ID, ID>): Pro
       conf.discarded = true
       conf.title = tab.title
     }
-    const newTab = await browser.tabs.create(conf)
+    const newTab = await createTab(conf)
     oldNewIds[tab.id] = newTab.id
   }
 }

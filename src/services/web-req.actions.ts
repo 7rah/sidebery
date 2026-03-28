@@ -7,6 +7,7 @@ import * as IPC from 'src/services/ipc'
 import * as Logs from 'src/services/logs'
 import { RE_STR_RE } from 'src/defaults'
 import { Platform } from './platform'
+import { createTab } from './platform.actions'
 
 type optBlockingResponse = browser.webRequest.BlockingResponse | void
 
@@ -61,7 +62,7 @@ async function recreateTab(
 
   if (index === undefined) index = tab.index
 
-  await browser.tabs.create({
+  await createTab({
     windowId: tab.windowId,
     url: info.url,
     cookieStoreId,

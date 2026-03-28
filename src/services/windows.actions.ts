@@ -11,7 +11,13 @@ import { Containers } from './containers'
 import { Sidebar } from './sidebar'
 import { Info } from './info'
 import { translate } from 'src/dict'
-import { getWindowState, moveTabsInSuccession, setTabState, setWindowState } from './platform.actions'
+import {
+  createTab,
+  getWindowState,
+  moveTabsInSuccession,
+  setTabState,
+  setWindowState,
+} from './platform.actions'
 
 function canUseCookieStoreId(): boolean {
   return Info.isFirefox && typeof browser.contextualIdentities !== 'undefined'
@@ -222,7 +228,7 @@ export async function createWithTabs(
         conf.cookieStoreId = info.container
       }
 
-      processingTabs.push(browser.tabs.create(conf))
+      processingTabs.push(createTab(conf))
     }
   }
 

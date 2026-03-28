@@ -47,6 +47,7 @@ import { Snapshots } from 'src/services/snapshots'
 import { Favicons } from 'src/services/_services.fg'
 import { IPC, Logs, Utils } from 'src/services/_services'
 import { Windows } from 'src/services/windows'
+import { createTab } from 'src/services/platform.actions'
 import { SnapshotsViewerState } from './snapshots.vue'
 
 interface SnapTabProps {
@@ -165,7 +166,7 @@ async function openTab(tab: SnapTabState): Promise<void> {
       active: false,
       cookieStoreId: tab.containerId ?? CONTAINER_ID,
     }
-    browser.tabs.create(conf)
+    void createTab(conf)
   }
 }
 

@@ -9,6 +9,7 @@ import * as Favicons from './favicons.fg'
 import * as IPC from './ipc'
 import * as Logs from './logs'
 import * as Popups from './popups'
+import { createTab } from './platform.actions'
 
 /**
  * Set relGroupId prop in related pinned and group tabs
@@ -107,7 +108,7 @@ export async function groupTabs(tabIds: ID[], conf?: GroupConfig): Promise<void>
 
   // Find index and create group tab
   Tabs.setNewTabPosition(tabs[0].index, tabs[0].parentId, tabs[0].panelId)
-  const groupTab = await browser.tabs.create({
+  const groupTab = await createTab({
     active: !!conf.active,
     cookieStoreId: tabs[0].cookieStoreId,
     index: tabs[0].index,

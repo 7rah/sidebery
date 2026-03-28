@@ -24,6 +24,7 @@ import { translate } from 'src/dict'
 import { Command } from 'src/types'
 import { Keybindings } from 'src/services/keybindings'
 import { Info } from 'src/services/info'
+import { canEditExtensionShortcuts, openExtensionShortcutSettings } from 'src/services/keybindings.actions'
 import * as Popups from 'src/services/popups'
 
 const ERR_SHOW_TIMEOUT = 2000
@@ -39,6 +40,11 @@ let errMsg = ''
 const inputLabel = computed((): string => state.newShortcut || translate('settings.kb_input'))
 
 function changeKeybinding(cmd: Command): void {
+  if (!canEditExtensionShortcuts()) {
+    void openExtensionShortcutSettings()
+    return
+  }
+
   state.newShortcut = ''
   errMsg = ''
 
@@ -53,7 +59,9 @@ function changeKeybinding(cmd: Command): void {
 
 function normalizeShortcut(s?: string): string {
   if (!s) return '---'
-  if (Info.reactive.os === 'mac') return s.replace('Command', '⌘').replace('MacCtrl', '⌃')
+  if (Info.reactive.os === 'mac') {
+    return s.replace('Command', '⌘').replace('MacCtrl', '⌃').replace('Alt', '⌥')
+  }
   if (Info.reactive.os === 'win') return s.replace('Command', 'Win')
   if (Info.reactive.os === 'linux') return s.replace('Command', 'Super')
   return s
@@ -126,30 +134,8 @@ function onKBKey(e: KeyboardEvent, cmd: Command): void {
   if (e.altKey && keys.length <= 1) keys.push('Alt')
   if (e.shiftKey && keys.length <= 1) keys.push('Shift')
 
-  const LetterRe = /^[0-9A-Za-z]$/
-  const FRe = /^F\d\d?$/
-  if (LetterRe.test(e.key)) keys.push(e.key.toUpperCase())
-  else if (e.key.startsWith('Arrow')) keys.push(e.key.slice(5))
-  else if (FRe.test(e.key)) keys.push(e.key)
-  else if (e.key === ',' || e.key === '<') keys.push('Comma')
-  else if (e.key === '.' || e.key === '>') keys.push('Period')
-  else if (e.key === ' ') keys.push('Space')
-  else if (
-    e.key === 'Home' ||
-    e.key === 'End' ||
-    e.key === 'PageUp' ||
-    e.key === 'PageDown' ||
-    e.key === 'Insert' ||
-    e.key === 'Delete' ||
-    e.key === 'Up' ||
-    e.key === 'Down' ||
-    e.key === 'Left' ||
-    e.key === 'Right'
-  ) {
-    keys.push(e.key)
-  } else if (e.code.startsWith('Digit')) {
-    keys.push(e.code.slice(5))
-  }
+  const mainKey = getShortcutMainKey(e)
+  if (mainKey) keys.push(mainKey)
 
   const shortcut = keys.join('+')
   state.newShortcut = shortcut
@@ -163,12 +149,50 @@ function onKBKey(e: KeyboardEvent, cmd: Command): void {
   }
 }
 
+function getShortcutMainKey(e: KeyboardEvent): string | undefined {
+  if (Info.reactive.os === 'mac' && e.altKey) {
+    if (e.code.startsWith('Key')) return e.code.slice(3)
+    if (e.code.startsWith('Digit')) return e.code.slice(5)
+    if (e.code === 'Comma') return 'Comma'
+    if (e.code === 'Period') return 'Period'
+    if (e.code === 'Space') return 'Space'
+  }
+
+  const LetterRe = /^[0-9A-Za-z]$/
+  const FRe = /^F\d\d?$/
+  if (LetterRe.test(e.key)) return e.key.toUpperCase()
+  if (e.key.startsWith('Arrow')) return e.key.slice(5)
+  if (FRe.test(e.key)) return e.key
+  if (e.key === ',' || e.key === '<') return 'Comma'
+  if (e.key === '.' || e.key === '>') return 'Period'
+  if (e.key === ' ') return 'Space'
+  if (
+    e.key === 'Home' ||
+    e.key === 'End' ||
+    e.key === 'PageUp' ||
+    e.key === 'PageDown' ||
+    e.key === 'Insert' ||
+    e.key === 'Delete' ||
+    e.key === 'Up' ||
+    e.key === 'Down' ||
+    e.key === 'Left' ||
+    e.key === 'Right'
+  ) {
+    return e.key
+  }
+  if (e.code.startsWith('Digit')) return e.code.slice(5)
+}
+
 function onKBKeyUp(e: Event): void {
   inputEl.value?.blur()
 }
 
 function removeKeybinding(cmd: Command): void {
   if (!cmd.shortcut) return
+  if (!canEditExtensionShortcuts()) {
+    void openExtensionShortcutSettings()
+    return
+  }
   Keybindings.update(cmd, { shortcut: '', focus: false })
 }
 </script>

@@ -25,6 +25,14 @@ import { translate } from 'src/dict'
 const VALID_SHORTCUT =
   /^((Ctrl|Alt|Command|MacCtrl)\+)((Shift|Alt|Ctrl|Command|MacCtrl)\+)?([A-Z0-9]|Comma|Period|Home|End|PageUp|PageDown|Space|Insert|Delete|Up|Down|Left|Right|F\d\d?)$|^((Ctrl|Alt|Command|MacCtrl)\+)?((Shift|Alt|Ctrl|Command|MacCtrl)\+)?(F\d\d?)$/
 
+export function canEditExtensionShortcuts(): boolean {
+  return typeof browser.commands.update === 'function'
+}
+
+export async function openExtensionShortcutSettings(): Promise<void> {
+  await browser.tabs.create({ url: 'chrome://extensions/shortcuts' })
+}
+
 /**
  * Load keybindings
  */
@@ -81,6 +89,11 @@ export async function importSyncedKeybindings(entry: Sync.SyncedEntry) {
 export async function importKeybindings(keybindings: Record<string, string>) {
   // Logs.info('Keybindings.importKeybindings(): keybindings:', keybindings)
 
+  if (!canEditExtensionShortcuts()) {
+    await openExtensionShortcutSettings()
+    return
+  }
+
   const waiting = []
   const commands = await browser.commands.getAll()
   for (const k of commands as Command[]) {
@@ -106,6 +119,11 @@ export async function importKeybindings(keybindings: Record<string, string>) {
  * Reset addon's keybindings
  */
 export async function resetKeybindings(): Promise<void> {
+  if (typeof browser.commands.reset !== 'function') {
+    await openExtensionShortcutSettings()
+    return
+  }
+
   const waitGroup = Keybindings.reactive.list.map(async k => {
     if (k.name) return browser.commands.reset(k.name)
   })
@@ -133,6 +151,12 @@ export function checkShortcut(shortcut: string): 'valid' | 'duplicate' | 'invali
  * Update keybinding
  */
 export async function update(cmd: Command, details: CommandUpdateDetails): Promise<void> {
+  if (details.shortcut !== undefined && cmd.name && !canEditExtensionShortcuts()) {
+    Object.assign(cmd, { focus: false, error: '' })
+    await openExtensionShortcutSettings()
+    return
+  }
+
   Object.assign(cmd, details)
 
   if (details.shortcut !== undefined && cmd.name) {

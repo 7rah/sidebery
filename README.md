@@ -177,3 +177,6 @@ UQAxwOfvZQz1YR4qieiE-J4wHiz3zrMXAyxDiRJQQXIDX8MH
 ## License
 
 [MIT](./LICENSE)
+
+## credit
+[https://linux.do/](https://linux.do/)

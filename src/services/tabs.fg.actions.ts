@@ -1466,12 +1466,13 @@ export async function bookmarkTabs(tabIds: ID[]): Promise<void> {
       const info = { id: tab.id, title: result.name, container: tab.cookieStoreId }
       Bookmarks.attachTabInfoToTitle(info)
 
-      await browser.bookmarks.create({
-        parentId,
-        type: 'bookmark',
-        title: info.title,
-        url: result.url,
-      })
+      await browser.bookmarks.create(
+        Bookmarks.getBookmarkCreateDetails('bookmark', {
+          parentId,
+          title: info.title,
+          url: result.url,
+        })
+      )
     }
   } else {
     if (Settings.state.askNewBookmarkPlace) {

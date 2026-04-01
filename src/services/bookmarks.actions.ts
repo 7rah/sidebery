@@ -41,6 +41,25 @@ export function normalizeBookmarkNode(node: Bookmark): Bookmark {
   return node
 }
 
+export function getBookmarkCreateDetails(
+  type: browser.bookmarks.TreeNodeType,
+  details: Omit<browser.bookmarks.CreateDetails, 'type'>
+): browser.bookmarks.CreateDetails {
+  const conf: browser.bookmarks.CreateDetails = {}
+  if (details.parentId !== undefined) conf.parentId = details.parentId
+  if (details.index !== undefined) conf.index = details.index
+
+  if (type === 'separator') {
+    conf.type = 'separator'
+    return conf
+  }
+
+  if (details.title !== undefined) conf.title = details.title
+  if (type === 'bookmark' && details.url !== undefined) conf.url = details.url
+
+  return conf
+}
+
 let loading = false
 let onLoaded: (() => void)[] = []
 function finishLoading() {
@@ -500,7 +519,7 @@ export async function createBookmarkNode(
   if (!parentId) parentId = BKM_OTHER_ID
 
   if (type === 'separator') {
-    browser.bookmarks.create({ parentId, type: 'separator', index })
+    browser.bookmarks.create(getBookmarkCreateDetails(type, { parentId, index }))
   } else {
     const isBookmark = type === 'bookmark'
     const result = await openBookmarksPopup({
@@ -523,13 +542,14 @@ export async function createBookmarkNode(
       if (parentId === NOID) parentId = BKM_OTHER_ID
 
       try {
-        await browser.bookmarks.create({
-          parentId,
-          title: result.name,
-          type,
-          url: result.url,
-          index,
-        })
+        await browser.bookmarks.create(
+          getBookmarkCreateDetails(type, {
+            parentId,
+            title: result.name,
+            url: result.url,
+            index,
+          })
+        )
       } catch (err) {
         Logs.err('Bookmarks.createBookmarkNode: Cannot create bookmark', err)
         Notifications.err(translate('notif.bookmarks_create_err'))
@@ -661,11 +681,15 @@ async function undoRemove(deleted: Bookmark[]): Promise<void> {
   let prevParent
   for (const n of deleted) {
     if (prevParent !== n.parentId) offset = 0
-    const conf: browser.bookmarks.CreateDetails = { type: n.type, index: n.index + offset }
-    if (Bookmarks.reactive.byId[n.parentId]) conf.parentId = n.parentId
-    if (oldNewIds[n.parentId]) conf.parentId = oldNewIds[n.parentId]
-    if (n.type !== 'separator') conf.title = n.title
-    if (n.type === 'bookmark') conf.url = n.url
+    let parentId
+    if (Bookmarks.reactive.byId[n.parentId]) parentId = n.parentId
+    if (oldNewIds[n.parentId]) parentId = oldNewIds[n.parentId]
+    const conf = getBookmarkCreateDetails(n.type, {
+      parentId,
+      index: n.index + offset,
+      title: n.title,
+      url: n.url,
+    })
     const newNode = await browser.bookmarks.create(conf)
     prevParent = n.parentId
     oldNewIds[n.id] = newNode.id

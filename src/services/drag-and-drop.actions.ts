@@ -1208,12 +1208,13 @@ async function setFolderForTabsPanel(panel: Panel, dst: DstPlaceInfo) {
     if (parent && result.name) {
       let rootFolder
       try {
-        rootFolder = await browser.bookmarks.create({
-          type: 'folder',
-          title: result.name.trim(),
-          parentId: parentId,
-          index,
-        })
+        rootFolder = await browser.bookmarks.create(
+          Bookmarks.getBookmarkCreateDetails('folder', {
+            title: result.name.trim(),
+            parentId: parentId,
+            index,
+          })
+        )
       } catch (err) {
         Logs.err('DnD.onDrop: Cannot set folder for tabs panel', err)
       }

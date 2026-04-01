@@ -283,12 +283,13 @@ async function createNewFolder(): Promise<void> {
     newFolderIndex = parent.children?.length ?? 0
   }
 
-  const folder = (await browser.bookmarks.create({
-    index: newFolderIndex,
-    parentId: parent.id,
-    title: state.newFolderTitle.trim(),
-    type: 'folder',
-  })) as Bookmark
+  const folder = (await browser.bookmarks.create(
+    Bookmarks.getBookmarkCreateDetails('folder', {
+      index: newFolderIndex,
+      parentId: parent.id,
+      title: state.newFolderTitle.trim(),
+    })
+  )) as Bookmark
 
   if (!folder) {
     state.creatingNewFolder = false

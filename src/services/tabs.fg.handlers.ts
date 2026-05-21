@@ -19,10 +19,13 @@ import { Containers } from './containers'
 import { Mouse } from './mouse'
 import { getTabState, updateTab } from './platform.actions'
 import { Platform } from './platform'
+import { getNativeTabChange } from './tabs.fg.native-sync'
 
 const EXT_HOST = browser.runtime.getURL('').slice(16)
 const URL_HOST_PATH_RE = /^([a-z0-9-]{1,63}\.)+\w+(:\d+)?\/[A-Za-z0-9-._~:/?#[\]%@!$&'()*+,;=]*$/
 const NEWTAB_URL = browser.extension.inIncognitoContext ? 'about:privatebrowsing' : 'about:newtab'
+const NATIVE_TABS_SYNC_INTERVAL = 60_000
+const NATIVE_TABS_SYNC_WAKE_DELAY = 120_000
 
 export function setupTabsListeners(): void {
   if (!Sidebar.hasTabs) return
@@ -44,6 +47,7 @@ export function setupTabsListeners(): void {
   browser.tabs.onDetached.addListener(onTabDetached)
   browser.tabs.onAttached.addListener(onTabAttached)
   browser.tabs.onActivated.addListener(onTabActivated)
+  setupNativeTabsSync()
 }
 
 export function resetTabsListeners(): void {
@@ -54,6 +58,79 @@ export function resetTabsListeners(): void {
   browser.tabs.onDetached.removeListener(onTabDetached)
   browser.tabs.onAttached.removeListener(onTabAttached)
   browser.tabs.onActivated.removeListener(onTabActivated)
+  resetNativeTabsSync()
+}
+
+let nativeTabsSyncInterval: number | undefined
+let nativeTabsSyncTimeout: number | undefined
+let nativeTabsSyncLastCheck = Date.now()
+function setupNativeTabsSync(): void {
+  resetNativeTabsSync()
+
+  nativeTabsSyncLastCheck = Date.now()
+  window.addEventListener('focus', onNativeTabsSyncNeeded)
+  window.addEventListener('pageshow', onNativeTabsSyncNeeded)
+  document.addEventListener('visibilitychange', onNativeTabsVisibilityChange)
+  nativeTabsSyncInterval = setInterval(onNativeTabsSyncTick, NATIVE_TABS_SYNC_INTERVAL)
+}
+
+function resetNativeTabsSync(): void {
+  window.removeEventListener('focus', onNativeTabsSyncNeeded)
+  window.removeEventListener('pageshow', onNativeTabsSyncNeeded)
+  document.removeEventListener('visibilitychange', onNativeTabsVisibilityChange)
+  clearInterval(nativeTabsSyncInterval)
+  clearTimeout(nativeTabsSyncTimeout)
+}
+
+function onNativeTabsVisibilityChange(): void {
+  if (document.visibilityState === 'visible') syncNativeTabsDebounced()
+}
+
+function onNativeTabsSyncNeeded(): void {
+  syncNativeTabsDebounced()
+}
+
+function onNativeTabsSyncTick(): void {
+  const now = Date.now()
+  if (now - nativeTabsSyncLastCheck > NATIVE_TABS_SYNC_WAKE_DELAY) syncNativeTabsDebounced(0)
+  nativeTabsSyncLastCheck = now
+}
+
+function syncNativeTabsDebounced(delay = 250): void {
+  nativeTabsSyncTimeout = Utils.wait(nativeTabsSyncTimeout, delay, () => {
+    nativeTabsSyncLastCheck = Date.now()
+    syncNativeTabs().catch(err => {
+      Logs.err('Tabs.syncNativeTabs: Cannot sync native tabs:', err)
+    })
+  })
+}
+
+export async function syncNativeTabs(): Promise<void> {
+  if (!Sidebar.hasTabs || !Tabs.ready || Tabs.sorting || Tabs.tabsReinitializing) return
+
+  const nativeTabs = await browser.tabs.query({ windowId: Windows.id })
+  if (!Tabs.ready || Tabs.sorting || Tabs.tabsReinitializing) return
+  if (nativeTabs.length !== Tabs.list.length) return Tabs.reinitTabs(0)
+
+  for (let i = 0; i < nativeTabs.length; i++) {
+    const nativeTab = nativeTabs[i]
+    const localTab = Tabs.list[i]
+    if (!nativeTab || !localTab || localTab.id !== nativeTab.id) return Tabs.reinitTabs(0)
+
+    const tab = Tabs.byId[nativeTab.id]
+    if (!tab) return Tabs.reinitTabs(0)
+
+    if (nativeTab.active && (Tabs.activeId !== nativeTab.id || !tab.active)) {
+      onTabActivated({
+        tabId: nativeTab.id,
+        previousTabId: Tabs.activeId,
+        windowId: Windows.id,
+      })
+    }
+
+    const change = getNativeTabChange(tab, nativeTab)
+    if (change) onTabUpdated(nativeTab.id, change, nativeTab)
+  }
 }
 
 let waitForOtherReopenedTabsTimeout: number | undefined

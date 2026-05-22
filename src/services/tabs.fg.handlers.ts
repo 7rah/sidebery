@@ -19,7 +19,7 @@ import { Containers } from './containers'
 import { Mouse } from './mouse'
 import { getTabState, updateTab } from './platform.actions'
 import { Platform } from './platform'
-import { getNativeTabChange } from './tabs.fg.native-sync'
+import { getNativeTabChange, getNativeTabsById } from './tabs.fg.native-sync'
 
 const EXT_HOST = browser.runtime.getURL('').slice(16)
 const URL_HOST_PATH_RE = /^([a-z0-9-]{1,63}\.)+\w+(:\d+)?\/[A-Za-z0-9-._~:/?#[\]%@!$&'()*+,;=]*$/
@@ -110,14 +110,12 @@ export async function syncNativeTabs(): Promise<void> {
 
   const nativeTabs = await browser.tabs.query({ windowId: Windows.id })
   if (!Tabs.ready || Tabs.sorting || Tabs.tabsReinitializing) return
-  if (nativeTabs.length !== Tabs.list.length) return Tabs.reinitTabs(0)
+  const nativeTabsById = getNativeTabsById(Tabs.list, nativeTabs)
+  if (!nativeTabsById) return Tabs.reinitTabs(0)
 
-  for (let i = 0; i < nativeTabs.length; i++) {
-    const nativeTab = nativeTabs[i]
-    const localTab = Tabs.list[i]
-    if (!nativeTab || !localTab || localTab.id !== nativeTab.id) return Tabs.reinitTabs(0)
-
-    const tab = Tabs.byId[nativeTab.id]
+  for (const localTab of Tabs.list) {
+    const nativeTab = nativeTabsById[localTab.id]
+    const tab = Tabs.byId[localTab.id]
     if (!tab) return Tabs.reinitTabs(0)
 
     if (nativeTab.active && (Tabs.activeId !== nativeTab.id || !tab.active)) {

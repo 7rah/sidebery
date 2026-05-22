@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { getNativeTabChange } from 'src/services/tabs.fg.native-sync'
+import { getNativeTabChange, getNativeTabsById } from 'src/services/tabs.fg.native-sync'
 
 describe('tabs native sync', () => {
   it('builds change info for native tab drift', () => {
@@ -58,5 +58,21 @@ describe('tabs native sync', () => {
     }
 
     assert.equal(getNativeTabChange(localTab, nativeTab), undefined)
+  })
+
+  it('matches native tabs by id regardless of native order', () => {
+    const localTabs = [
+      { id: 1, parentId: -1 },
+      { id: 2, parentId: 1 },
+    ]
+    const nativeTabs = [
+      { id: 2, discarded: true },
+      { id: 1, discarded: false },
+    ]
+
+    assert.deepEqual(getNativeTabsById(localTabs, nativeTabs), {
+      1: nativeTabs[1],
+      2: nativeTabs[0],
+    })
   })
 })

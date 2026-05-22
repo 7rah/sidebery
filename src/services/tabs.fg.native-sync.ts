@@ -2,6 +2,8 @@ import { NativeTab, Tab } from 'src/types'
 
 type NativeSyncTab = Pick<
   NativeTab,
+  | 'id'
+  | 'active'
   | 'audible'
   | 'discarded'
   | 'favIconUrl'
@@ -47,4 +49,22 @@ export function getNativeTabChange(
   if (tab.url !== nativeTab.url) set('url', nativeTab.url)
 
   return change
+}
+
+export function getNativeTabsById(
+  tabs: Pick<Tab, 'id'>[],
+  nativeTabs: NativeTab[]
+): Record<ID, NativeTab> | undefined {
+  if (nativeTabs.length !== tabs.length) return
+
+  const nativeTabsById: Record<ID, NativeTab> = {}
+  for (const nativeTab of nativeTabs) {
+    nativeTabsById[nativeTab.id] = nativeTab
+  }
+
+  for (const tab of tabs) {
+    if (!nativeTabsById[tab.id]) return
+  }
+
+  return nativeTabsById
 }

@@ -3,7 +3,14 @@ import { Platform } from './platform'
 const ACTION_MENU_OPEN_SETTINGS = 'open_settings'
 const ACTION_MENU_OPEN_SETTINGS_TITLE = 'Open settings'
 
+interface ActionMenuApi {
+  removeAll(): void | Promise<void>
+  create(createProperties: browser.menus.CreateProperties): string | number
+  onClicked: typeof browser.menus.onClicked
+}
+
 let actionMenuListenerInstalled = false
+let actionMenuSetup: Promise<void> | undefined
 
 export async function configureSidePanel(path: string): Promise<void> {
   if (!Platform.hasSidePanel) return
@@ -58,9 +65,19 @@ export async function setSidebarTitle(title: string, windowId?: ID): Promise<voi
 }
 
 export async function ensureActionContextMenu(): Promise<void> {
-  const menusApi = Platform.hasContextMenus ? browser.contextMenus : browser.menus
+  const menusApi = (Platform.hasContextMenus ? browser.contextMenus : browser.menus) as
+    | ActionMenuApi
+    | undefined
   if (!menusApi) return
 
+  if (actionMenuSetup) return actionMenuSetup
+  actionMenuSetup = setupActionContextMenu(menusApi).finally(() => {
+    actionMenuSetup = undefined
+  })
+  return actionMenuSetup
+}
+
+async function setupActionContextMenu(menusApi: ActionMenuApi): Promise<void> {
   try {
     await menusApi.removeAll()
   } catch (err) {

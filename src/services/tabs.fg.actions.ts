@@ -1172,6 +1172,7 @@ export async function discardTabs(tabIds: ID[] = []): Promise<void> {
       return true
     })
   }
+  if (!tabIds.length) return
 
   // Update succession for active tab to prevent switching to discarded tabs
   const activeTab = Tabs.byId[Tabs.activeId]
@@ -1190,9 +1191,7 @@ export async function discardTabs(tabIds: ID[] = []): Promise<void> {
   }
 
   // Try to discard tabs
-  await browser.tabs.discard(tabIds).catch(err => {
-    Logs.err('Tabs.discardTabs: Cannot discard:', err)
-  })
+  await discardNativeTabs(tabIds, 'Tabs.discardTabs')
 
   // Find not discarded tabs that might prevent their closing
   const secondTryIds = tabIds.filter(id => {
@@ -1203,34 +1202,49 @@ export async function discardTabs(tabIds: ID[] = []): Promise<void> {
   // Try to reset closing prevention and discard such tabs
   if (Settings.state.forceDiscard && Permissions.allUrls && secondTryIds.length) {
     await Promise.allSettled(
-      secondTryIds.map(async (id) => {
-        return browser.scripting.executeScript({
-          func: () => {
-            window.onbeforeunload = null;
-            window.addEventListener("beforeunload", e => {
-              e.stopPropagation()
-              e.returnValue = ''
-            }, { capture: true })
-          },
-          injectImmediately: true,
-          target: {
-            tabId: id,
-            allFrames: true
-          },
-          world: 'MAIN'
-        }).then(console.log).catch(console.error)
+      secondTryIds.map(async id => {
+        return browser.scripting
+          .executeScript({
+            func: () => {
+              window.onbeforeunload = null
+              window.addEventListener(
+                'beforeunload',
+                e => {
+                  e.stopPropagation()
+                  e.returnValue = ''
+                },
+                { capture: true }
+              )
+            },
+            injectImmediately: true,
+            target: {
+              tabId: id,
+              allFrames: true,
+            },
+            world: 'MAIN',
+          })
+          .catch(err => {
+            Logs.err('Tabs.discardTabs: Cannot reset closing prevention:', err)
+          })
       })
     )
 
     // Second try
-    await browser.tabs.discard(secondTryIds).catch(err => {
-      Logs.err('Tabs.discardTabs: Cannot discard (second try):', err)
-    })
+    await discardNativeTabs(secondTryIds, 'Tabs.discardTabs: second try')
   }
 
   if (Settings.state.hideUnloadedTabs) {
     updateNativeTabsVisibility()
   }
+}
+
+async function discardNativeTabs(tabIds: ID[], msg: string): Promise<void> {
+  const results = await Promise.allSettled(tabIds.map(id => browser.tabs.discard(id)))
+  results.forEach((result, index) => {
+    if (result.status === 'rejected') {
+      Logs.err(`${msg}: Cannot discard tab ${tabIds[index]}:`, result.reason)
+    }
+  })
 }
 
 /**
@@ -1672,7 +1686,7 @@ export function autoDiscardFolded(rootTab: Tab) {
     const childIds = Tabs.getBranch(rootTab, false).map(t => t.id)
     if (!childIds.length) return
 
-    browser.tabs.discard(childIds)
+    void discardNativeTabs(childIds, 'Tabs.autoDiscardFolded')
   } else {
     let delayMS = Settings.state.discardFoldedDelay
     if (Settings.state.discardFoldedDelayUnit === 'sec') delayMS *= 1000
@@ -1685,7 +1699,7 @@ export function autoDiscardFolded(rootTab: Tab) {
         const childIds = Tabs.getBranch(rootTab, false).map(t => t.id)
         if (!childIds.length) return
 
-        browser.tabs.discard(childIds)
+        void discardNativeTabs(childIds, 'Tabs.autoDiscardFolded')
       }
     }, delayMS)
   }

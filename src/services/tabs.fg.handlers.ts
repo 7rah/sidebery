@@ -713,6 +713,7 @@ function onTabUpdated(tabId: ID, change: browser.tabs.ChangeInfo, nativeTab: Nat
     return
   }
   if (Tabs.detachingTabIds.has(tabId)) return
+  if (Tabs.tabsReinitializing) return Tabs.reinitTabs()
 
   const tab = Tabs.byId[tabId]
   if (!tab) {
